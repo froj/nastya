@@ -16,7 +16,7 @@
 #include <stdarg.h>
 #include <uptime.h>
 #include <string.h>
-#include "commandline.h"
+#include <commandline.h>
 
 /* nios2.h contient toutes les fonctions dont nous avons besoin pour dialoguer
  * avec le nios alt_irq_register, IORD, etc... */
@@ -45,6 +45,8 @@ void mylog(struct error * e, ...) {
 /** Cette variable contient le temps maximum passe dans une boucle du scheduler.
  * Elle donne donc une assez bonne indication de l'occupation du CPU. */
 int32_t longest_scheduler_interrupt_time=0;
+
+extern command_t commands_list[];
 
 #ifdef COMPILE_ON_ROBOT
 /** Cette fonction est appellee a chaque overflow du timer (toutes les ms).
@@ -98,14 +100,9 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
     error_register_notice(mylog);
     error_register_debug(mylog);
 
-    commandline_init();
-    for(;;) commandline_input_char(getchar());
-
 	/* Step 2 : Init de la librairie math de Mathieu. */
     /**FIXME @todo Est-ce qu'on a encore besoin de fast_math_init() dans la version finale ? */
     fast_math_init();
-
-	//fast_benchmark();
 
 	/* Step 3 : Demare le scheduler pour le multitache. */
 	scheduler_init(); 
@@ -116,21 +113,11 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
 	sei(); /** FIXME @todo sei() Necessaire ? */
 #endif
 
-	/* Step 4 : Init les IO. */
-	cvra_board_init();
 	
 	/* Step 5 : Init la regulation et l'odometrie. */
 	//cvra_cs_init();  // Desactive depuis la casse du moteur.
 	
-	/* Step 6 : Init les bras.  */
-    /** FIXME @todo Reimplementer l'init des bras avec la nouvelle API. */
-
-	/* Step 7 : Init tout les parametres propres a une certaine edition ainsi que l'evitement d'obstacle. */
-    /** FIXME @todo Init des parametres robot a refaire au propre. */
-
-
-	/* Step 8 : Demarre la comm avec le PC, pas de retour de cette fonction. */
-    commandline_init();
+    commandline_init(commands_list);
     for(;;) commandline_input_char(getchar());
     	
 	return 0;

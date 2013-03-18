@@ -1,28 +1,36 @@
-/** Registers all the command in a single file. */
-#include <parse.h>
-#include <stdlib.h>
+#include <commandline.h>
+#include <string.h>
+#include "cvra_cs.h"
 
-/* All the following commands are declared in commands_misc.c */
-/** Resets the board. */
-extern parse_inst_t cmd_reset;
+/** Prints all args, then exits. */
+void test_func(int argc, char **argv) {
+    int i;
+    for(i=0;i<argc;i++)
+        printf("argv[%d] = \"%s\"\n", i, argv[i]);
+}
 
-/** Shutdowns an arm. */
-extern parse_inst_t cmd_arm_shutdown;
+/** resets the robot. */
+void cmd_reset(void) {
+    reset();
+}
 
-/** Shutdowns both arms. */
-extern parse_inst_t cmd_arm_shutdown_both;
+/** starts the strategy. */
+void cmd_start() {
+    printf("Press a key to start the robot.\n");
+    getchar();
+    printf("Match done. Hope you enjoyed it !\n");
+}
 
-/* All the following commands are declared in commands_misc.c */
-extern parse_inst_t cmd_start;
 
-parse_ctx_t commands[] = {
-    (parse_ctx_t)&cmd_reset,
-    (parse_ctx_t)&cmd_arm_shutdown,
-    (parse_ctx_t)&cmd_arm_shutdown_both,
-    (parse_ctx_t)&cmd_start,
-    NULL
+
+/** An array of all the commands. */
+command_t commands_list[] = {
+    COMMAND("test_argv",test_func),
+    COMMAND("reset", cmd_reset),
+    COMMAND("start",cmd_start),
+    COMMAND("none",NULL), /* must be last. */
 };
- 
+
 
 
 
