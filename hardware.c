@@ -35,17 +35,12 @@
 
 #include <stdio.h>
 
-
-static int8_t left_pump_on, left_pump_dir;
-static int8_t right_pump_on, right_pump_dir;
-
-
 void cvra_set_uart_speed(int32_t *uart_adress, int baudrate) {
 #ifdef COMPILE_ON_ROBOT
     int32_t divisor;
-	/* Formule tiree du Embedded IP User Guide page 7-4 */
-	divisor = (int32_t)(((float)ALT_CPU_FREQ/(float)baudrate) + 0.5);
-	IOWR(uart_adress, 0x04, divisor); // ecrit le diviseur dans le bon registre
+    /* Formule tiree du Embedded IP User Guide page 7-4 */
+    divisor = (int32_t)(((float)ALT_CPU_FREQ/(float)baudrate) + 0.5);
+    IOWR(uart_adress, 0x04, divisor); // ecrit le diviseur dans le bon registre
 #else
     printf("Changing speed to %d at adress %p\n", baudrate, uart_adress);
 #endif
@@ -59,12 +54,10 @@ void cvra_set_uart_speed(int32_t *uart_adress, int baudrate) {
  * It also init the UART, and calls fdevopen() to setup UART for printf()/scanf()/CLI.
  */
 void cvra_board_init(void) {
-    cvra_pump_left_mode(OFF);
-    cvra_pump_right_mode(OFF);
+    /* Init de l'ADC */
 #ifdef COMPILE_ON_ROBOT
     cvra_adc_init(&robot.analog_in, ANALOG_SPI_ADRESS, ANALOGIN_IRQ);
 #endif
-
     /* On manage les capteurs toutes les 5 ms. */
     scheduler_add_periodical_event_priority(cvra_board_manage_sensors,NULL,5000/SCHEDULER_UNIT,130);
     cvra_board_manage_outputs();
@@ -72,7 +65,7 @@ void cvra_board_init(void) {
 
 
 void cvra_board_manage_sensors(__attribute__((unused)) void * dummy) {
-	cvra_adc_start_scan(&robot.analog_in);
+    cvra_adc_start_scan(&robot.analog_in); /** @todo : le robot.analog_in */
 }
 
 void cvra_get_avoiding_sensors(int *l, int *r) {
@@ -86,92 +79,10 @@ void cvra_get_avoiding_sensors(int *l, int *r) {
 }
 
 void cvra_board_manage_outputs(void) {
-    int8_t outval=0;
-  	outval |= right_pump_on		<< 1;
-    outval |= right_pump_dir	<< 0;
-    outval |= left_pump_on    << 2;
-    outval |= left_pump_dir   << 3;
-    IOWR(DIGITAL_OUTPUT0, 0, outval);
+    //int8_t outval=0;
+    //outval |= right_pump_on     << 1;
+    //outval |= right_pump_dir    << 0;
+    //outval |= left_pump_on    << 2;
+    //outval |= left_pump_dir   << 3;
+    //IOWR(DIGITAL_OUTPUT0, 0, outval);
 }
-
-void cvra_pump_left_mode(pump_mode_t m) {
-	switch(m) {
-		case OFF:
-			left_pump_on=0;
-			break;
-		case VENT_BAS:
-				left_pump_on=1;
-				left_pump_dir=0;
-				break;
-		case VENT_LAT:
-				left_pump_on=1;
-				left_pump_dir=1;
-				break;
-		default:
-			left_pump_on=0;
-			break;
-	}
-  cvra_board_manage_outputs();
-}
-
-void cvra_pump_right_mode(pump_mode_t m) {
-	switch(m) {
-			case OFF:
-				right_pump_on=0;
-				break;
-			case VENT_BAS:
-				right_pump_on=1;
-				right_pump_dir=1;
-					break;
-			case VENT_LAT:
-				right_pump_on=1;
-				right_pump_dir=0;
-					break;
-			default:
-				right_pump_on=0;
-				break;
-		}
-    cvra_board_manage_outputs();
-}
-
-void cvra_pump_mode(pump_mode_t m, pump_handle_t curArm) {
-	if(curArm == PUMP_LEFT)
-	{
-		switch(m) {
-			case OFF:
-				left_pump_on=0;
-				break;
-			case VENT_BAS:
-					left_pump_on=1;
-					left_pump_dir=0;
-					break;
-			case VENT_LAT:
-					left_pump_on=1;
-					left_pump_dir=1;
-					break;
-			default:
-				left_pump_on=0;
-				break;
-		}
-	}else if(curArm == PUMP_RIGHT)
-	{
-		switch(m) {
-				case OFF:
-					right_pump_on=0;
-					break;
-				case VENT_BAS:
-					right_pump_on=1;
-					right_pump_dir=1;
-						break;
-				case VENT_LAT:
-					right_pump_on=1;
-					right_pump_dir=0;
-						break;
-				default:
-					right_pump_on=0;
-					break;
-			}
-	}
-  cvra_board_manage_outputs();
-}
-

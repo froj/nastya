@@ -1,8 +1,9 @@
 /**
- @file cvra_cs.c
- @author Antoine Albertelli
- @date 19th September 2009
- @todo Deplacer toutes les constantes comme TRACK_MM dans strat.c:initRobot().
+ * @file cvra_cs.c
+ * @author Antoine Albertelli
+ * @date 19th September 2009
+ * @todo Deplacer toutes les constantes comme TRACK_MM dans strat.c:initRobot().
+ * @todo ce fichier et son .h
 */
 
 #ifndef CVRA_CS_H
@@ -16,26 +17,25 @@
 #include <control_system_manager.h>
 #include <pid.h>
 #include <quadramp.h>
-#include <blocking_detection_manager.h>
+//#include <blocking_detection_manager.h>
 
 #include <cvra_adc.h>
 
 #include <obstacle_avoidance.h>
 
 #include <cvra_bldc.h>
-#include "arm.h"
 #include "strat.h"
 #include "cvra_param_robot.h"
 
 
 
-/**Distance between wheels */
+/**Distance between wheels */ /** @todo : usefull ?? */
 #define TRACK_MM 271.8
 
 /** Wheel diameter */
 #define WHEEL_DIAM_MM 50.0
 
-/** Number of ipulsions on a rotation of the wheel */
+/** Number of impulsions on a rotation of the wheel */
 #define IMP_PER_TURN 32000.0
 
 /** Frequency of the regulation loop (in Hz) */
@@ -68,13 +68,13 @@ enum board_mode_t {
 
  */
 enum trajectory_type_t {
-    TRAJECTORY_TYPE_XY_ALL,						///< Chemin direct, en avant ou en arriere
-    TRAJECTORY_TYPE_XY_FORWARD,					///< Chemin direct, en avant
-    TRAJECTORY_TYPE_XY_BACKWARD,				///< Chemin direct, en arriere
-    TRAJECTORY_TYPE_ANGLE_ONLY,					///< Orientation vers un angle
-    TRAJECTORY_TYPE_DISTANCE_FORWARD_ONLY,		///< Marche avant
-    TRAJECTORY_TYPE_DISTANCE_BACKWARD_ONLY,		///< Marche arriere
-    TRAJECTORY_TYPE_XY_AVOID,					///< Trajectoire d'evitement, en marche avant
+    TRAJECTORY_TYPE_XY_ALL,                     ///< Chemin direct, en avant ou en arriere
+    TRAJECTORY_TYPE_XY_FORWARD,                 ///< Chemin direct, en avant
+    TRAJECTORY_TYPE_XY_BACKWARD,                ///< Chemin direct, en arriere
+    TRAJECTORY_TYPE_ANGLE_ONLY,                 ///< Orientation vers un angle
+    TRAJECTORY_TYPE_DISTANCE_FORWARD_ONLY,      ///< Marche avant
+    TRAJECTORY_TYPE_DISTANCE_BACKWARD_ONLY,     ///< Marche arriere
+    TRAJECTORY_TYPE_XY_AVOID,                   ///< Trajectoire d'evitement, en marche avant
 };
 
 /**
@@ -84,11 +84,11 @@ enum trajectory_type_t {
  group all vars in one place. It also serve as a namespace.
  */
 struct _rob {
-    uint8_t verbosity_level;				///< @deprecated Contient le niveau de debug du robot.
+    uint8_t verbosity_level;                ///< @deprecated Contient le niveau de debug du robot.
     
-    void * right_motor;                  	///< Adresse du module moteur droite
-    void * left_motor;                   	///< Adresse du module moteur gauche
-    cvra_adc_t analog_in;                	///< Instance de cvra_adc pour la carte analog in
+    void * right_motor;                     ///< Adresse du module moteur droite
+    void * left_motor;                      ///< Adresse du module moteur gauche
+    cvra_adc_t analog_in;                   ///< Instance de cvra_adc pour la carte analog in
     
     struct robot_system rs;                 ///< Robot system (angle & distance).
     struct robot_position pos;              ///< Position manager.
@@ -99,8 +99,9 @@ struct _rob {
     struct quadramp_filter angle_qr;        ///< Angle quadramp
     struct quadramp_filter distance_qr;     ///< Distance quadramps.
     struct trajectory traj;                 ///< Trivial trajectory manager.
-    struct blocking_detection angle_bd;     ///< Angle blocking detection manager.
-    struct blocking_detection distance_bd;  ///< Distance blocking detection manager.
+    // Sans balises on n'en a pas besoin
+    //struct blocking_detection angle_bd;     ///< Angle blocking detection manager.
+    //struct blocking_detection distance_bd;  ///< Distance blocking detection manager.
         
     enum board_mode_t mode;                 ///< The current board mode. @deprecated
  
@@ -111,10 +112,6 @@ struct _rob {
     uint8_t is_blocked:1;                   ///< =1 if the robot got blocked
     uint8_t avoiding_enabled:1;
     uint8_t askLog;
-    
-    arm_t left_arm;					///< Structure representant le bras gauche.
-    arm_t right_arm;					///< Structure representant le bras droit. 
-
 };
 
 
