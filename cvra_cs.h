@@ -42,22 +42,6 @@
 /** Frequency of the regulation loop (in Hz) */
 #define ASSERV_FREQUENCY 100
 
-///**
- //@brief Trajectory type
- 
- //This enum is used to store informations about the trajectory type, like "x,y 
- //forward only" or "angle only", etc...
-
- //*/
-//enum trajectory_type_t {
-    //TRAJECTORY_TYPE_XY_ALL,                     ///< Chemin direct, en avant ou en arriere
-    //TRAJECTORY_TYPE_XY_FORWARD,                 ///< Chemin direct, en avant
-    //TRAJECTORY_TYPE_XY_BACKWARD,                ///< Chemin direct, en arriere
-    //TRAJECTORY_TYPE_ANGLE_ONLY,                 ///< Orientation vers un angle
-    //TRAJECTORY_TYPE_DISTANCE_FORWARD_ONLY,      ///< Marche avant
-    //TRAJECTORY_TYPE_DISTANCE_BACKWARD_ONLY,     ///< Marche arriere
-    //TRAJECTORY_TYPE_XY_AVOID,                   ///< Trajectoire d'evitement, en marche avant
-//};
 
 /**
  @brief contains all global vars.

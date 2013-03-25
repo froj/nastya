@@ -31,11 +31,19 @@
 //                       *********************************************
 //                                         Dimensions
 //                       *********************************************
-//#define ROBOT_ECART_ROUE 275.7880216836 //275.1716841994 // 276.8397370540  276
-//#define ROBOT_INC_MM 162.73750397497828327709 //162.487138584247  //Calculé: 162.9746
+#define ROBOT_RADIUS_WHEEL0_MM  37
+#define ROBOT_RADIUS_WHEEL1_MM  37
+#define ROBOT_RADIUS_WHEEL2_MM  37
 
-//#define ROBOT_WHEEL_L_CORR 1.00107255365769 //1.00172702807009
-//#define ROBOT_WHEEL_R_CORR -0.998927446342313 //-0.99827297192991
+#define ROBOT_DISTANCE_WHEEL0_MM 77.75
+#define ROBOT_DISTANCE_WHEEL1_MM 77.75
+#define ROBOT_DISTANCE_WHEEL2_MM 77.75
+
+#define ROBOT_BETA_WHEEL0_RAD  60*M_PI/180 
+#define ROBOT_BETA_WHEEL1_RAD  180*M_PI/180 
+#define ROBOT_BETA_WHEEL2_RAD  300*M_PI/180 
+
+#define ROBOT_ENCODER_RESOLUTION 16384
 
 //                       *********************************************
 //                                             Blocage
@@ -58,6 +66,6 @@
 //#define NB_LINGOT 7
 //#define NB_POS_PRISE 4
 
-//#define TABLE_X_MM 3000
-//#define TABLE_Y_MM 2000
+#define TABLE_X_MM 3000
+#define TABLE_Y_MM 2000
 #endif /* CVRA_PARAM_ROBOT_H_ */
