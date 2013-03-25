@@ -178,7 +178,10 @@ static void dump_error(void) {
     static int time = 0;
     if (robot.error_dump_enabled) {
         if (time % 10)
-            fprintf(stderr, "%d;%d;%d\n", time, (int)cs_get_error(&robot.angle_cs), (int)cs_get_error(&robot.distance_cs));
+            fprintf(stderr, "%d;%d;%d\n", time,
+                    (int)cs_get_error(&robot.angle_cs),
+                    (int)cs_get_error(&robot.omega_cs),
+                    (int)cs_get_error(&robot.speed_cs));
         time++;
     } else {
         time = 0;
