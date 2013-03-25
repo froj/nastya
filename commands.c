@@ -14,14 +14,13 @@ void cmd_reset(void) {
     reset();
 }
 
+
 /** starts the strategy. */
 void cmd_start() {
     printf("Press a key to start the robot.\n");
     getchar();
     printf("Match done. Hope you enjoyed it !\n");
 }
-
-
 
 /** An array of all the commands. */
 command_t commands_list[] = {

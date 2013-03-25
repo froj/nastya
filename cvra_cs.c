@@ -18,9 +18,9 @@
 
 #include <aversive.h>
 
-#include <2wheels/trajectory_manager.h>
-#include <2wheels/robot_system.h>
-#include <2wheels/position_manager.h>
+#include <holonomic/trajectory_manager.h>
+#include <holonomic/robot_system.h>
+#include <holonomic/position_manager.h>
 #include <control_system_manager.h>
 #include <pid.h>
 #include <quadramp.h>
@@ -42,171 +42,162 @@ struct _rob robot;
 
 
 void cvra_cs_init(void) {
-	robot.mode = BOARD_MODE_ANGLE_DISTANCE;
-	/*--------------------------------------------------------------------------*/
-	/*                                Motor                                     */
-	/*--------------------------------------------------------------------------*/
-    /*XXX TODO */
+    /*--------------------------------------------------------------------------*/
+    /*                                Motor                                     */
+    /*--------------------------------------------------------------------------*/
+    robot.motor0 = MOTOR0_ADRESS;
+    robot.motor1 = MOTOR1_ADRESS;
+    robot.motor2 = MOTOR2_ADRESS;
+    
+    //cvra_bldc_reset(robot.motor0);
+    //cvra_bldc_reset(robot.motor1);
+    //cvra_bldc_reset(robot.motor2);
 
-	/****************************************************************************/
-	/*                             Robot system                                 */
-	/****************************************************************************/
-	rs_init(&robot.rs);
-	rs_set_flags(&robot.rs, RS_USE_EXT);
+    /****************************************************************************/
+    /*                             Robot system                                 */
+    /****************************************************************************/
+    rsh_init(&robot.rs);
 
-	/*************************f***************************************************/
-	/*                         Encoders & PWMs                                  */
-	/****************************************************************************/
-	/*rs_set_left_pwm(&robot.rs, cvra_bldc_set_pwm, robot.left_motor);
-	rs_set_right_pwm(&robot.rs, cvra_bldc_set_pwm_negative, robot.right_motor);
-	rs_set_left_ext_encoder(&robot.rs, cvra_bldc_get_encoder, robot.left_motor,
-			ROBOT_WHEEL_L_CORR);	// CALIBRATION : Changer ce coefficient a 1 si le codeur va dans le mauvais sens
-	rs_set_right_ext_encoder(&robot.rs, cvra_bldc_get_encoder, robot.right_motor,
-			ROBOT_WHEEL_R_CORR); // CALIBRATION : idem*/
+    /*************************f***************************************************/
+    /*                         Encoders & PWMs                                  */
+    /****************************************************************************/
+    /** @todo (avec position manager) */
+    //rs_set_left_pwm(&robot.rs, cvra_bldc_set_pwm, robot.left_motor);
+    //rs_set_right_pwm(&robot.rs, cvra_bldc_set_pwm_negative, robot.right_motor);
+    //rs_set_left_ext_encoder(&robot.rs, cvra_bldc_get_encoder, robot.left_motor,
+            //ROBOT_WHEEL_L_CORR);    // CALIBRATION : Changer ce coefficient a 1 si le codeur va dans le mauvais sens
+    //rs_set_right_ext_encoder(&robot.rs, cvra_bldc_get_encoder, robot.right_motor,
+            //ROBOT_WHEEL_R_CORR); // CALIBRATION : idem
 
-	/****************************************************************************/
-	/*                          Position manager                                */
-	/****************************************************************************/
+    /****************************************************************************/
+    /*                          Position manager                                */
+    /****************************************************************************/
 
-	position_init(&robot.pos);
-	/* Links the position manager to the robot system. */
-	position_set_related_robot_system(&robot.pos, &robot.rs);
-	position_set_physical_params(&robot.pos, ROBOT_ECART_ROUE, // Distance between encoding wheels. // 276
-			ROBOT_INC_MM); // imp / mm  //
+    holonomic_position_init(&robot.pos); /** todo */
+    /* Links the position manager to the robot system. */
+    //position_set_related_robot_system(&robot.pos, &robot.rs); 
+    //position_set_physical_params(&robot.pos, ROBOT_ECART_ROUE, // Distance between encoding wheels. // 276
+            //ROBOT_INC_MM); // imp / mm  //
 
-	/****************************************************************************/
-	/*                       Regulation de l'angle                              */
-	/****************************************************************************/
+    /****************************************************************************/
+    /*                         Regulation Wheel-by-Wheel                        */
+    /****************************************************************************/
 
-	pid_init(&robot.angle_pid);
-	pid_set_gains(&robot.angle_pid, ROBOT_PID_ANGL_P, ROBOT_PID_ANGL_I, ROBOT_PID_ANGL_D);		// CALIBRATION : Mettre les gains < 0 si le moteur compense dans le mauvais sens
-	pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
-	pid_set_out_shift(&robot.angle_pid, 10);
+    pid_init(&robot.wheel0_pid);
+    pid_init(&robot.wheel1_pid);
+    pid_init(&robot.wheel2_pid);
+    
+    // CALIBRATION : Mettre les gains < 0 si le moteur compense dans le mauvais sens
+    pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I,ROBOT_PID_WHEEL0_D);
+    pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
+    pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
+    
+    /** @todo : demander Ã  Antoine*/
+    //pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
+    //pid_set_out_shift(&robot.angle_pid, 10);
+    
+    cs_set_correct_filter(&robot.wheel0_cs, pid_do_filter, &robot.wheel0_pid);
+    cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
+    cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
+    
+    /** @todo */
+    //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+    //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+    //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+    
+    //cs_set_process_out(&robot.distance_cs, rs_get_ext_distance, &robot.rs);
+    //cs_set_consign(&robot.distance_cs, 0);
 
-	quadramp_init(&robot.angle_qr);
+    
+    
+    /****************************************************************************/
+    /**      CS pour les macros-variables (seulement les rampes, pas de PID)    */
+    /****************************************************************************/
+    
+    /******************************** ANGLE *************************************/
+    quadramp_init(&robot.angle_qr);
+    cs_init(&robot.angle_cs);
+    
+    cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr);
+    //cs_set_process_in(&robot.angle_cs, rsh_set_direction, &robot.rs);
+    //cs_set_process_out(&robot.angle_cs, holonomic_position_get_a_rad_double, &robot.pos);
+    cs_set_consign(&robot.angle_cs, 0);
+    
+    /******************************** OMEGA ************************************/
+    ramp_init(&robot.omega_r);
+    cs_init(&robot.omega_cs);
+    
+    cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
+    //cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
+    ///@todo : GETER LA VITEESSE ANGULAIRE IL FAUT UNE FONCTION 
+    //cs_set_process_out(&robot.omega_cs, holonomic_position, &robot.pos);
+    cs_set_consign(&robot.omega_cs, 0);
+    
+    /******************************** SPEED *************************************/
+    ramp_init(&robot.speed_r);
+    cs_init(&robot.omega_cs);
+    
+    cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
+    cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
+    ///@todo : GETER LA VITEESSE ANGULAIRE IL FAUT UNE FONCTION 
+    //cs_set_process_out(&robot.angle_cs, rs_get_ext_angle, &robot.rs);
+    cs_set_consign(&robot.speed_cs, 0);
 
-	cs_init(&robot.angle_cs); /* Initialise le control system. */
-	cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr); /* Met un filtre en acceleration. */
-	cs_set_correct_filter(&robot.angle_cs, pid_do_filter, &robot.angle_pid); /* Met le PID. */
-	cs_set_process_in(&robot.angle_cs, rs_set_angle, &robot.rs); /* Met la sortie sur le pwm virtuel de l'angle. */
-	cs_set_process_out(&robot.angle_cs, rs_get_ext_angle, &robot.rs); /* lecture codeur virtuel de l'angle */
-	cs_set_consign(&robot.angle_cs, 0); /* Met une consigne nulle. */
+    /****************************************************************************/
+    /*                           Trajectory Manager (Trivial)                   */
+    /****************************************************************************/
+    //trajectory_init(&robot.traj, ASSERV_FREQUENCY);
+    //trajectory_set_cs(&robot.traj, &robot.distance_cs, &robot.angle_cs);
+    //trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
+    //trajectory_set_speed(&robot.traj, 2400, 1200); /* distance, angle */
+    //trajectory_set_acc(&robot.traj, 40., 30.);
+    ///* distance window, angle window, angle start */
+    //trajectory_set_windows(&robot.traj, 30., 1.0, 20.); // Prod
 
-	/****************************************************************************/
-	/*                      Regulation de la distance                           */
-	/****************************************************************************/
+    //// Angle BDM
+    //bd_init(&robot.angle_bd, &robot.angle_cs);
+    //bd_set_thresholds(&robot.angle_bd, ROBOT_ANGLE_BD, 5);
 
-	pid_init(&robot.distance_pid); /* Initialise le PID. */
-	pid_set_gains(&robot.distance_pid, ROBOT_PID_DIST_P, ROBOT_PID_DIST_I, ROBOT_PID_DIST_D); /* Regles les gains du PID. */
-	pid_set_maximums(&robot.distance_pid, 0, 5000, 30000); /* pas de max sur l'entree, integral limite a 5000, sortie limitee a 4095 (PWM 12 bits). */
-	pid_set_out_shift(&robot.distance_pid, 10); /* Divise la sortie par 1024. */
+    //// Distance BDM
+    //bd_init(&robot.distance_bd, &robot.distance_cs);
+    //bd_set_thresholds(&robot.distance_bd, ROBOT_DIST_BD, 5);
 
-	quadramp_init(&robot.distance_qr); /* Demarre le filtre en acceleration. *//* set accel. */
+    //robot.is_aligning = 0;
 
-	cs_init(&robot.distance_cs); /* Initialise le control system. */
-	cs_set_consign_filter(&robot.distance_cs, quadramp_do_filter,
-			&robot.distance_qr); /* Met un filtre en acceleration. */
-	cs_set_correct_filter(&robot.distance_cs, pid_do_filter, &robot.distance_pid); /* Met le PID. */
-	cs_set_process_in(&robot.distance_cs, rs_set_distance, &robot.rs); /* Met la sortie sur le pwm virtuel de l'distance. */
-	cs_set_process_out(&robot.distance_cs, rs_get_ext_distance, &robot.rs); /* lecture codeur virtuel de l'distance */
-	cs_set_consign(&robot.distance_cs, 0);/* Met une consigne nulle. */
+    //// Initialisation dÃ©placement:
+    //position_set(&robot.pos, 0, 0, 0);
 
-	/****************************************************************************/
-	/*                           Trajectory Manager (Trivial)                   */
-	/****************************************************************************/
-	trajectory_init(&robot.traj, ASSERV_FREQUENCY);
-	trajectory_set_cs(&robot.traj, &robot.distance_cs, &robot.angle_cs);
-	trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
-	trajectory_set_speed(&robot.traj, 24, 12); /* distance, angle */
-	trajectory_set_acc(&robot.traj, 40., 30.);
-
-	trajectory_set_acc(&robot.traj, .4, 30);
-	/* distance window, angle window, angle start */
-	trajectory_set_windows(&robot.traj, 30., 1.0, 20.); // Prod
-
-	// Angle BDM
-	bd_init(&robot.angle_bd, &robot.angle_cs);
-	bd_set_thresholds(&robot.angle_bd, ROBOT_ANGLE_BD, 5);
-
-	// Distance BDM
-	bd_init(&robot.distance_bd, &robot.distance_cs);
-	bd_set_thresholds(&robot.distance_bd, ROBOT_DIST_BD, 5);
-
-	robot.is_aligning = 0;
-
-	// Initialisation déplacement:
-	position_set(&robot.pos, 0, 0, 0);
-
-	/* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
-	scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
-			/ ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
-}
-
-/**
- @brief Brings power back on after a blocking.
- 
- This functions resets the blocking detection systems, sets the robot on angle
- and distance mode and stops the current trajectory.
- */
-static void restart_power(__attribute__((unused)) void * dummy) {
-	bd_reset(&robot.angle_bd);
-	bd_reset(&robot.distance_bd);
-	robot.mode = BOARD_MODE_ANGLE_DISTANCE;
-	trajectory_hardstop(&robot.traj);
-	robot.is_blocked = 0;
+    ///* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
+    scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
+            / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
 }
 
 /** Logge l'erreur sur les differents regulateurs et l'affiche avec le temps. */
 static void dump_error(void) {
-	static int time = 0;
-	if (robot.error_dump_enabled) {
-		if (time % 10)
-			fprintf(stderr, "%d;%d;%d\n", time, (int)cs_get_error(&robot.angle_cs), (int)cs_get_error(&robot.distance_cs));
-		time++;
-	} else {
-		time = 0;
-	}
+    static int time = 0;
+    if (robot.error_dump_enabled) {
+        if (time % 10)
+            ///@todo : Afficher des trucs utiles
+            //fprintf(stderr, "%d;%d;%d\n", time,
+                    //(int)cs_get_error(&robot.angle_cs),
+                    //(int)cs_get_error(&robot.omega_cs),
+                    //(int)cs_get_error(&robot.speed_cs));
+        time++;
+    } else {
+        time = 0;
+    }
 }
 
 void cvra_cs_manage(__attribute__((unused)) void * dummy) {
-	NOTICE(ERROR_CS, __FUNCTION__);
+    NOTICE(ERROR_CS, __FUNCTION__);
 
-	/* Gestion de la position. */
-	rs_update(&robot.rs);
-	position_manage(&robot.pos);
+    /*Â Gestion de la position. */
+    rsh_update(&robot.rs);
+    holonomic_position_manage(&robot.pos);
 
-	/* Gestion de l'asservissement. */
-	if (robot.mode != BOARD_MODE_SET_PWM) {
-		if (robot.mode == BOARD_MODE_ANGLE_DISTANCE || robot.mode == BOARD_MODE_ANGLE_ONLY) {
-			cs_manage(&robot.angle_cs);
-		} else {
-			rs_set_angle(&robot.rs, 0); // Sets a null angle PWM
-		}
-
-		if (robot.mode == BOARD_MODE_ANGLE_DISTANCE || robot.mode == BOARD_MODE_DISTANCE_ONLY) {
-			cs_manage(&robot.distance_cs);
-		} else {
-			rs_set_distance(&robot.rs, 0); // Sets a distance angle PWM
-		}
-	}
-
-	/* Affichage des courbes d'asservissement. */
-	dump_error();
-
-#if 1
-	/* Gestion du blocage */
-	bd_manage(&robot.angle_bd);
-	bd_manage(&robot.distance_bd);
-
-	if ((bd_get(&robot.angle_bd) || bd_get(&robot.distance_bd))
-			&& !robot.is_aligning) {
-		// Stop la bete :)
-		printf("Choc roue %i,%i\r", bd_get(&robot.angle_bd),  bd_get(&robot.distance_bd));
-		trajectory_hardstop(&robot.traj);
-		robot.is_blocked = 1;
-		robot.mode = BOARD_MODE_FREE; /* On coupe tout. */
-		restart_power(NULL);
-
-	}
-#endif
+    /*Â Gestion de l'asservissement. */
+    cs_manage(&robot.angle_cs); /// @todo : wich one ?
+    
+    /*Â Affichage des courbes d'asservissement. */
+    dump_error();
 }
