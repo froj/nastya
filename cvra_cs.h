@@ -2,8 +2,6 @@
  * @file cvra_cs.c
  * @author Antoine Albertelli
  * @date 19th September 2009
- * @todo Deplacer toutes les constantes comme TRACK_MM dans strat.c:initRobot().
- * @todo ce fichier et son .h
 */
 
 #ifndef CVRA_CS_H
@@ -27,17 +25,6 @@
 #include <cvra_bldc.h>
 #include "strat.h"
 #include "cvra_param_robot.h"
-
-
-
-/**Distance between wheels */ /** @todo : usefull ?? */
-#define TRACK_MM 271.8
-
-/** Wheel diameter */
-#define WHEEL_DIAM_MM 50.0
-
-/** Number of impulsions on a rotation of the wheel */
-#define IMP_PER_TURN 32000.0
 
 /** Frequency of the regulation loop (in Hz) */
 #define ASSERV_FREQUENCY 100
@@ -90,7 +77,6 @@ struct _rob {
     uint8_t is_aligning:1;                  ///< =1 if the robot is aligning on border
     
     uint8_t error_dump_enabled:1;           ///< =1 if infos should be dumped
-    uint8_t is_blocked:1;                   ///< =1 if the robot got blocked
     uint8_t avoiding_enabled:1;
     uint8_t askLog;
 };
