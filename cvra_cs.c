@@ -42,16 +42,15 @@ struct _rob robot;
 
 
 void cvra_cs_init(void) {
-    /*--------------------------------------------------------------------------*/
+    /****************************************************************************/
     /*                                Motor                                     */
-    /*--------------------------------------------------------------------------*/
-    robot.motor0 = MOTOR0_ADRESS;
-    robot.motor1 = MOTOR1_ADRESS;
-    robot.motor2 = MOTOR2_ADRESS;
-    
-    //cvra_bldc_reset(robot.motor0);
-    //cvra_bldc_reset(robot.motor1);
-    //cvra_bldc_reset(robot.motor2);
+    /****************************************************************************/
+    int i;
+
+    for(i=0;i<6;i++) {
+        cvra_dc_set_encoder(HEXMOTORCONTROLLER_BASE, i, 0);
+        cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, i, 0);
+    }
 
     /****************************************************************************/
     /*                             Robot system                                 */
@@ -61,23 +60,12 @@ void cvra_cs_init(void) {
     /*************************f***************************************************/
     /*                         Encoders & PWMs                                  */
     /****************************************************************************/
-    /** @todo (avec position manager) */
-    //rs_set_left_pwm(&robot.rs, cvra_bldc_set_pwm, robot.left_motor);
-    //rs_set_right_pwm(&robot.rs, cvra_bldc_set_pwm_negative, robot.right_motor);
-    //rs_set_left_ext_encoder(&robot.rs, cvra_bldc_get_encoder, robot.left_motor,
-            //ROBOT_WHEEL_L_CORR);    // CALIBRATION : Changer ce coefficient a 1 si le codeur va dans le mauvais sens
-    //rs_set_right_ext_encoder(&robot.rs, cvra_bldc_get_encoder, robot.right_motor,
-            //ROBOT_WHEEL_R_CORR); // CALIBRATION : idem
+    //rs_set_left_pwm(&robot.rs, cvra_dc_set_pwm0, HEXMOTORCONTROLLER_BASE);
+    //rs_set_right_pwm(&robot.rs, cvra_dc_set_pwm5, HEXMOTORCONTROLLER_BASE);
+    
+    //rs_set_left_ext_encoder(&robot.rs, cvra_dc_get_encoder0, HEXMOTORCONTROLLER_BASE, 0.999981348555308);
+    //rs_set_right_ext_encoder(&robot.rs, cvra_dc_get_encoder5, HEXMOTORCONTROLLER_BASE, -1.00001865144469);
 
-    /****************************************************************************/
-    /*                          Position manager                                */
-    /****************************************************************************/
-
-    holonomic_position_init(&robot.pos); /** todo */
-    /* Links the position manager to the robot system. */
-    //position_set_related_robot_system(&robot.pos, &robot.rs); 
-    //position_set_physical_params(&robot.pos, ROBOT_ECART_ROUE, // Distance between encoding wheels. // 276
-            //ROBOT_INC_MM); // imp / mm  //
 
     /****************************************************************************/
     /*                         Regulation Wheel-by-Wheel                        */
@@ -96,14 +84,19 @@ void cvra_cs_init(void) {
     //pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
     //pid_set_out_shift(&robot.angle_pid, 10);
     
+    cs_init(&robot.wheel0_cs); 
+    cs_init(&robot.wheel1_cs); 
+    cs_init(&robot.wheel2_cs);
+    
     cs_set_correct_filter(&robot.wheel0_cs, pid_do_filter, &robot.wheel0_pid);
     cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
     cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
     
-    /** @todo */
-    //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
-    //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
-    //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+    //rsh_set_cs(struct robot_system_holonomic *rs, int index, struct cs *cs); 
+    
+    cs_set_process_in(&robot.wheel0_cs, cvra_dc_get_encoder, &robot.rs);
+    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
     
     //cs_set_process_out(&robot.distance_cs, rs_get_ext_distance, &robot.rs);
     //cs_set_consign(&robot.distance_cs, 0);
@@ -142,6 +135,16 @@ void cvra_cs_init(void) {
     ///@todo : GETER LA VITEESSE ANGULAIRE IL FAUT UNE FONCTION 
     //cs_set_process_out(&robot.angle_cs, rs_get_ext_angle, &robot.rs);
     cs_set_consign(&robot.speed_cs, 0);
+    
+    /****************************************************************************/
+    /*                          Position manager                                */
+    /****************************************************************************/
+
+    holonomic_position_init(&robot.pos); /** todo */
+    /* Links the position manager to the robot system. */
+    //position_set_related_robot_system(&robot.pos, &robot.rs); 
+    //position_set_physical_params(&robot.pos, ROBOT_ECART_ROUE, // Distance between encoding wheels. // 276
+            //ROBOT_INC_MM); // imp / mm  //
 
     /****************************************************************************/
     /*                           Trajectory Manager (Trivial)                   */
