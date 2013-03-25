@@ -92,16 +92,22 @@ void cvra_cs_init(void) {
     cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
     cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
     
-    //rsh_set_cs(struct robot_system_holonomic *rs, int index, struct cs *cs); 
+    /** @todo : quel pwm fait quoi ? */
+    cs_set_process_in(&robot.wheel0_cs, cvra_dc_set_pwm4, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel1_cs, cvra_dc_set_pwm3, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel2_cs, cvra_dc_set_pwm5, HEXMOTORCONTROLLER_BASE);
     
-    cs_set_process_in(&robot.wheel0_cs, cvra_dc_get_encoder, &robot.rs);
-    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
-    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+    cs_set_process_out(&robot.wheel0_cs, cvra_dc_get_encoder4, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel1_cs, cvra_dc_get_encoder3, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel2_cs, cvra_dc_get_encoder5, HEXMOTORCONTROLLER_BASE);
     
-    //cs_set_process_out(&robot.distance_cs, rs_get_ext_distance, &robot.rs);
-    //cs_set_consign(&robot.distance_cs, 0);
-
+    //cs_set_consign(&robot.wheel0_cs, 0);
+    //cs_set_consign(&robot.wheel1_cs, 0);
+    //cs_set_consign(&robot.wheel2_cs, 0);
     
+    rsh_set_cs(&robot.rs, 0 , &robot.wheel0_cs);
+    rsh_set_cs(&robot.rs, 1 , &robot.wheel1_cs);
+    rsh_set_cs(&robot.rs, 2 , &robot.wheel2_cs);
     
     /****************************************************************************/
     /**      CS pour les macros-variables (seulement les rampes, pas de PID)    */
