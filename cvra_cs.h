@@ -19,6 +19,7 @@
 //#include <blocking_detection_manager.h>
 
 #include <cvra_adc.h>
+#include <cvra_dc.h>
 
 #include <obstacle_avoidance.h>
 

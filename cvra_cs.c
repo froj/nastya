@@ -71,35 +71,35 @@ void cvra_cs_init(void) {
     /*                         Regulation Wheel-by-Wheel                        */
     /****************************************************************************/
 
-    pid_init(&robot.wheel0_pid);
-    pid_init(&robot.wheel1_pid);
-    pid_init(&robot.wheel2_pid);
-    
-    // CALIBRATION : Mettre les gains < 0 si le moteur compense dans le mauvais sens
-    pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I,ROBOT_PID_WHEEL0_D);
-    pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
-    pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
-    
-    /** @todo : demander à Antoine*/
-    //pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
-    //pid_set_out_shift(&robot.angle_pid, 10);
-    
-    cs_init(&robot.wheel0_cs); 
-    cs_init(&robot.wheel1_cs); 
-    cs_init(&robot.wheel2_cs);
-    
-    cs_set_correct_filter(&robot.wheel0_cs, pid_do_filter, &robot.wheel0_pid);
-    cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
-    cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
-    
-    //rsh_set_cs(struct robot_system_holonomic *rs, int index, struct cs *cs); 
-    
-    cs_set_process_in(&robot.wheel0_cs, cvra_dc_get_encoder, &robot.rs);
-    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
-    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
-    
-    //cs_set_process_out(&robot.distance_cs, rs_get_ext_distance, &robot.rs);
-    //cs_set_consign(&robot.distance_cs, 0);
+//    pid_init(&robot.wheel0_pid);
+//    pid_init(&robot.wheel1_pid);
+//    pid_init(&robot.wheel2_pid);
+//    
+//    // CALIBRATION : Mettre les gains < 0 si le moteur compense dans le mauvais sens
+//    pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I,ROBOT_PID_WHEEL0_D);
+//    pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
+//    pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
+//    
+//    /** @todo : demander à Antoine*/
+//    //pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
+//    //pid_set_out_shift(&robot.angle_pid, 10);
+//    
+//    cs_init(&robot.wheel0_cs); 
+//    cs_init(&robot.wheel1_cs); 
+//    cs_init(&robot.wheel2_cs);
+//    
+//    cs_set_correct_filter(&robot.wheel0_cs, pid_do_filter, &robot.wheel0_pid);
+//    cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
+//    cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
+//    
+//    //rsh_set_cs(struct robot_system_holonomic *rs, int index, struct cs *cs); 
+//    
+//    cs_set_process_in(&robot.wheel0_cs, cvra_dc_get_encoder, &robot.rs);
+//    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+//    cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
+//    
+//    //cs_set_process_out(&robot.distance_cs, rs_get_ext_distance, &robot.rs);
+//    //cs_set_consign(&robot.distance_cs, 0);
 
     
     
@@ -141,6 +141,38 @@ void cvra_cs_init(void) {
     /****************************************************************************/
 
     holonomic_position_init(&robot.pos); /** todo */
+
+    float beta[] = {ROBOT_BETA_WHEEL0_RAD,
+                    ROBOT_BETA_WHEEL1_RAD,
+                    ROBOT_BETA_WHEEL2_RAD};
+
+    float wheel_radius[] = {ROBOT_RADIUS_WHEEL0_MM,
+                            ROBOT_RADIUS_WHEEL1_MM,
+                            ROBOT_RADIUS_WHEEL2_MM};
+
+    float wheel_distance[] = {ROBOT_DISTANCE_WHEEL0_MM,
+                              ROBOT_DISTANCE_WHEEL1_MM,
+                              ROBOT_DISTANCE_WHEEL2_MM};
+
+    holonomic_position_set_physical_params(
+            &robot.pos,
+            beta,
+            wheel_radius,
+            wheel_distance,
+            ROBOT_ENCODER_RESOLUTION);
+
+    holonomic_position_set_update_frequency(&robot.pos, ASSERV_FREQUENCY);
+
+    int32_t (*motor_encoder[])(void *) = {cvra_dc_get_encoder4,
+                                          cvra_dc_get_encoder3,
+                                          cvra_dc_get_encoder5};
+
+    int32_t motor_encoder_param[] = {HEXMOTORCONTROLLER_BASE,
+                                     HEXMOTORCONTROLLER_BASE,
+                                     HEXMOTORCONTROLLER_BASE};
+
+    holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
+
     /* Links the position manager to the robot system. */
     //position_set_related_robot_system(&robot.pos, &robot.rs); 
     //position_set_physical_params(&robot.pos, ROBOT_ECART_ROUE, // Distance between encoding wheels. // 276
