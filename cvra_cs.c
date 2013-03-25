@@ -147,6 +147,38 @@ void cvra_cs_init(void) {
     /****************************************************************************/
 
     holonomic_position_init(&robot.pos); /** todo */
+
+    float beta[] = {ROBOT_BETA_WHEEL0_RAD,
+                    ROBOT_BETA_WHEEL1_RAD,
+                    ROBOT_BETA_WHEEL2_RAD};
+
+    float wheel_radius[] = {ROBOT_RADIUS_WHEEL0_MM,
+                            ROBOT_RADIUS_WHEEL1_MM,
+                            ROBOT_RADIUS_WHEEL2_MM};
+
+    float wheel_distance[] = {ROBOT_DISTANCE_WHEEL0_MM,
+                              ROBOT_DISTANCE_WHEEL1_MM,
+                              ROBOT_DISTANCE_WHEEL2_MM};
+
+    holonomic_position_set_physical_params(
+            &robot.pos,
+            beta,
+            wheel_radius,
+            wheel_distance,
+            ROBOT_ENCODER_RESOLUTION);
+
+    holonomic_position_set_update_frequency(&robot.pos, ASSERV_FREQUENCY);
+
+    int32_t (*motor_encoder[])(void *) = {cvra_dc_get_encoder4,
+                                          cvra_dc_get_encoder3,
+                                          cvra_dc_get_encoder5};
+
+    int32_t motor_encoder_param[] = {HEXMOTORCONTROLLER_BASE,
+                                     HEXMOTORCONTROLLER_BASE,
+                                     HEXMOTORCONTROLLER_BASE};
+
+    holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
+
     /* Links the position manager to the robot system. */
     //position_set_related_robot_system(&robot.pos, &robot.rs); 
     //position_set_physical_params(&robot.pos, ROBOT_ECART_ROUE, // Distance between encoding wheels. // 276

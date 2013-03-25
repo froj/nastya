@@ -25,6 +25,7 @@
 #define MOTOR2_ADRESS       (int *)(0x0)
 
 #else
+
 #define HEXMOTORCONTROLLER_BASE (int *)(0x0)
 #define MOTOR0_ADRESS       (int *)(0x0)
 #define MOTOR1_ADRESS       (int *)(0x0)
@@ -34,4 +35,7 @@
 #define DIGITAL_OUTPUT0     (int *)(0x0)
 
 #endif
+
+
+
 #endif

@@ -20,6 +20,7 @@
 
 #include <cvra_adc.h>
 #include <cvra_dc.h>
+
 #include <obstacle_avoidance.h>
 
 #include "strat.h"
