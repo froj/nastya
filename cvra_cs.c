@@ -137,8 +137,8 @@ void cvra_cs_init(void) {
     ramp_init(&robot.speed_r);
     cs_init(&robot.omega_cs);
     
-    cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
-    cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
+    //cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
+    //cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
     ///@todo : GETER LA VITEESSE ANGULAIRE IL FAUT UNE FONCTION 
     //cs_set_process_out(&robot.angle_cs, rs_get_ext_angle, &robot.rs);
     cs_set_consign(&robot.speed_cs, 0);
