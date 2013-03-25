@@ -101,7 +101,7 @@ void cvra_cs_init(void) {
     cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
     cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
     
-    /**@todo*/
+    /** @todo */
     //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
     //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
     //cs_set_process_in(&robot.wheel0_cs, rs_set_distance, &robot.rs);
@@ -178,6 +178,7 @@ static void dump_error(void) {
     static int time = 0;
     if (robot.error_dump_enabled) {
         if (time % 10)
+            ///@todo : Afficher des trucs utiles
             fprintf(stderr, "%d;%d;%d\n", time,
                     (int)cs_get_error(&robot.angle_cs),
                     (int)cs_get_error(&robot.omega_cs),

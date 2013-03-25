@@ -42,7 +42,6 @@
 /** Frequency of the regulation loop (in Hz) */
 #define ASSERV_FREQUENCY 100
 
-
 /**
  @brief contains all global vars.
  
@@ -53,9 +52,10 @@ struct _rob {
     uint8_t verbosity_level;                ///< @deprecated Contient le niveau de debug du robot.
     
     /** Adresse des modules moteurs */
-    void * motor0;
-    void * motor1;
-    void * motor2;
+    void *motor0;
+    void *motor1;
+    void *motor2;
+    
     cvra_adc_t analog_in;                   ///< Instance de cvra_adc pour la carte analog in
     
     struct robot_system_holonomic rs;       ///< Holonomic robot system

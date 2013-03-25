@@ -107,7 +107,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
     /**FIXME @todo Est-ce qu'on a encore besoin de fast_math_init() dans la version finale ? */
     fast_math_init();
 
-    /* Step 3 : Demare le scheduler pour le multitache. */
+    /* Step 3 : Demarre le scheduler pour le multitache. */
     scheduler_init(); 
 
 #ifdef COMPILE_ON_ROBOT
@@ -117,18 +117,13 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
 #endif
 
     /* Step 4 : Init les IO. 
-     * Init de l'ADC et planification des updates des capteurs*/
-    cvra_board_init(); /** @todo : c'est bien le bon harware.c qui est appelé */
+     * Init de l'ADC et planification des updates des capteurs */
+    //cvra_board_init(); /** @todo : c'est bien le bon harware.c qui est appelé */
     
-    /* Step 5 : Init la regulation et l'odometrie. */
+    /* Step 5 : Init la regulation et l'odometrie (+ planification). */
     cvra_cs_init();
-    
 
-    /* Step 7 : Init tout les parametres propres a une certaine edition ainsi que l'evitement d'obstacle. */
-    /** FIXME @todo Init des parametres robot a refaire au propre. */
-
-
-    /* Step 8 : Demarre la comm avec le PC, pas de retour de cette fonction. */
+    /* Step 6 : Demarre la comm avec le PC, pas de retour de cette fonction. */
     commandline_init();
     for(;;) commandline_input_char(getchar());
         

@@ -60,12 +60,12 @@ void cvra_board_init(void) {
 #endif
     /* On manage les capteurs toutes les 5 ms. */
     scheduler_add_periodical_event_priority(cvra_board_manage_sensors,NULL,5000/SCHEDULER_UNIT,130);
-    cvra_board_manage_outputs();
+    //cvra_board_manage_outputs();
 }
 
 
 void cvra_board_manage_sensors(__attribute__((unused)) void * dummy) {
-    cvra_adc_start_scan(&robot.analog_in); /** @todo : le robot.analog_in */
+    cvra_adc_start_scan(&robot.analog_in);
 }
 
 void cvra_get_avoiding_sensors(int *l, int *r) {
