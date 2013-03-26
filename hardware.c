@@ -72,6 +72,9 @@ void cvra_board_manage_sensors(__attribute__((unused)) void * dummy) {
 }
 
 void cvra_get_avoiding_sensors(int *l, int *r) {
+    //TODO : delete. this is only to eliminate warnings.
+    (void*)l;
+    (void*)r;
     /* C'est branche sur un analog in => seuillage. la val est sur 10
      * bits donc sur 1024. */
     /* Le capteur gauche est sur le port analogique 3. */

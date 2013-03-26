@@ -29,14 +29,19 @@ void strat_begin(void) {
 }
 
 void strat_autopos(int16_t x, int16_t y, int16_t a, int16_t epaisseurRobot) {
-
+    (void)x;
+    (void)y;
+    (void)a;
+    (void)epaisseurRobot;
 }
 
 
 int test_traj_end(int why) {
-
+    (void)why;
+    return 0;
 }
 
 int wait_traj_end(int why) {
-
+    (void)why;  
+    return 0;
 }

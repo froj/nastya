@@ -45,9 +45,10 @@ void cvra_cs_init(void) {
     /****************************************************************************/
     /*                                Motor                                     */
     /****************************************************************************/
-    int i;
 
 #ifdef COMPILE_ON_ROBOT
+    int i;
+
     for(i=0;i<6;i++) {
         cvra_dc_set_encoder(HEXMOTORCONTROLLER_BASE, i, 0);
         cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, i, 0);
@@ -167,7 +168,7 @@ void cvra_cs_init(void) {
                                           cvra_dc_get_encoder3,
                                           cvra_dc_get_encoder5};
 
-    int32_t motor_encoder_param[] = {HEXMOTORCONTROLLER_BASE,
+    void* motor_encoder_param[] = {HEXMOTORCONTROLLER_BASE,
                                      HEXMOTORCONTROLLER_BASE,
                                      HEXMOTORCONTROLLER_BASE};
 
