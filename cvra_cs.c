@@ -150,33 +150,39 @@ void cvra_cs_init(void) {
     quadramp_init(&robot.angle_qr);
     cs_init(&robot.angle_cs);
     
+    quadramp_set_2nd_order_vars(&robot.angle_qr,100,100);
+    quadramp_set_1st_order_vars(&robot.angle_qr,100,100);
+    
     cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr);
     cs_set_process_in(&robot.angle_cs, rsh_set_direction_int, &robot.rs);
     cs_set_process_out(&robot.angle_cs, holonomic_position_get_a_deg_s32, &robot.pos);
     cs_set_consign(&robot.angle_cs, 0);
     
-    /******************************** OMEGA ************************************/
+    ///******************************** OMEGA ************************************/
     ramp_init(&robot.omega_r);
     cs_init(&robot.omega_cs);
     
-    //cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
-    //cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
-    //cs_set_process_out(&robot.omega_cs, holonomic_position, &robot.pos);
-    //cs_set_consign(&robot.omega_cs, 0);
+    ramp_set_vars(&robot.omega_r,100,100); /**@todo : -100 ou 100 come neg_var */
     
-    /******************************** SPEED *************************************/
+    cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
+    cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
+    cs_set_process_out(&robot.omega_cs, holonomic_position_get_rotation_speed_int, &robot.pos);
+    cs_set_consign(&robot.omega_cs, 0);
+    
+    ///******************************** SPEED *************************************/
     ramp_init(&robot.speed_r);
     cs_init(&robot.omega_cs);
     
-    //cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
-    //cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
-    ///@todo : GETER LA VITEESSE ANGULAIRE IL FAUT UNE FONCTION 
-    //cs_set_process_out(&robot.angle_cs, rs_get_ext_angle, &robot.rs);
+    ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var */
+    
+    cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
+    cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
+    cs_set_process_out(&robot.speed_cs, holonomic_position_get_translation_speed_int, &robot.pos);
     cs_set_consign(&robot.speed_cs, 0);
 
-    /****************************************************************************/
-    /*                           Trajectory Manager (Trivial)                   */
-    /****************************************************************************/
+    ///****************************************************************************/
+    ///*                           Trajectory Manager (Trivial)                   */
+    ///****************************************************************************/
     holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
     holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
     //trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);

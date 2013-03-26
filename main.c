@@ -113,7 +113,6 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
 #ifdef COMPILE_ON_ROBOT
     /* Step 3 (suite) : Si on est sur le robot on inscrit le tick dans la table des interrupts. */
     alt_ic_isr_register(0, TICK_IRQ, main_timer_interrupt, NULL, 0);
-    sei(); /** FIXME @todo sei() Necessaire ? */
 #endif
 
     /* Step 4 : Init les IO. 

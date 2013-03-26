@@ -59,7 +59,7 @@ void cvra_set_uart_speed(int32_t *uart_adress, int baudrate) {
 void cvra_board_init(void) {
     /* Init de l'ADC */
 #ifdef COMPILE_ON_ROBOT
-    cvra_adc_init(&robot.analog_in, ANALOG_SPI_ADRESS, ANALOGIN_IRQ);
+//    cvra_adc_init(&robot.analog_in, ANALOG_SPI_ADRESS, ANALOGIN_IRQ);
 #endif
     /* On manage les capteurs toutes les 5 ms. */
     scheduler_add_periodical_event_priority(cvra_board_manage_sensors,NULL,5000/SCHEDULER_UNIT,130);

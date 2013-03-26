@@ -7,19 +7,10 @@
 
 struct strat_info strat;
 
-/** Increments the match timer, called every second. */
-static void increment_timer(__attribute__((unused))void *data) {
-    strat.time++;
-}
-
-/** @brief Take the first two glasses.
- *
- * This function takes the first two glasses on the correct side.
- * @todo Test the starting coordinates.
- */
-static void strat_do_first_glasses(void) {
-    DEBUG(E_STRAT, "Doing first glasses."); 
-}
+///** Increments the match timer, called every second. */
+//static void increment_timer(__attribute__((unused))void *data) {
+    //strat.time++;
+//}
 
 void strat_set_objects(void) {
 }
