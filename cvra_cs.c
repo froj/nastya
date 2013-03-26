@@ -57,16 +57,8 @@ void cvra_cs_init(void) {
     /****************************************************************************/
     /*                             Robot system                                 */
     /****************************************************************************/
+    //TODO
     rsh_init(&robot.rs);
-
-    /*************************f***************************************************/
-    /*                         Encoders & PWMs                                  */
-    /****************************************************************************/
-    //rs_set_left_pwm(&robot.rs, cvra_dc_set_pwm0, HEXMOTORCONTROLLER_BASE);
-    //rs_set_right_pwm(&robot.rs, cvra_dc_set_pwm5, HEXMOTORCONTROLLER_BASE);
-    
-    //rs_set_left_ext_encoder(&robot.rs, cvra_dc_get_encoder0, HEXMOTORCONTROLLER_BASE, 0.999981348555308);
-    //rs_set_right_ext_encoder(&robot.rs, cvra_dc_get_encoder5, HEXMOTORCONTROLLER_BASE, -1.00001865144469);
 
 
     /****************************************************************************/
@@ -148,7 +140,7 @@ void cvra_cs_init(void) {
     /*                          Position manager                                */
     /****************************************************************************/
 
-    holonomic_position_init(&robot.pos); /** todo */
+    holonomic_position_init(&robot.pos);
 
     float beta[] = {ROBOT_BETA_WHEEL0_RAD,
                     ROBOT_BETA_WHEEL1_RAD,
@@ -181,10 +173,6 @@ void cvra_cs_init(void) {
 
     holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
 
-    /* Links the position manager to the robot system. */
-    //position_set_related_robot_system(&robot.pos, &robot.rs); 
-    //position_set_physical_params(&robot.pos, ROBOT_ECART_ROUE, // Distance between encoding wheels. // 276
-            //ROBOT_INC_MM); // imp / mm  //
 
     /****************************************************************************/
     /*                           Trajectory Manager (Trivial)                   */
