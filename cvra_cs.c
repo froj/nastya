@@ -203,7 +203,13 @@ void cvra_cs_init(void) {
 
     //// Initialisation déplacement:
     //position_set(&robot.pos, 0, 0, 0);
-
+    
+    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 0, 100);
+    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 1, 100);
+    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 2, 100);
+    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 3, 100);
+    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 4, 100);
+    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 5, 100);
     ///* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
@@ -213,7 +219,7 @@ void cvra_cs_init(void) {
 static void dump_error(void) {
     static int time = 0;
     if (robot.error_dump_enabled) {
-        if (time % 10)
+       // if (time % 10)
             ///@todo : Afficher des trucs utiles
             //fprintf(stderr, "%d;%d;%d\n", time,
                     //(int)cs_get_error(&robot.angle_cs),
@@ -233,7 +239,7 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     holonomic_position_manage(&robot.pos);
 
     /* Gestion de l'asservissement. */
-    cs_manage(&robot.angle_cs); /// @todo : wich one ?
+    //cs_manage(&robot.angle_cs); /// @todo : wich one ?
     
     /* Affichage des courbes d'asservissement. */
     dump_error();
