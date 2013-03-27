@@ -103,13 +103,18 @@ void cvra_cs_init(void) {
     cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
     cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
     
+
+#ifdef COMPILE_ON_ROBOT
+
     cs_set_process_in(&robot.wheel0_cs, cvra_dc_set_pwm0, HEXMOTORCONTROLLER_BASE);
     cs_set_process_in(&robot.wheel1_cs, cvra_dc_set_pwm1, HEXMOTORCONTROLLER_BASE);
     cs_set_process_in(&robot.wheel2_cs, cvra_dc_set_pwm2, HEXMOTORCONTROLLER_BASE);
     
-    cs_set_process_out(&robot.wheel0_cs, cvra_get_encoder0, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_out(&robot.wheel1_cs, cvra_get_encoder1, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_out(&robot.wheel2_cs, cvra_get_encoder2, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel0_cs, cvra_dc_get_encoder4, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel1_cs, cvra_dc_get_encoder3, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel2_cs, cvra_dc_get_encoder5, HEXMOTORCONTROLLER_BASE);
+#endif
+
     
     cs_set_consign(&robot.wheel0_cs, 1000);
     cs_set_consign(&robot.wheel1_cs, 1000);
@@ -227,6 +232,7 @@ void cvra_cs_init(void) {
 
     //// Initialisation déplacement:
     //holonomic_position_set(&robot.pos, 0, 0, 0);
+
 
     /////* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     //scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
