@@ -35,12 +35,17 @@ void cmd_pwm(int argc, char **argv) {
 }
 
 /** Gets the encoder values. */
-void cmd_encoders(void) {
+void cmd_encoders(int argc, char **argv) {
 #ifdef COMPILE_ON_ROBOT
     int i;
     for(i=0;i<6;i++)
+        if(strcmp("reset", argv[1])){
+            cvra_dc_set_encoder(HEXMOTORCONTROLLER_BASE, i);
+        }
         printf("%d;", cvra_dc_get_encoder(HEXMOTORCONTROLLER_BASE, i));
 #else
+    (void)argc;
+    (void)argv;
     printf("Not on robot, bitch.\n");
 #endif
     printf("\n");
@@ -85,6 +90,19 @@ void cmd_pid(int argc, char **argv) {
     }
 }
 
+/** Set or get the position */
+void cmd_position(int argc, char **argv){
+    if(argc == 1){
+        printf("x: %lf; y: %lf; a: %d\n", holonomic_position_get_x_double(&robot.pos), 
+                                          holonomic_position_get_y_double(&robot.pos),
+                                          holonomic_position_get_a_deg_s16(&robot.pos));
+    }else{
+        holonomic_position_set_x_s16(&robot.pos, (int16_t)atoi(argv[1]));
+        holonomic_position_set_y_s16(&robot.pos, (int16_t)atoi(argv[2]));
+        holonomic_position_set_a_s16(&robot.pos, (int16_t)atoi(argv[3]));
+    }
+}
+
 /** Lists all available commands. */
 void cmd_help(void) {
     int i;
@@ -105,6 +123,7 @@ command_t commands_list[] = {
     COMMAND("pid", cmd_pid), 
     COMMAND("pwm", cmd_pwm),
     COMMAND("encoders", cmd_encoders),
+    COMMAND("pos", cmd_position),
     COMMAND("help", cmd_help),
     COMMAND("none",NULL), /* must be last. */
 };
