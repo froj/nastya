@@ -40,6 +40,19 @@
 
 struct _rob robot;
 
+/** Limite PWM = + ou - 475 */
+
+int32_t cvra_get_encoder0(void *device) {
+    return cvra_dc_get_encoder(device, 0);
+}
+
+int32_t cvra_get_encoder1(void *device) {
+    return cvra_dc_get_encoder(device, 1);
+}
+
+int32_t cvra_get_encoder2(void *device) {
+    return cvra_dc_get_encoder(device, 2);
+}
 
 void cvra_cs_init(void) {
     /****************************************************************************/
@@ -59,8 +72,8 @@ void cvra_cs_init(void) {
     /*                             Robot system                                 */
     /****************************************************************************/
     
-    rsh_init(&robot.rs);
-    rsh_set_position_manager(&robot.rs, &robot.pos);
+    //rsh_init(&robot.rs);
+    //rsh_set_position_manager(&robot.rs, &robot.pos);
 
 
     /****************************************************************************/
@@ -78,7 +91,9 @@ void cvra_cs_init(void) {
     
     /** @todo : demander à Antoine*/
     //pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
-    //pid_set_out_shift(&robot.angle_pid, 10);
+    pid_set_out_shift(&robot.wheel0_pid, 10);
+    pid_set_out_shift(&robot.wheel1_pid, 10);
+    pid_set_out_shift(&robot.wheel2_pid, 10);
     
     cs_init(&robot.wheel0_cs); 
     cs_init(&robot.wheel1_cs); 
@@ -88,104 +103,112 @@ void cvra_cs_init(void) {
     cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
     cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
     
-    /** @todo : quel pwm fait quoi ? */
     cs_set_process_in(&robot.wheel0_cs, cvra_dc_set_pwm0, HEXMOTORCONTROLLER_BASE);
     cs_set_process_in(&robot.wheel1_cs, cvra_dc_set_pwm1, HEXMOTORCONTROLLER_BASE);
     cs_set_process_in(&robot.wheel2_cs, cvra_dc_set_pwm2, HEXMOTORCONTROLLER_BASE);
     
-    cs_set_process_out(&robot.wheel0_cs, cvra_dc_get_encoder4, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_out(&robot.wheel1_cs, cvra_dc_get_encoder3, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_out(&robot.wheel2_cs, cvra_dc_get_encoder5, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel0_cs, cvra_get_encoder0, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel1_cs, cvra_get_encoder1, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel2_cs, cvra_get_encoder2, HEXMOTORCONTROLLER_BASE);
     
-    //cs_set_consign(&robot.wheel0_cs, 0);
-    //cs_set_consign(&robot.wheel1_cs, 0);
-    //cs_set_consign(&robot.wheel2_cs, 0);
+    cs_set_consign(&robot.wheel0_cs, 1000);
+    cs_set_consign(&robot.wheel1_cs, 1000);
+    cs_set_consign(&robot.wheel2_cs, 1000);
     
-    rsh_set_cs(&robot.rs, 0 , &robot.wheel0_cs);
-    rsh_set_cs(&robot.rs, 1 , &robot.wheel1_cs);
-    rsh_set_cs(&robot.rs, 2 , &robot.wheel2_cs);
-
     
-    /****************************************************************************/
-    /*                          Position manager                                */
-    /****************************************************************************/
+    
+    //rsh_set_cs(&robot.rs, 0 , &robot.wheel0_cs);
+    //rsh_set_cs(&robot.rs, 1 , &robot.wheel1_cs);
+    //rsh_set_cs(&robot.rs, 2 , &robot.wheel2_cs);
+    NOTICE(ERROR_CS, __FUNCTION__);
+    scheduler_add_periodical_event_priority(cs_manage, &robot.wheel0_cs, (1000000
+            / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
+            
+    scheduler_add_periodical_event_priority(cs_manage, &robot.wheel1_cs, (1000000
+            / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
+    scheduler_add_periodical_event_priority(cs_manage, &robot.wheel2_cs, (1000000
+            / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
+    
+    ///****************************************************************************/
+    ///*                          Position manager                                */
+    ///****************************************************************************/
 
-    holonomic_position_init(&robot.pos);
+    //holonomic_position_init(&robot.pos);
 
-    float beta[] = {ROBOT_BETA_WHEEL0_RAD,
-                    ROBOT_BETA_WHEEL1_RAD,
-                    ROBOT_BETA_WHEEL2_RAD};
+    //float beta[] = {ROBOT_BETA_WHEEL0_RAD,
+                    //ROBOT_BETA_WHEEL1_RAD,
+                    //ROBOT_BETA_WHEEL2_RAD};
 
-    float wheel_radius[] = {ROBOT_RADIUS_WHEEL0_MM,
-                            ROBOT_RADIUS_WHEEL1_MM,
-                            ROBOT_RADIUS_WHEEL2_MM};
+    //float wheel_radius[] = {ROBOT_RADIUS_WHEEL0_MM,
+                            //ROBOT_RADIUS_WHEEL1_MM,
+                            //ROBOT_RADIUS_WHEEL2_MM};
 
-    float wheel_distance[] = {ROBOT_DISTANCE_WHEEL0_MM,
-                              ROBOT_DISTANCE_WHEEL1_MM,
-                              ROBOT_DISTANCE_WHEEL2_MM};
+    //float wheel_distance[] = {ROBOT_DISTANCE_WHEEL0_MM,
+                              //ROBOT_DISTANCE_WHEEL1_MM,
+                              //ROBOT_DISTANCE_WHEEL2_MM};
 
-    holonomic_position_set_physical_params(
-            &robot.pos,
-            beta,
-            wheel_radius,
-            wheel_distance,
-            ROBOT_ENCODER_RESOLUTION);
+    //holonomic_position_set_physical_params(
+            //&robot.pos,
+            //beta,
+            //wheel_radius,
+            //wheel_distance,
+            //ROBOT_ENCODER_RESOLUTION);
 
-    holonomic_position_set_update_frequency(&robot.pos, ASSERV_FREQUENCY);
+    //holonomic_position_set_update_frequency(&robot.pos, ASSERV_FREQUENCY);
 
-    int32_t (*motor_encoder[])(void *) = {cvra_dc_get_encoder4,
-                                          cvra_dc_get_encoder3,
-                                          cvra_dc_get_encoder5};
+    //int32_t (*motor_encoder[])(void *) = {cvra_dc_get_encoder4,
+                                          //cvra_dc_get_encoder3,
+                                          //cvra_dc_get_encoder5};
 
-    void* motor_encoder_param[] = {HEXMOTORCONTROLLER_BASE,
-                                     HEXMOTORCONTROLLER_BASE,
-                                     HEXMOTORCONTROLLER_BASE};
+    //void* motor_encoder_param[] = {HEXMOTORCONTROLLER_BASE,
+                                     //HEXMOTORCONTROLLER_BASE,
+                                     //HEXMOTORCONTROLLER_BASE};
 
-    holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
+    //holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
 
     /****************************************************************************/
     /**      CS pour les macros-variables (seulement les rampes, pas de PID)    */
     /****************************************************************************/
     
     /******************************** ANGLE *************************************/
-    quadramp_init(&robot.angle_qr);
-    cs_init(&robot.angle_cs);
+    //quadramp_init(&robot.angle_qr);
+    //cs_init(&robot.angle_cs);
     
-    quadramp_set_2nd_order_vars(&robot.angle_qr,100,100);
-    quadramp_set_1st_order_vars(&robot.angle_qr,100,100);
+    //quadramp_set_2nd_order_vars(&robot.angle_qr,100,100);
+    //quadramp_set_1st_order_vars(&robot.angle_qr,100,100);
     
-    cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr);
-    cs_set_process_in(&robot.angle_cs, rsh_set_direction_int, &robot.rs);
-    cs_set_process_out(&robot.angle_cs, holonomic_position_get_a_deg_s32, &robot.pos);
-    cs_set_consign(&robot.angle_cs, 0);
+    //cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr);
+    //cs_set_process_in(&robot.angle_cs, rsh_set_direction_int, &robot.rs);
+    //cs_set_process_out(&robot.angle_cs, holonomic_position_get_a_deg_s32, &robot.pos);
+    //cs_set_consign(&robot.angle_cs, 0);
     
-    ///******************************** OMEGA ************************************/
-    ramp_init(&robot.omega_r);
-    cs_init(&robot.omega_cs);
+    /////******************************** OMEGA ************************************/
+    //ramp_init(&robot.omega_r);
+    //cs_init(&robot.omega_cs);
     
-    ramp_set_vars(&robot.omega_r,100,100); /**@todo : -100 ou 100 come neg_var */
+    //ramp_set_vars(&robot.omega_r,100,100); /**@todo : -100 ou 100 come neg_var */
     
-    cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
-    cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
-    cs_set_process_out(&robot.omega_cs, holonomic_position_get_rotation_speed_int, &robot.pos);
-    cs_set_consign(&robot.omega_cs, 0);
+    //cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
+    //cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
+    //cs_set_process_out(&robot.omega_cs, holonomic_position_get_rotation_speed_int, &robot.pos);
+    //cs_set_consign(&robot.omega_cs, 0);
     
-    ///******************************** SPEED *************************************/
-    ramp_init(&robot.speed_r);
-    cs_init(&robot.omega_cs);
+    /////******************************** SPEED *************************************/
+    //ramp_init(&robot.speed_r);
+    //cs_init(&robot.omega_cs);
     
-    ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var */
+    //ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var */
     
-    cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
-    cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
-    cs_set_process_out(&robot.speed_cs, holonomic_position_get_translation_speed_int, &robot.pos);
-    cs_set_consign(&robot.speed_cs, 0);
+    //cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
+    //cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
+    //cs_set_process_out(&robot.speed_cs, holonomic_position_get_translation_speed_int, &robot.pos);
+    //cs_set_consign(&robot.speed_cs, 0);
 
     ///****************************************************************************/
     ///*                           Trajectory Manager (Trivial)                   */
     ///****************************************************************************/
-    holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
-    holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
+    //holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
+    //holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
     //trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
     //trajectory_set_speed(&robot.traj, 2400, 1200); /* distance, angle */
     //trajectory_set_acc(&robot.traj, 40., 30.);
@@ -203,15 +226,11 @@ void cvra_cs_init(void) {
     //robot.is_aligning = 0;
 
     //// Initialisation déplacement:
-    //position_set(&robot.pos, 0, 0, 0);
-    
-    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 0, 100);
-    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 1, 100);
-    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 2, 100);
+    //holonomic_position_set(&robot.pos, 0, 0, 0);
 
-    ///* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
-    scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
-            / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
+    /////* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
+    //scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
+            /// ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
 }
 
 /** Logge l'erreur sur les differents regulateurs et l'affiche avec le temps. */
