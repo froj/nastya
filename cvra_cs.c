@@ -58,7 +58,7 @@ void cvra_cs_init(void) {
     /****************************************************************************/
     /*                             Robot system                                 */
     /****************************************************************************/
-    //TODO
+    
     rsh_init(&robot.rs);
     rsh_set_position_manager(&robot.rs, &robot.pos);
 
@@ -89,9 +89,9 @@ void cvra_cs_init(void) {
     cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
     
     /** @todo : quel pwm fait quoi ? */
-    cs_set_process_in(&robot.wheel0_cs, cvra_dc_set_pwm4, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_in(&robot.wheel1_cs, cvra_dc_set_pwm3, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_in(&robot.wheel2_cs, cvra_dc_set_pwm5, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel0_cs, cvra_dc_set_pwm0, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel1_cs, cvra_dc_set_pwm1, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel2_cs, cvra_dc_set_pwm2, HEXMOTORCONTROLLER_BASE);
     
     cs_set_process_out(&robot.wheel0_cs, cvra_dc_get_encoder4, HEXMOTORCONTROLLER_BASE);
     cs_set_process_out(&robot.wheel1_cs, cvra_dc_get_encoder3, HEXMOTORCONTROLLER_BASE);
@@ -208,9 +208,7 @@ void cvra_cs_init(void) {
     cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 0, 100);
     cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 1, 100);
     cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 2, 100);
-    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 3, 100);
-    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 4, 100);
-    cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, 5, 100);
+
     ///* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
@@ -233,8 +231,9 @@ static void dump_error(void) {
 }
 
 void cvra_cs_manage(__attribute__((unused)) void * dummy) {
-    NOTICE(ERROR_CS, __FUNCTION__);
-
+    
+    //NOTICE(ERROR_CS, __FUNCTION__);
+    //DEBUG(E_ROBOT_SYSTEM, "LOL");
     /* Gestion de la position. */
     rsh_update(&robot.rs);
     holonomic_position_manage(&robot.pos);
@@ -243,5 +242,5 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     //cs_manage(&robot.angle_cs); /// @todo : wich one ?
     
     /* Affichage des courbes d'asservissement. */
-    dump_error();
+    //dump_error();
 }
