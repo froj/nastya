@@ -50,11 +50,15 @@ struct _rob {
     struct pid_filter wheel0_pid;
     struct pid_filter wheel1_pid;
     struct pid_filter wheel2_pid;
+
+    struct ramp_filter wheel0_ramp;
+    struct ramp_filter wheel1_ramp;
+    struct ramp_filter wheel2_ramp;
     
     /** Filtres */
     struct quadramp_filter angle_qr;
     struct ramp_filter omega_r;
-    struct ramp_filter speed_r;
+    struct ramp_filter speed_r; /* antoine: dafuq ? */
     
     /** Control system des macro-variables (juste les filtres) */
     struct cs angle_cs;

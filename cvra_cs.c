@@ -90,6 +90,19 @@ void cvra_cs_init(void) {
     cs_set_correct_filter(&robot.wheel0_cs, pid_do_filter, &robot.wheel0_pid);
     cs_set_correct_filter(&robot.wheel1_cs, pid_do_filter, &robot.wheel1_pid);
     cs_set_correct_filter(&robot.wheel2_cs, pid_do_filter, &robot.wheel2_pid);
+
+    ramp_init(&robot.wheel0_ramp);
+    ramp_init(&robot.wheel1_ramp);
+    ramp_init(&robot.wheel2_ramp);
+
+    ramp_set_vars(&robot.wheel0_ramp, 10, 10);
+    ramp_set_vars(&robot.wheel1_ramp, 10, 10);
+    ramp_set_vars(&robot.wheel2_ramp, 10, 10);
+
+    cs_set_consign_filter(&robot.wheel0_cs, ramp_do_filter, &robot.wheel0_ramp);
+    cs_set_consign_filter(&robot.wheel1_cs, ramp_do_filter, &robot.wheel1_ramp);
+    cs_set_consign_filter(&robot.wheel2_cs, ramp_do_filter, &robot.wheel2_ramp);
+
     
 
 #ifdef COMPILE_ON_ROBOT
