@@ -95,9 +95,9 @@ void cvra_cs_init(void) {
     ramp_init(&robot.wheel1_ramp);
     ramp_init(&robot.wheel2_ramp);
 
-    ramp_set_vars(&robot.wheel0_ramp, 10, 10);
-    ramp_set_vars(&robot.wheel1_ramp, 10, 10);
-    ramp_set_vars(&robot.wheel2_ramp, 10, 10);
+    ramp_set_vars(&robot.wheel0_ramp, 1, 1);
+    ramp_set_vars(&robot.wheel1_ramp, 1, 1);
+    ramp_set_vars(&robot.wheel2_ramp, 1, 1);
 
     cs_set_consign_filter(&robot.wheel0_cs, ramp_do_filter, &robot.wheel0_ramp);
     cs_set_consign_filter(&robot.wheel1_cs, ramp_do_filter, &robot.wheel1_ramp);
@@ -117,9 +117,9 @@ void cvra_cs_init(void) {
 #endif
 
     
-    cs_set_consign(&robot.wheel0_cs, 1000);
-    cs_set_consign(&robot.wheel1_cs, 1000);
-    cs_set_consign(&robot.wheel2_cs, 1000);
+    cs_set_consign(&robot.wheel0_cs, 100);
+    cs_set_consign(&robot.wheel1_cs, 100);
+    cs_set_consign(&robot.wheel2_cs, 100);
     
     
     
@@ -262,8 +262,13 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     //NOTICE(ERROR_CS, __FUNCTION__);
     //DEBUG(E_ROBOT_SYSTEM, "LOL");
     /* Gestion de la position. */
-    rsh_update(&robot.rs);
+    
+    //rsh_update(&robot.rs);
     holonomic_position_manage(&robot.pos);
+
+    cs_manage(&robot.wheel0_cs);
+    cs_manage(&robot.wheel1_cs);
+    cs_manage(&robot.wheel2_cs);
 
     /* Gestion de l'asservissement. */
     //cs_manage(&robot.angle_cs); /// @todo : wich one ?

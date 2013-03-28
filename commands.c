@@ -116,6 +116,24 @@ void cmd_help(void) {
     printf("\n");
 }
 
+void cmd_speed(int argc, char **argv) {
+    cs_set_consign(&robot.wheel0_cs, atoi(argv[1]));
+    cs_set_consign(&robot.wheel1_cs, atoi(argv[1]));
+    cs_set_consign(&robot.wheel2_cs, atoi(argv[1]));
+}
+
+void cmd_cs_enable(int argc, char **argv) {
+    if(argc > 1){
+        cs_disable(&robot.wheel0_cs);
+        cs_disable(&robot.wheel1_cs);
+        cs_disable(&robot.wheel2_cs);
+    }else{
+        cs_enable(&robot.wheel0_cs);
+        cs_enable(&robot.wheel1_cs);
+        cs_enable(&robot.wheel2_cs);
+    }
+}
+
 /** An array of all the commands. */
 command_t commands_list[] = {
     COMMAND("test_argv",test_func),
@@ -126,6 +144,8 @@ command_t commands_list[] = {
     COMMAND("encoders", cmd_encoders),
     COMMAND("pos", cmd_position),
     COMMAND("help", cmd_help),
+    COMMAND("speed", cmd_speed),
+    COMMAND("cs_enable", cmd_cs_enable),
     COMMAND("none",NULL), /* must be last. */
 };
 
