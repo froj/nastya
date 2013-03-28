@@ -38,11 +38,12 @@ void cmd_pwm(int argc, char **argv) {
 void cmd_encoders(int argc, char **argv) {
 #ifdef COMPILE_ON_ROBOT
     int i;
-    for(i=0;i<6;i++)
-        if(strcmp("reset", argv[1])){
-            cvra_dc_set_encoder(HEXMOTORCONTROLLER_BASE, i);
-        }
+    for(i=0;i<6;i++){
+ //       if(strcmp("reset", argv[1])){
+ //           cvra_dc_set_encoder(HEXMOTORCONTROLLER_BASE, i, 0);
+ //       }
         printf("%d;", cvra_dc_get_encoder(HEXMOTORCONTROLLER_BASE, i));
+    }
 #else
     (void)argc;
     (void)argv;
