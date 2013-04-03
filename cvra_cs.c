@@ -117,9 +117,9 @@ void cvra_cs_init(void) {
 #endif
 
     
-    cs_set_consign(&robot.wheel0_cs, 100);
-    cs_set_consign(&robot.wheel1_cs, 100);
-    cs_set_consign(&robot.wheel2_cs, 100);
+    cs_set_consign(&robot.wheel0_cs, 0);
+    cs_set_consign(&robot.wheel1_cs, 0);
+    cs_set_consign(&robot.wheel2_cs, 0);
     
     
     
@@ -263,7 +263,7 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     //DEBUG(E_ROBOT_SYSTEM, "LOL");
     /* Gestion de la position. */
     
-    //rsh_update(&robot.rs);
+    rsh_update(&robot.rs);
     holonomic_position_manage(&robot.pos);
 
     cs_manage(&robot.wheel0_cs);
