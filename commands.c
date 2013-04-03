@@ -117,9 +117,18 @@ void cmd_help(void) {
 }
 
 void cmd_speed(int argc, char **argv) {
-    cs_set_consign(&robot.wheel0_cs, atoi(argv[1]));
-    cs_set_consign(&robot.wheel1_cs, atoi(argv[1]));
-    cs_set_consign(&robot.wheel2_cs, atoi(argv[1]));
+    if(argc < 2){
+        printf("Translation Speed: %f\nDirection:         %f\nRotation Speed:    %f\n",
+                robot.rs.speed, robot.rs.direction, robot.rs.rotation_speed);
+    }else if(argc < 3){
+        printf("Usage: speed SPEED DIRECTION ROT_SPEED\n");
+    }else{
+        rsh_set_speed(&robot.rs, (int32_t)atoi(argv[1]));
+        rsh_set_direction_int(&robot.rs, (int32_t)atoi(argv[2]));
+        if(argc > 3){
+            rsh_set_rotation_speed(&robot.rs, (int32_t)atoi(argv[3]));
+        }
+    }
 }
 
 void cmd_cs_enable(int argc, char **argv) {
