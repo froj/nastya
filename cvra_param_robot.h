@@ -32,9 +32,9 @@
 //                       *********************************************
 //                                         Dimensions
 //                       *********************************************
-#define ROBOT_RADIUS_WHEEL0_MM  37
-#define ROBOT_RADIUS_WHEEL1_MM  37
-#define ROBOT_RADIUS_WHEEL2_MM  37
+#define ROBOT_RADIUS_WHEEL0_MM  18.5
+#define ROBOT_RADIUS_WHEEL1_MM  18.5
+#define ROBOT_RADIUS_WHEEL2_MM  18.5
 
 #define ROBOT_DISTANCE_WHEEL0_MM 77.75
 #define ROBOT_DISTANCE_WHEEL1_MM 77.75
