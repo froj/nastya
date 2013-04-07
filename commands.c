@@ -94,9 +94,9 @@ void cmd_pid(int argc, char **argv) {
 /** Set or get the position */
 void cmd_position(int argc, char **argv){
     if(argc == 1){
-        printf("x: %lf; y: %lf; a: %d\n", holonomic_position_get_x_double(&robot.pos), 
+        printf("x: %lf; y: %lf; a: %lf\n", holonomic_position_get_x_double(&robot.pos), 
                                           holonomic_position_get_y_double(&robot.pos),
-                                          holonomic_position_get_a_deg_s16(&robot.pos));
+                                          holonomic_position_get_a_rad_double(&robot.pos));
     }else{
         holonomic_position_set_x_s16(&robot.pos, (int16_t)atoi(argv[1]));
         holonomic_position_set_y_s16(&robot.pos, (int16_t)atoi(argv[2]));
