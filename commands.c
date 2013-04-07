@@ -131,6 +131,17 @@ void cmd_speed(int argc, char **argv) {
     }
 }
 
+void cmd_get_speed(void){
+    printf("Translation Speed: %f\nDirection: %d\nRotations Speed: %lf\n",
+            holonomic_position_get_instant_translation_speed(&robot.pos),
+            holonomic_position_get_theta_v_int(&robot.pos),
+            holonomic_position_get_instant_rotation_speed(&robot.pos));
+}
+
+void cmd_delta_enc(void){
+    printf("%d; %d; %d;\n", robot.pos.delta_enc[0], robot.pos.delta_enc[1], robot.pos.delta_enc[2]);
+}
+
 void cmd_cs_enable(int argc, char **argv) {
     if(argc > 1){
         cs_disable(&robot.wheel0_cs);
@@ -155,6 +166,8 @@ command_t commands_list[] = {
     COMMAND("help", cmd_help),
     COMMAND("speed", cmd_speed),
     COMMAND("cs_enable", cmd_cs_enable),
+    COMMAND("get_speed", cmd_get_speed),
+    COMMAND("delta_enc", cmd_delta_enc),
     COMMAND("none",NULL), /* must be last. */
 };
 

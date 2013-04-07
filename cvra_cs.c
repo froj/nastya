@@ -161,7 +161,7 @@ void cvra_cs_init(void) {
             wheel_distance,
             ROBOT_ENCODER_RESOLUTION);
 
-    holonomic_position_set_update_frequency(&robot.pos, ASSERV_FREQUENCY);
+    holonomic_position_set_update_frequency(&robot.pos, (float)ASSERV_FREQUENCY);
 
     int32_t (*motor_encoder[])(void *) = {cvra_dc_get_encoder0,
                                           cvra_dc_get_encoder1,
@@ -186,7 +186,7 @@ void cvra_cs_init(void) {
     
     cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr);
     cs_set_process_in(&robot.angle_cs, rsh_set_direction_int, &robot.rs);
-    cs_set_process_out(&robot.angle_cs, holonomic_position_get_a_deg_s32, &robot.pos);
+    cs_set_process_out(&robot.angle_cs, holonomic_position_get_theta_v_int, &robot.pos);
     cs_set_consign(&robot.angle_cs, 0);
     
     ///******************************** OMEGA ************************************/
