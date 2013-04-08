@@ -22,6 +22,17 @@ void cmd_start() {
     printf("Match done. Hope you enjoyed it !\n");
 }
 
+/** Move to a point */
+void cmd_move(int argc, char **argv) {
+    if (argc == 3) {
+        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, atoi(argv[1]), atoi(argv[2]));
+        while(!holonomic_robot_in_xy_window(&robot.traj, 10));
+        }
+    else {
+         printf("Usage: move x_mm y_mm\n");
+     }
+}
+
 /** Writes to a specific PWM. */
 void cmd_pwm(int argc, char **argv) {
     if(argc == 3) {
@@ -168,6 +179,7 @@ command_t commands_list[] = {
     COMMAND("cs_enable", cmd_cs_enable),
     COMMAND("get_speed", cmd_get_speed),
     COMMAND("delta_enc", cmd_delta_enc),
+    COMMAND("move",cmd_move),
     COMMAND("none",NULL), /* must be last. */
 };
 

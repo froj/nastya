@@ -78,8 +78,8 @@ void cvra_cs_init(void) {
     pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
     pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
     
-    /** @todo : demander à Antoine*/
     //pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
+    
     pid_set_out_shift(&robot.wheel0_pid, 10);
     pid_set_out_shift(&robot.wheel1_pid, 10);
     pid_set_out_shift(&robot.wheel2_pid, 10);
@@ -206,7 +206,7 @@ void cvra_cs_init(void) {
     ramp_init(&robot.speed_r);
     cs_init(&robot.omega_cs);
     
-    ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var */
+    ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var ? */
     
     cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
     cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
@@ -218,24 +218,12 @@ void cvra_cs_init(void) {
     ///****************************************************************************/
     holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
     holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
-    //trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
-    //trajectory_set_speed(&robot.traj, 2400, 1200); /* distance, angle */
+    holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
+    
+    //holonomic_trajectory_set_var(&robot.traj, 10, 0, 0);
     //trajectory_set_acc(&robot.traj, 40., 30.);
     ///* distance window, angle window, angle start */
     //trajectory_set_windows(&robot.traj, 30., 1.0, 20.); // Prod
-
-    //// Angle BDM
-    //bd_init(&robot.angle_bd, &robot.angle_cs);
-    //bd_set_thresholds(&robot.angle_bd, ROBOT_ANGLE_BD, 5);
-
-    //// Distance BDM
-    //bd_init(&robot.distance_bd, &robot.distance_cs);
-    //bd_set_thresholds(&robot.distance_bd, ROBOT_DIST_BD, 5);
-
-    //robot.is_aligning = 0;
-
-    //// Initialisation déplacement:
-    //holonomic_position_set(&robot.pos, 0, 0, 0);
 
 
     ///* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
@@ -243,21 +231,21 @@ void cvra_cs_init(void) {
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
 }
 
-/** Logge l'erreur sur les differents regulateurs et l'affiche avec le temps. */
-static void dump_error(void) {
-    static int time = 0;
-    if (robot.error_dump_enabled) {
-       // if (time % 10)
-            ///@todo : Afficher des trucs utiles
-            //fprintf(stderr, "%d;%d;%d\n", time,
-                    //(int)cs_get_error(&robot.angle_cs),
-                    //(int)cs_get_error(&robot.omega_cs),
-                    //(int)cs_get_error(&robot.speed_cs));
-        time++;
-    } else {
-        time = 0;
-    }
-}
+///** Logge l'erreur sur les differents regulateurs et l'affiche avec le temps. */
+//static void dump_error(void) {
+    //static int time = 0;
+    //if (robot.error_dump_enabled) {
+       //// if (time % 10)
+            /////@todo : Afficher des trucs utiles
+            ////fprintf(stderr, "%d;%d;%d\n", time,
+                    ////(int)cs_get_error(&robot.angle_cs),
+                    ////(int)cs_get_error(&robot.omega_cs),
+                    ////(int)cs_get_error(&robot.speed_cs));
+        //time++;
+    //} else {
+        //time = 0;
+    //}
+//}
 
 void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     
@@ -271,9 +259,10 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     cs_manage(&robot.wheel0_cs);
     cs_manage(&robot.wheel1_cs);
     cs_manage(&robot.wheel2_cs);
-
-    /* Gestion de l'asservissement. */
-    //cs_manage(&robot.angle_cs); /// @todo : wich one ?
+    
+    cs_manage(&robot.speed_cs);
+    cs_manage(&robot.angle_cs);
+    cs_manage(&robot.omega_cs);
     
     /* Affichage des courbes d'asservissement. */
     //dump_error();
