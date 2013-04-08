@@ -188,7 +188,6 @@ void cvra_cs_init(void) {
     
     cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr);
     cs_set_process_in(&robot.angle_cs, rsh_set_direction_int, &robot.rs);
-    cs_set_process_out(&robot.angle_cs, holonomic_position_get_theta_v_int, &robot.pos);
     cs_set_consign(&robot.angle_cs, 0);
     
     ///******************************** OMEGA ************************************/
@@ -199,7 +198,6 @@ void cvra_cs_init(void) {
     
     cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
     cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
-    cs_set_process_out(&robot.omega_cs, holonomic_position_get_rotation_speed_int, &robot.pos);
     cs_set_consign(&robot.omega_cs, 0);
     
     ///******************************** SPEED *************************************/
@@ -208,9 +206,8 @@ void cvra_cs_init(void) {
     
     ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var ? */
     
-    cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
+    //cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
     cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
-    cs_set_process_out(&robot.speed_cs, holonomic_position_get_translation_speed_int, &robot.pos);
     cs_set_consign(&robot.speed_cs, 0);
 
     ///****************************************************************************/
@@ -219,12 +216,12 @@ void cvra_cs_init(void) {
     holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
     holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
     holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
-    
+    /**@todo jo : les fonctions et calculs devenu unitiles sans les process out */
+    /** Testing movement */
     //holonomic_trajectory_set_var(&robot.traj, 10, 0, 0);
-    //trajectory_set_acc(&robot.traj, 40., 30.);
-    ///* distance window, angle window, angle start */
-    //trajectory_set_windows(&robot.traj, 30., 1.0, 20.); // Prod
-
+    //rsh_set_speed(&robot.rs,10);
+    
+    /** Set a windows for arrival
 
     ///* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
@@ -260,9 +257,9 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     cs_manage(&robot.wheel1_cs);
     cs_manage(&robot.wheel2_cs);
     
-    cs_manage(&robot.speed_cs);
-    cs_manage(&robot.angle_cs);
-    cs_manage(&robot.omega_cs);
+    //cs_manage(&robot.speed_cs);
+    //cs_manage(&robot.angle_cs);
+    //cs_manage(&robot.omega_cs);
     
     /* Affichage des courbes d'asservissement. */
     //dump_error();
