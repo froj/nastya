@@ -223,7 +223,7 @@ void cvra_cs_init(void) {
     
     /** Set a windows for arrival
 
-    ///* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
+    /** ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
 }
