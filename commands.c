@@ -143,9 +143,9 @@ void cmd_speed(int argc, char **argv) {
 }
 
 void cmd_get_speed(void){
-    printf("Translation Speed: %f\nDirection: %d\nRotations Speed: %lf\n",
+    printf("Translation Speed: %f\nDirection: %f\nRotations Speed: %lf\n",
             holonomic_position_get_instant_translation_speed(&robot.pos),
-            holonomic_position_get_theta_v_int(&robot.pos),
+            holonomic_position_get_theta_v(&robot.pos),
             holonomic_position_get_instant_rotation_speed(&robot.pos));
 }
 
