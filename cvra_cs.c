@@ -96,9 +96,9 @@ void cvra_cs_init(void) {
     ramp_init(&robot.wheel1_ramp);
     ramp_init(&robot.wheel2_ramp);
 
-    ramp_set_vars(&robot.wheel0_ramp, 1, 1);
-    ramp_set_vars(&robot.wheel1_ramp, 1, 1);
-    ramp_set_vars(&robot.wheel2_ramp, 1, 1);
+    ramp_set_vars(&robot.wheel0_ramp, 10000, 10000);
+    ramp_set_vars(&robot.wheel1_ramp, 10000, 10000);
+    ramp_set_vars(&robot.wheel2_ramp, 10000, 10000);
 
     cs_set_consign_filter(&robot.wheel0_cs, ramp_do_filter, &robot.wheel0_ramp);
     cs_set_consign_filter(&robot.wheel1_cs, ramp_do_filter, &robot.wheel1_ramp);
@@ -185,7 +185,7 @@ void cvra_cs_init(void) {
     ramp_init(&robot.omega_r);
     cs_init(&robot.omega_cs);
     
-    ramp_set_vars(&robot.omega_r,100,100); /**@todo : -100 ou 100 come neg_var */
+    ramp_set_vars(&robot.omega_r,1000,1000); /**@todo : -100 ou 100 come neg_var */
     
     cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
     cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
@@ -195,7 +195,7 @@ void cvra_cs_init(void) {
     ramp_init(&robot.speed_r);
     cs_init(&robot.speed_cs);
     
-    ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var ? */
+    ramp_set_vars(&robot.speed_r,1000,1000); /**@todo : -100 ou 100 come neg_var ? */
     
     cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
     cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
@@ -207,7 +207,7 @@ void cvra_cs_init(void) {
     holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
     holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
     holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
-    holonomic_trajectory_set_windows(&robot.traj, 10, 0.1);
+    holonomic_trajectory_set_windows(&robot.traj, 30, 0.1);
     
 
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
