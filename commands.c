@@ -174,6 +174,10 @@ void cmd_cs_enable(int argc, char **argv) {
     }
 }
 
+void cmd_exit(int argc, char **argv) {
+    exit(0);
+}
+
 /** An array of all the commands. */
 command_t commands_list[] = {
     COMMAND("test_argv",test_func),
@@ -190,6 +194,7 @@ command_t commands_list[] = {
     COMMAND("delta_enc", cmd_delta_enc),
     COMMAND("move",cmd_move),
     COMMAND("macro_var",cmd_set_traj_var),
+    COMMAND("exit", cmd_exit),
     COMMAND("none",NULL), /* must be last. */
 };
 
