@@ -127,15 +127,6 @@ void cvra_cs_init(void) {
     rsh_set_cs(&robot.rs, 0 , &robot.wheel0_cs);
     rsh_set_cs(&robot.rs, 1 , &robot.wheel1_cs);
     rsh_set_cs(&robot.rs, 2 , &robot.wheel2_cs);
-    //IF you comment all the hich-level function and discomment this, it regulates
-    //NOTICE(ERROR_CS, __FUNCTION__);
-    //scheduler_add_periodical_event_priority(cs_manage, &robot.wheel0_cs, (1000000
-            /// ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
-            
-    //scheduler_add_periodical_event_priority(cs_manage, &robot.wheel1_cs, (1000000
-            /// ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
-    //scheduler_add_periodical_event_priority(cs_manage, &robot.wheel2_cs, (1000000
-            /// ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
     
     ///****************************************************************************/
     ///*                          Position manager                                */
@@ -202,11 +193,11 @@ void cvra_cs_init(void) {
     
     ///******************************** SPEED *************************************/
     ramp_init(&robot.speed_r);
-    cs_init(&robot.omega_cs);
+    cs_init(&robot.speed_cs);
     
     ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var ? */
     
-    //cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
+    cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
     cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
     cs_set_consign(&robot.speed_cs, 0);
 
@@ -215,6 +206,9 @@ void cvra_cs_init(void) {
     ///****************************************************************************/
     holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
     holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
+    holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
+    holonomic_trajectory_set_windows(&robot.traj, 10, 0.1);
+    
 
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
@@ -250,6 +244,7 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     cs_manage(&robot.wheel1_cs);
     cs_manage(&robot.wheel2_cs);
     
+    /** The followings line are done by trajectory_manager */
     //cs_manage(&robot.speed_cs);
     //cs_manage(&robot.angle_cs);
     //cs_manage(&robot.omega_cs);
