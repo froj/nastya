@@ -26,7 +26,7 @@ void cmd_start() {
 void cmd_move(int argc, char **argv) {
     if (argc == 3) {
         holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, atoi(argv[1]), atoi(argv[2]));
-        while(!holonomic_robot_in_xy_window(&robot.traj, 10));
+        //while(!holonomic_robot_in_xy_window(&robot.traj, 10));
         }
     else {
          printf("Usage: move x_mm y_mm\n");
@@ -115,6 +115,14 @@ void cmd_position(int argc, char **argv){
     }
 }
 
+/** Set the macro-variable (speed. direction, omega) via trajectory */
+void cmd_set_traj_var(int argc, char **argv) {
+    if(argc < 3)
+       printf("Usage: macro_var SPEED DIRECTION ROT_SPEED\n");
+   else
+      holonomic_trajectory_set_var(&robot.traj, (int32_t)atoi(argv[1]), (int32_t)atoi(argv[2]), (int32_t)atoi(argv[3]));
+}
+
 /** Lists all available commands. */
 void cmd_help(void) {
     int i;
@@ -169,7 +177,7 @@ void cmd_cs_enable(int argc, char **argv) {
 /** An array of all the commands. */
 command_t commands_list[] = {
     COMMAND("test_argv",test_func),
-//    COMMAND("reset", cmd_reset),
+    COMMAND("reset", cmd_reset),
     COMMAND("start",cmd_start),
     COMMAND("pid", cmd_pid), 
     COMMAND("pwm", cmd_pwm),
@@ -181,6 +189,7 @@ command_t commands_list[] = {
     COMMAND("get_speed", cmd_get_speed),
     COMMAND("delta_enc", cmd_delta_enc),
     COMMAND("move",cmd_move),
+    COMMAND("macro_var",cmd_set_traj_var),
     COMMAND("none",NULL), /* must be last. */
 };
 

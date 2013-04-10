@@ -27,7 +27,7 @@
 #include "cvra_param_robot.h"
 
 /** Frequency of the regulation loop (in Hz) */
-#define ASSERV_FREQUENCY 100
+#define ASSERV_FREQUENCY 100.0
 
 /**
  @brief contains all global vars.
