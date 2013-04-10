@@ -26,7 +26,7 @@ void cmd_start() {
 void cmd_move(int argc, char **argv) {
     if (argc == 3) {
         holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, atoi(argv[1]), atoi(argv[2]));
-        //while(!holonomic_robot_in_xy_window(&robot.traj, 10));
+        while(!holonomic_robot_in_xy_window(&robot.traj, 10));
         }
     else {
          printf("Usage: move x_mm y_mm\n");
@@ -100,11 +100,6 @@ void cmd_pid(int argc, char **argv) {
         /** @todo We should be more cautious when handling user input. */
         pid_set_gains(pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); 
     }
-    pid_set_gains(&robot.wheel0_pid,atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-        pid_set_gains(&robot.wheel1_pid,atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-    pid_set_gains(&robot.wheel2_pid,atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-
-     
 }
 
 /** Set or get the position */
@@ -148,9 +143,9 @@ void cmd_speed(int argc, char **argv) {
 }
 
 void cmd_get_speed(void){
-    printf("Translation Speed: %f\nDirection: %f\nRotations Speed: %lf\n",
+    printf("Translation Speed: %f\nDirection: %d\nRotations Speed: %lf\n",
             holonomic_position_get_instant_translation_speed(&robot.pos),
-            holonomic_position_get_theta_v(&robot.pos),
+            holonomic_position_get_theta_v_int(&robot.pos),
             holonomic_position_get_instant_rotation_speed(&robot.pos));
 }
 
@@ -159,6 +154,7 @@ void cmd_delta_enc(void){
 }
 
 void cmd_cs_enable(int argc, char **argv) {
+    (void)argv;
     if(argc > 1){
         cs_disable(&robot.wheel0_cs);
         cs_disable(&robot.wheel1_cs);
@@ -168,14 +164,6 @@ void cmd_cs_enable(int argc, char **argv) {
         cs_enable(&robot.wheel1_cs);
         cs_enable(&robot.wheel2_cs);
     }
-}
-
-/** Set the macro-variable (speed. direction, omega) via trajectory */
-void cmd_set_traj_var(int argc, char **argv) {
-    if(argc < 3)
-        printf("Usage: macro_var SPEED DIRECTION ROT_SPEED\n");
-    else
-        holonomic_trajectory_set_var(&robot.traj, (int32_t)atoi(argv[1]), (int32_t)atoi(argv[2]), (int32_t)atoi(argv[3]));
 }
 
 /** An array of all the commands. */
@@ -193,7 +181,6 @@ command_t commands_list[] = {
     COMMAND("get_speed", cmd_get_speed),
     COMMAND("delta_enc", cmd_delta_enc),
     COMMAND("move",cmd_move),
-    COMMAND("macro_var",cmd_set_traj_var),
     COMMAND("none",NULL), /* must be last. */
 };
 

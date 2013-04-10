@@ -16,17 +16,17 @@
 //                                             PID
 //                       *********************************************
 
-#define ROBOT_PID_WHEEL0_P 1
-#define ROBOT_PID_WHEEL0_I 0
-#define ROBOT_PID_WHEEL0_D 0
+#define ROBOT_PID_WHEEL0_P 30
+#define ROBOT_PID_WHEEL0_I 1
+#define ROBOT_PID_WHEEL0_D 10
 
-#define ROBOT_PID_WHEEL1_P 1
+#define ROBOT_PID_WHEEL1_P 30
 #define ROBOT_PID_WHEEL1_I 0
-#define ROBOT_PID_WHEEL1_D 0
+#define ROBOT_PID_WHEEL1_D 10
 
-#define ROBOT_PID_WHEEL2_P 1
-#define ROBOT_PID_WHEEL2_I 0
-#define ROBOT_PID_WHEEL2_D 0
+#define ROBOT_PID_WHEEL2_P 30
+#define ROBOT_PID_WHEEL2_I 1
+#define ROBOT_PID_WHEEL2_D 10
 
 
 //                       *********************************************
