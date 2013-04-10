@@ -154,7 +154,6 @@ void cmd_delta_enc(void){
 }
 
 void cmd_cs_enable(int argc, char **argv) {
-    (void)argv;
     if(argc > 1){
         cs_disable(&robot.wheel0_cs);
         cs_disable(&robot.wheel1_cs);
