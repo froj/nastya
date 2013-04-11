@@ -1,5 +1,6 @@
 #include <commandline.h>
 #include <string.h>
+#include <stdio.h>
 #include "cvra_cs.h"
 
 /** Prints all args, then exits. */
@@ -38,7 +39,7 @@ void cmd_pwm(int argc, char **argv) {
     if(argc == 3) {
         printf("Putting channel %d = %d\n", atoi(argv[1]), atoi(argv[2]));
 #ifdef COMPILE_ON_ROBOT
-        cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, atoi(argv[1]), atoi(argv[2]));
+        cvra_dc_set_pwm((void*)HEXMOTORCONTROLLER_BASE, atoi(argv[1]), atoi(argv[2]));
 #endif
     }else{
         printf("Usage: pwm channel value\n");
@@ -51,9 +52,9 @@ void cmd_encoders(int argc, char **argv) {
     int i;
     for(i=0;i<6;i++){
         if(argc > 1){
-            cvra_dc_set_encoder(HEXMOTORCONTROLLER_BASE, i, 0);
+            cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, i, 0);
         }
-        printf("%d;", cvra_dc_get_encoder(HEXMOTORCONTROLLER_BASE, i));
+        printf("%d;", (int)cvra_dc_get_encoder((void*)HEXMOTORCONTROLLER_BASE, i));
     }
 #else
     (void)argc;
@@ -153,12 +154,12 @@ void cmd_speed(int argc, char **argv) {
 void cmd_get_speed(void){
     printf("Translation Speed: %f\nDirection: %d\nRotations Speed: %lf\n",
             holonomic_position_get_instant_translation_speed(&robot.pos),
-            holonomic_position_get_theta_v_int(&robot.pos),
+            (int)holonomic_position_get_theta_v_int(&robot.pos),
             holonomic_position_get_instant_rotation_speed(&robot.pos));
 }
 
 void cmd_delta_enc(void){
-    printf("%d; %d; %d;\n", robot.pos.delta_enc[0], robot.pos.delta_enc[1], robot.pos.delta_enc[2]);
+    printf("%d; %d; %d;\n", (int)robot.pos.delta_enc[0], (int)robot.pos.delta_enc[1], (int)robot.pos.delta_enc[2]);
 }
 
 void cmd_cs_enable(int argc, char **argv) {
