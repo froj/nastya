@@ -27,7 +27,7 @@ void cmd_start() {
 void cmd_move(int argc, char **argv) {
     if (argc == 3) {
         holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, atoi(argv[1]), atoi(argv[2]));
-        //while(!holonomic_robot_in_xy_window(&robot.traj, 10));
+        while(!holonomic_robot_in_xy_window(&robot.traj, 30));
         }
     else {
          printf("Usage: move x_mm y_mm\n");

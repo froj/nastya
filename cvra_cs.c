@@ -159,8 +159,8 @@ void cvra_cs_init(void) {
                                           cvra_dc_get_encoder2};
 
     void* motor_encoder_param[] = { (void*)HEXMOTORCONTROLLER_BASE,
-    								(void*)HEXMOTORCONTROLLER_BASE,
-    								(void*)HEXMOTORCONTROLLER_BASE};
+                                    (void*)HEXMOTORCONTROLLER_BASE,
+                                    (void*)HEXMOTORCONTROLLER_BASE};
 
     holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
 
@@ -177,12 +177,12 @@ void cvra_cs_init(void) {
     
     ///******************************** OMEGA ************************************/
     ramp_init(&robot.omega_r);
-    ramp_set_vars(&robot.omega_r,10000,10000);
+    ramp_set_vars(&robot.omega_r, 400,400);
     
     
     ///******************************** SPEED *************************************/
     ramp_init(&robot.speed_r);
-    ramp_set_vars(&robot.speed_r,10000,10000);
+    ramp_set_vars(&robot.speed_r,100,100);
     
 
     ///****************************************************************************/
@@ -192,28 +192,13 @@ void cvra_cs_init(void) {
     holonomic_trajectory_set_ramps(&robot.traj, &robot.speed_r, &robot.angle_qr, &robot.omega_r);
     
     holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
-    holonomic_trajectory_set_windows(&robot.traj, 10, 0.1);
+    holonomic_trajectory_set_windows(&robot.traj, 30, 0.1);
     
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
 }
 
-///** Logge l'erreur sur les differents regulateurs et l'affiche avec le temps. */
-//static void dump_error(void) {
-    //static int time = 0;
-    //if (robot.error_dump_enabled) {
-       //// if (time % 10)
-            /////@todo : Afficher des trucs utiles
-            ////fprintf(stderr, "%d;%d;%d\n", time,
-                    ////(int)cs_get_error(&robot.angle_cs),
-                    ////(int)cs_get_error(&robot.omega_cs),
-                    ////(int)cs_get_error(&robot.speed_cs));
-        //time++;
-    //} else {
-        //time = 0;
-    //}
-//}
 
 void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     
@@ -227,7 +212,4 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     cs_manage(&robot.wheel0_cs);
     cs_manage(&robot.wheel1_cs);
     cs_manage(&robot.wheel2_cs);
-    
-    /* Affichage des courbes d'asservissement. */
-    //dump_error();
 }
