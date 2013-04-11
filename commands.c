@@ -99,7 +99,11 @@ void cmd_pid(int argc, char **argv) {
         }
 
         /** @todo We should be more cautious when handling user input. */
-        pid_set_gains(pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); 
+        /** @workaround : to set all the pid */
+        pid_set_gains(&robot.wheel0_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); 
+        pid_set_gains(&robot.wheel1_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
+        pid_set_gains(&robot.wheel2_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
+        //pid_set_gains(pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); 
     }
 }
 

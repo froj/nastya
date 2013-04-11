@@ -188,11 +188,11 @@ void cvra_cs_init(void) {
     ///****************************************************************************/
     ///*                           Trajectory Manager (Trivial)                   */
     ///****************************************************************************/
-    holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
+    holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY/10);
     holonomic_trajectory_set_ramps(&robot.traj, &robot.speed_r, &robot.angle_qr, &robot.omega_r);
     
     holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
-    holonomic_trajectory_set_windows(&robot.traj, 30, 0.1);
+    holonomic_trajectory_set_windows(&robot.traj, 10, 0.1);
     
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
