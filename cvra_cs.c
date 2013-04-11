@@ -52,8 +52,8 @@ void cvra_cs_init(void) {
     int i;
 
     for(i=0;i<6;i++) {
-        cvra_dc_set_encoder(HEXMOTORCONTROLLER_BASE, i, 0);
-        cvra_dc_set_pwm(HEXMOTORCONTROLLER_BASE, i, 0);
+        cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, i, 0);
+        cvra_dc_set_pwm((void*)HEXMOTORCONTROLLER_BASE, i, 0);
     }
 #endif
 
@@ -108,13 +108,13 @@ void cvra_cs_init(void) {
 
 #ifdef COMPILE_ON_ROBOT
 
-    cs_set_process_in(&robot.wheel0_cs, cvra_dc_set_pwm0, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_in(&robot.wheel1_cs, cvra_dc_set_pwm1, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_in(&robot.wheel2_cs, cvra_dc_set_pwm2, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel0_cs, cvra_dc_set_pwm0, (void*)HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel1_cs, cvra_dc_set_pwm1, (void*)HEXMOTORCONTROLLER_BASE);
+    cs_set_process_in(&robot.wheel2_cs, cvra_dc_set_pwm2, (void*)HEXMOTORCONTROLLER_BASE);
     
-    cs_set_process_out(&robot.wheel0_cs, cvra_dc_get_encoder0, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_out(&robot.wheel1_cs, cvra_dc_get_encoder1, HEXMOTORCONTROLLER_BASE);
-    cs_set_process_out(&robot.wheel2_cs, cvra_dc_get_encoder2, HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel0_cs, cvra_dc_get_encoder0, (void*)HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel1_cs, cvra_dc_get_encoder1, (void*)HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&robot.wheel2_cs, cvra_dc_get_encoder2, (void*)HEXMOTORCONTROLLER_BASE);
 #endif
 
     
@@ -159,9 +159,9 @@ void cvra_cs_init(void) {
                                           cvra_dc_get_encoder1,
                                           cvra_dc_get_encoder2};
 
-    void* motor_encoder_param[] = {HEXMOTORCONTROLLER_BASE,
-                                     HEXMOTORCONTROLLER_BASE,
-                                     HEXMOTORCONTROLLER_BASE};
+    void* motor_encoder_param[] = { (void*)HEXMOTORCONTROLLER_BASE,
+    								(void*)HEXMOTORCONTROLLER_BASE,
+    								(void*)HEXMOTORCONTROLLER_BASE};
 
     holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
 
