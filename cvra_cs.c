@@ -42,7 +42,6 @@ struct _rob robot;
 
 /** Limite PWM = + ou - 475 */
 
-
 void cvra_cs_init(void) {
     /****************************************************************************/
     /*                                Motor                                     */
@@ -96,9 +95,9 @@ void cvra_cs_init(void) {
     ramp_init(&robot.wheel1_ramp);
     ramp_init(&robot.wheel2_ramp);
 
-    ramp_set_vars(&robot.wheel0_ramp, 1, 1);
-    ramp_set_vars(&robot.wheel1_ramp, 1, 1);
-    ramp_set_vars(&robot.wheel2_ramp, 1, 1);
+    ramp_set_vars(&robot.wheel0_ramp, 1000, 1000);
+    ramp_set_vars(&robot.wheel1_ramp, 1000, 1000);
+    ramp_set_vars(&robot.wheel2_ramp, 1000, 1000);
 
     cs_set_consign_filter(&robot.wheel0_cs, ramp_do_filter, &robot.wheel0_ramp);
     cs_set_consign_filter(&robot.wheel1_cs, ramp_do_filter, &robot.wheel1_ramp);
@@ -172,43 +171,29 @@ void cvra_cs_init(void) {
     
     /******************************** ANGLE *************************************/
     quadramp_init(&robot.angle_qr);
-    cs_init(&robot.angle_cs);
+    quadramp_set_2nd_order_vars(&robot.angle_qr,10000,10000);
+    quadramp_set_1st_order_vars(&robot.angle_qr,10000,10000);
     
-    quadramp_set_2nd_order_vars(&robot.angle_qr,100,100);
-    quadramp_set_1st_order_vars(&robot.angle_qr,100,100);
-    
-    cs_set_consign_filter(&robot.angle_cs, quadramp_do_filter, &robot.angle_qr);
-    cs_set_process_in(&robot.angle_cs, rsh_set_direction_int, &robot.rs);
-    cs_set_consign(&robot.angle_cs, 0);
     
     ///******************************** OMEGA ************************************/
     ramp_init(&robot.omega_r);
-    cs_init(&robot.omega_cs);
+    ramp_set_vars(&robot.omega_r,10000,10000);
     
-    ramp_set_vars(&robot.omega_r,100,100); /**@todo : -100 ou 100 come neg_var */
-    
-    cs_set_consign_filter(&robot.omega_cs, ramp_do_filter, &robot.omega_r);
-    cs_set_process_in(&robot.omega_cs, rsh_set_rotation_speed, &robot.rs);
-    cs_set_consign(&robot.omega_cs, 0);
     
     ///******************************** SPEED *************************************/
     ramp_init(&robot.speed_r);
-    cs_init(&robot.speed_cs);
+    ramp_set_vars(&robot.speed_r,10000,10000);
     
-    ramp_set_vars(&robot.speed_r,100,100); /**@todo : -100 ou 100 come neg_var ? */
-    
-    cs_set_consign_filter(&robot.speed_cs, ramp_do_filter, &robot.speed_r);
-    cs_set_process_in(&robot.speed_cs, rsh_set_speed, &robot.rs);
-    cs_set_consign(&robot.speed_cs, 0);
 
     ///****************************************************************************/
     ///*                           Trajectory Manager (Trivial)                   */
     ///****************************************************************************/
     holonomic_trajectory_init(&robot.traj, ASSERV_FREQUENCY);
-    holonomic_trajectory_set_cs(&robot.traj, &robot.angle_cs, &robot.speed_cs, &robot.omega_cs);
+    holonomic_trajectory_set_ramps(&robot.traj, &robot.speed_r, &robot.angle_qr, &robot.omega_r);
     
     holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
     holonomic_trajectory_set_windows(&robot.traj, 10, 0.1);
+    
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
@@ -242,11 +227,6 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     cs_manage(&robot.wheel0_cs);
     cs_manage(&robot.wheel1_cs);
     cs_manage(&robot.wheel2_cs);
-    
-    /** The followings line are done by trajectory_manager */
-    //cs_manage(&robot.speed_cs);
-    //cs_manage(&robot.angle_cs);
-    //cs_manage(&robot.omega_cs);
     
     /* Affichage des courbes d'asservissement. */
     //dump_error();

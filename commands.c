@@ -116,7 +116,7 @@ void cmd_position(int argc, char **argv){
 }
 
 /** Set the macro-variable (speed. direction, omega) via trajectory */
-void cmd_set_traj_var(int argc, char **argv) {
+void cmd_set_macro_var(int argc, char **argv) {
     if(argc < 3)
        printf("Usage: macro_var SPEED DIRECTION ROT_SPEED\n");
    else
@@ -140,7 +140,7 @@ void cmd_speed(int argc, char **argv) {
         printf("Translation Speed: %f\nDirection:         %f\nRotation Speed:    %f\n",
                 robot.rs.speed, robot.rs.direction, robot.rs.rotation_speed);
     }else if(argc < 3){
-        printf("Usage: speed SPEED DIRECTION ROT_SPEED\n");
+        printf("Usage: speed SPEED DIRECTION (DEG) ROT_SPEED\n");
     }else{
         rsh_set_speed(&robot.rs, (int32_t)atoi(argv[1]));
         rsh_set_direction_int(&robot.rs, (int32_t)atoi(argv[2]));
@@ -174,7 +174,7 @@ void cmd_cs_enable(int argc, char **argv) {
     }
 }
 
-void cmd_exit(int argc, char **argv) {
+void cmd_exit(void) {
     exit(0);
 }
 
@@ -193,7 +193,7 @@ command_t commands_list[] = {
     COMMAND("get_speed", cmd_get_speed),
     COMMAND("delta_enc", cmd_delta_enc),
     COMMAND("move",cmd_move),
-    COMMAND("macro_var",cmd_set_traj_var),
+    COMMAND("macro_var",cmd_set_macro_var),
     COMMAND("exit", cmd_exit),
     COMMAND("none",NULL), /* must be last. */
 };
