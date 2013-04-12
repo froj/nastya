@@ -6,23 +6,24 @@
 #include <scheduler.h>
 #include <aversive/error.h>
 #include <cvra_servo.h>
+#include "adresses.h"
 
 struct strat_info strat;
 
-void strat_long_arm_up(){
-        cvra_servo_set(SERVOS_BASE, 0, 9000); 
+void strat_long_arm_up(void){
+        cvra_servo_set((void*)SERVOS_BASE, 0, 9000); 
 }
 
-void strat_long_arm_down(){
-        cvra_servo_set(SERVOS_BASE, 0, 18000); 
+void strat_long_arm_down(void){
+        cvra_servo_set((void*)SERVOS_BASE, 0, 18000); 
 }
 
-void strat_short_arm_up(){
-        cvra_servo_set(SERVOS_BASE, 1, 9000); 
+void strat_short_arm_up(void){
+        cvra_servo_set((void*)SERVOS_BASE, 1, 9000); 
 }
 
-void strat_short_arm_down(){
-        cvra_servo_set(SERVOS_BASE, 1, 18000); 
+void strat_short_arm_down(void){
+        cvra_servo_set((void*)SERVOS_BASE, 1, 18000); 
 }
 
 

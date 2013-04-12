@@ -144,5 +144,9 @@ void strat_begin(strat_color_t color);
 
 
 void strat_do_gift(int number);
+void strat_long_arm_up(void);
+void strat_long_arm_down(void);
+void strat_short_arm_up(void);
+void strat_short_arm_down(void);
 
 #endif
