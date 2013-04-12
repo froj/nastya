@@ -155,6 +155,14 @@ void cmd_speed(int argc, char **argv) {
     }
 }
 
+void cmd_circle(int argc, char **argv) {
+    if(argc < 3){
+        printf("Usage: circle center_x[mm] center_y[mm] section[rad]\n");
+    }else{
+        holonomic_trajectory_moving_circle(&robot.traj,(int32_t)atoi(argv[1]) ,(int32_t)atoi(argv[2]), (double)atof(argv[3]));
+        }
+}
+
 void cmd_get_speed(void){
     printf("Translation Speed: %f\nDirection: %d\nRotations Speed: %lf\n",
             holonomic_position_get_instant_translation_speed(&robot.pos),
@@ -200,6 +208,7 @@ command_t commands_list[] = {
     COMMAND("move",cmd_move),
     COMMAND("macro_var",cmd_set_macro_var),
     COMMAND("exit", cmd_exit),
+    COMMAND("circle",cmd_circle),
     COMMAND("none",NULL), /* must be last. */
 };
 
