@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "cvra_cs.h"
+#include "strat.h"
 
 /** Prints all args, then exits. */
 void test_func(int argc, char **argv) {
@@ -15,13 +16,6 @@ void cmd_reset(void) {
     reset();
 }
 
-
-/** starts the strategy. */
-void cmd_start() {
-    printf("Press a key to start the robot.\n");
-    getchar();
-    printf("Match done. Hope you enjoyed it !\n");
-}
 
 /** Move to a point */
 void cmd_move(int argc, char **argv) {
@@ -190,6 +184,16 @@ void cmd_cs_enable(int argc, char **argv) {
 void cmd_exit(void) {
     exit(0);
 }
+void cmd_start(int argc) {
+    printf("Press a key to start the robot.\n");
+    getchar();
+    if (argc == 1)
+        strat_begin(RED);
+    else
+        strat_begin(BLUE);
+    printf("Match done. Hope you enjoyed it !\n");
+}
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -209,6 +213,7 @@ command_t commands_list[] = {
     COMMAND("macro_var",cmd_set_macro_var),
     COMMAND("exit", cmd_exit),
     COMMAND("circle",cmd_circle),
+    COMMAND("start",cmd_start),
     COMMAND("none",NULL), /* must be last. */
 };
 

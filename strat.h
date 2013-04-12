@@ -50,7 +50,7 @@
 typedef enum {BLUE, RED} strat_color_t;
 
 /** Computes the symmetrical position depending on color. */ 
-#define COLOR_Y(x) (strat.color == RED ? (x) : 2100 - (x))
+#define COLOR_Y(x) (strat.color == RED ? (x) : 2000 - (x))
 
 /** Computes the symmetrical angle depending on color. */
 #define COLOR_A(x) (strat.color == RED ? (x) : -(x))
@@ -76,7 +76,7 @@ typedef struct {
 
 /** This structure holds all the configuration data and state of the strategy. */
 struct strat_info {
-    strat_color_t color;				/**< Color of our robot. */
+    strat_color_t color;                /**< Color of our robot. */
 
     /** @brief The glasses on the playing field.
      * \image html doc/glasses_position.png "Indexes of the glasses for the red team."
@@ -139,6 +139,6 @@ void strat_set_objects(void);
  * This function starts the match. It will \a not check for the starting cord
  * so the caller should do it.
  */
-void strat_begin(void);
+void strat_begin(strat_color_t color);
 
 #endif

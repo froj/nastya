@@ -2,211 +2,68 @@
 #include "strat.h"
 #include <string.h>
 #include <holonomic/trajectory_manager.h>
+#include <holonomic/position_manager.h>
 #include <scheduler.h>
 #include <aversive/error.h>
 
 struct strat_info strat;
 
-void strat_open_servo(enum servo_e servo) {
-    if(servo == RIGHT)
-        cvra_servo_set(SERVOS_BASE, 1, 21000);
-    else
-        cvra_servo_set(SERVOS_BASE, 0, 9000); 
-}
+//void strat_open_servo(enum servo_e servo) {
+    //if(servo == RIGHT)
+        //cvra_servo_set(SERVOS_BASE, 1, 21000);
+    //else
+        //cvra_servo_set(SERVOS_BASE, 0, 9000); 
+//}
 
 
-void strat_close_servo(enum servo_e servo) {
-    if(servo == RIGHT)
-        cvra_servo_set(SERVOS_BASE, 1, 17500);
-    else
-        cvra_servo_set(SERVOS_BASE, 0, 11500); 
-}
+//void strat_close_servo(enum servo_e servo) {
+    //if(servo == RIGHT)
+        //cvra_servo_set(SERVOS_BASE, 1, 17500);
+    //else
+        //cvra_servo_set(SERVOS_BASE, 0, 11500); 
+//}
 
-void strat_release_servo(enum servo_e servo) {
-    if(servo == RIGHT)
-        cvra_servo_set(SERVOS_BASE, 1, 15000);
-    else
-        cvra_servo_set(SERVOS_BASE, 0, 15000); 
-}
+//void strat_release_servo(enum servo_e servo) {
+    //if(servo == RIGHT)
+        //cvra_servo_set(SERVOS_BASE, 1, 15000);
+    //else
+        //cvra_servo_set(SERVOS_BASE, 0, 15000); 
+//}
 
 /** Increments the match timer, called every second. */
 static void increment_timer(__attribute__((unused))void *data) {
     strat.time++;
 }
 
-/** @brief Take the first two glasses.
- *
- * This function takes the first two glasses on the correct side.
- * @todo Test the starting coordinates.
+/** @brief Do the gift
  */
-static void strat_do_first_glasses(void) {
-    WARNING(E_STRAT, "Doing first glasses."); 
+static void strat_do_gift(void) {
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,500, COLOR_Y(500));
 
-    strat_open_servo(LEFT);
-    strat_open_servo(RIGHT);
-
-    trajectory_goto_forward_xy_abs(&robot.traj, strat.glasses[2].pos.x, COLOR_Y(strat.glasses[2].pos.y)-50);
-    wait_traj_end(TRAJ_FLAGS_NEAR);
-
-    strat_close_servo(LEFT);
-
-
-    trajectory_goto_forward_xy_abs(&robot.traj, strat.glasses[5].pos.x, COLOR_Y(strat.glasses[5].pos.y)+50);
-    wait_traj_end(TRAJ_FLAGS_NEAR);
-    strat_close_servo(RIGHT);
-
-    trajectory_a_abs(&robot.traj, -180);
-    wait_traj_end(TRAJ_FLAGS_STD);
-
-    trajectory_d_rel(&robot.traj, 1000);
-
-    wait_traj_end(TRAJ_FLAGS_NEAR);
-    strat_open_servo(LEFT);
-    strat_open_servo(RIGHT);
-
-    trajectory_d_rel(&robot.traj, -100);
-
-    wait_traj_end(TRAJ_FLAGS_STD);
-
-    strat_release_servo(LEFT);
-    strat_release_servo(RIGHT);
 }
 
-void strat_set_objects(void) {
-    memset(&strat.glasses, 0, sizeof(glass_t)*12);
-    memset(&strat.gifts, 0, sizeof(gift_t)*4);
 
-    /* Init gifts position. */ 
-    strat.gifts[0].x = 525; /* middle of the gift. */
-    strat.gifts[1].x = 1125;
-    strat.gifts[2].x = 1725;
-    strat.gifts[3].x = 2325;
-
-    /* Init glasses positions. */
-    strat.glasses[0].pos.x = 900; strat.glasses[0].pos.y = (1550);
-    strat.glasses[1].pos.x = 900; strat.glasses[1].pos.y = (1050);
-    strat.glasses[2].pos.x = 1050; strat.glasses[2].pos.y = (1200);
-
-    /*XXX Not sure about coordinates of 3 and 4. */
-    strat.glasses[3].pos.x = 1200; strat.glasses[3].pos.y = (1550);
-    strat.glasses[4].pos.x = 1200; strat.glasses[4].pos.y = (1050);
-    strat.glasses[5].pos.x = 1350; strat.glasses[5].pos.y = (1200);
-    strat.glasses[6].pos.x = 1650; strat.glasses[6].pos.y = (1300);
-    strat.glasses[7].pos.x = 1800; strat.glasses[7].pos.y = (1550);
-    strat.glasses[8].pos.x = 1800; strat.glasses[8].pos.y = (1050);
-    strat.glasses[9].pos.x = 1950; strat.glasses[9].pos.y = (1300);
-    strat.glasses[10].pos.x = 2100; strat.glasses[10].pos.y = (1550);
-    strat.glasses[11].pos.x = 2100; strat.glasses[11].pos.y = (1050);
+/** @todo : passe to double */
+void strat_start_position(void) {
+    //distance centre/ coté : 88.5 mm
+    //distance centre /calibre : 112.87 mm
+    //épaisseur bord blanc : 100 mm
+    holonomic_position_set_x_s16(&robot.pos, 88.5);
+    holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
+    holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
 }
 
-void strat_begin(void) {
+void strat_begin(strat_color_t color) {
     /* Starts the game timer. */
     strat.time = 0;
+    strat.color = color;
     scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
-
-    /* Prepares the object DB. */
-    strat_set_objects();
+    
+    strat_start_position();
 
     /* Do the two central glasses. */
-    strat_do_first_glasses();
+    strat_do_gift();
 
 }
 
-void strat_autopos(int16_t x, int16_t y, int16_t a, int16_t epaisseurRobot) {
 
-        robot.is_aligning = 1;
-
-        // Pour se recaler, on met le robot en regulation angulaire, on reduit la vitesse et l'acceleration
-        // On diminue la sensibilite on augmente la constante de temps de detection du bloquage
-
-        bd_set_thresholds(&robot.distance_bd,  2000, 2);
-
-        trajectory_set_speed(&robot.traj, 100, 100);
-        robot.mode = BOARD_MODE_DISTANCE_ONLY;
-
-        // On recule jusqu'a� qu'on ait touche un mur
-        trajectory_d_rel(&robot.traj, (double) -2000);
-
-
-        while(!bd_get(&robot.distance_bd));
-        trajectory_hardstop(&robot.traj);
-        bd_reset(&robot.distance_bd);
-        bd_reset(&robot.angle_bd);
-        robot.mode = BOARD_MODE_ANGLE_DISTANCE;
-
-    position_set(&robot.pos, epaisseurRobot, 0, 0);
-
-        /* On se mets a la bonne position en x. */
-        trajectory_d_rel(&robot.traj, (double) (x - epaisseurRobot));
-        while(!trajectory_finished(&robot.traj));
-
-        /* On se tourne face a la paroi en Y. */
-        trajectory_only_a_abs(&robot.traj, COLOR_A(90));
-        while(!trajectory_finished(&robot.traj));
-
-        /* On recule jusqu'a avoir touche le bord. */
-        trajectory_d_rel(&robot.traj, (double) -2000);
-        while(!bd_get(&robot.distance_bd));
-
-        bd_reset(&robot.distance_bd);
-        bd_reset(&robot.angle_bd);
-
-        /* On reregle la position. */
-    /* XXX ze + 100 is a hotfix for 2013. */
-        position_set(&robot.pos, position_get_x_s16(&robot.pos), COLOR_Y((epaisseurRobot+100)), COLOR_A(90));
-
-        /* On se met en place a la position demandee. */
-        trajectory_d_rel(&robot.traj, (double) (y - epaisseurRobot));
-        while(!trajectory_finished(&robot.traj));
-
-        /* Pour finir on s'occuppe de l'angle. */
-        trajectory_a_abs(&robot.traj, (double)a);
-        while(!trajectory_finished(&robot.traj));
-
-        /* On remet le robot dans son etat initial. */
-        robot.mode = BOARD_MODE_ANGLE_DISTANCE;
-        robot.is_aligning = 0;
-}
-
-
-int test_traj_end(int why) {
-
-    if((why & END_TRAJ) && trajectory_finished(&robot.traj))
-        return END_TRAJ;
-
-        if (why & END_NEAR) {
-                int16_t d_near = 100; /* mm */
-        /* XXX Change distance depending on speed. */        
-                if (trajectory_in_window(&robot.traj, d_near, RAD(5.0)))
-                        return END_NEAR;
-    }
-
-    if((why & END_BLOCKING) && bd_get(&robot.distance_bd)) {
-        trajectory_hardstop(&robot.traj);
-        return END_TRAJ;
-    }
-
-    if((why & END_BLOCKING) && bd_get(&robot.angle_bd)) {
-        trajectory_hardstop(&robot.traj);
-        return END_TRAJ;
-    }
-
-    /* XXX Implement END_OBSTACLE when we got our beacons. */
-
-    if((why & END_TIMER) && strat.time >= MATCH_TIME) {
-        trajectory_hardstop(&robot.traj);
-        return END_TIMER;
-    } 
-
-    return 0;   
-}
-
-int wait_traj_end(int why) {
-    int ret;
-    /* Here we could easily insert debugging facilities. */
-    do {
-        ret = test_traj_end(why);
-    } while(ret==0); 
-
-    return ret;
-}
