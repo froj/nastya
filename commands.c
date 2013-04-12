@@ -194,6 +194,10 @@ void cmd_start(int argc) {
     printf("Match done. Hope you enjoyed it !\n");
 }
 
+void cmd_do_gift(int argc, char** argv){
+    strat_do_gift(atoi(argv[1]));
+}
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -209,11 +213,12 @@ command_t commands_list[] = {
     COMMAND("cs_enable", cmd_cs_enable),
     COMMAND("get_speed", cmd_get_speed),
     COMMAND("delta_enc", cmd_delta_enc),
-    COMMAND("move",cmd_move),
-    COMMAND("macro_var",cmd_set_macro_var),
+    COMMAND("move", cmd_move),
+    COMMAND("macro_var", cmd_set_macro_var),
     COMMAND("exit", cmd_exit),
-    COMMAND("circle",cmd_circle),
-    COMMAND("start",cmd_start),
+    COMMAND("circle", cmd_circle),
+    COMMAND("start", cmd_start),
+    COMMAND("do_gift", cmd_do_gift),
     COMMAND("none",NULL), /* must be last. */
 };
 

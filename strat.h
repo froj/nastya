@@ -141,4 +141,8 @@ void strat_set_objects(void);
  */
 void strat_begin(strat_color_t color);
 
+
+
+void strat_do_gift(int number);
+
 #endif
