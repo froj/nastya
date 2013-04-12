@@ -28,6 +28,17 @@ void cmd_move(int argc, char **argv) {
      }
 }
 
+void cmd_turn(int argc, char **argv) {
+    if (argc == 2) {
+        holonomic_trajectory_turning_cap(&robot.traj, atof(argv[1]));
+        //while(!holonomic_robot_in_xy_window(&robot.traj, 30));
+        }
+    else {
+         printf("Usage: turn angle [rad] \n");
+     }
+}
+
+
 /** Writes to a specific PWM. */
 void cmd_pwm(int argc, char **argv) {
     if(argc == 3) {
@@ -214,6 +225,7 @@ command_t commands_list[] = {
     COMMAND("exit", cmd_exit),
     COMMAND("circle",cmd_circle),
     COMMAND("start",cmd_start),
+    COMMAND("turn",cmd_turn),
     COMMAND("none",NULL), /* must be last. */
 };
 
