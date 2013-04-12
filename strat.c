@@ -5,30 +5,26 @@
 #include <holonomic/position_manager.h>
 #include <scheduler.h>
 #include <aversive/error.h>
+#include <cvra_servo.h>
 
 struct strat_info strat;
 
-//void strat_open_servo(enum servo_e servo) {
-    //if(servo == RIGHT)
-        //cvra_servo_set(SERVOS_BASE, 1, 21000);
-    //else
-        //cvra_servo_set(SERVOS_BASE, 0, 9000); 
-//}
+void strat_long_arm_up(){
+        cvra_servo_set(SERVOS_BASE, 0, 9000); 
+}
 
+void strat_long_arm_down(){
+        cvra_servo_set(SERVOS_BASE, 0, 18000); 
+}
 
-//void strat_close_servo(enum servo_e servo) {
-    //if(servo == RIGHT)
-        //cvra_servo_set(SERVOS_BASE, 1, 17500);
-    //else
-        //cvra_servo_set(SERVOS_BASE, 0, 11500); 
-//}
+void strat_short_arm_up(){
+        cvra_servo_set(SERVOS_BASE, 1, 9000); 
+}
 
-//void strat_release_servo(enum servo_e servo) {
-    //if(servo == RIGHT)
-        //cvra_servo_set(SERVOS_BASE, 1, 15000);
-    //else
-        //cvra_servo_set(SERVOS_BASE, 0, 15000); 
-//}
+void strat_short_arm_down(){
+        cvra_servo_set(SERVOS_BASE, 1, 18000); 
+}
+
 
 /** Increments the match timer, called every second. */
 static void increment_timer(__attribute__((unused))void *data) {
@@ -90,7 +86,8 @@ void strat_begin(strat_color_t color) {
 /** @brief Do the gift
  */
 void strat_do_gift(int number) {
+    strat_long_arm_down();
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, strat.gifts[number].x, COLOR_Y(2000-150));
     holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(95));
-
+    strat_long_arm_up();
 }
