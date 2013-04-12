@@ -38,7 +38,7 @@ static void increment_timer(__attribute__((unused))void *data) {
 /** @brief Do the gift
  */
 static void strat_do_gift(void) {
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,500, COLOR_Y(500));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,500, COLOR_Y(1500));
 
 }
 
