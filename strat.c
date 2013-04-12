@@ -80,11 +80,10 @@ void strat_begin(strat_color_t color) {
     strat.color = color;
     scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
     
+    strat_set_objects();
     strat_start_position();
 
-    /* Do the two central glasses. */
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
-    strat_set_objects();
 
 }
 
@@ -92,5 +91,6 @@ void strat_begin(strat_color_t color) {
  */
 void strat_do_gift(int number) {
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, strat.gifts[number].x, COLOR_Y(2000-150));
+    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(95));
 
 }
