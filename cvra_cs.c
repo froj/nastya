@@ -54,10 +54,11 @@ void cvra_cs_init(void) {
         cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, i, 0);
         cvra_dc_set_pwm((void*)HEXMOTORCONTROLLER_BASE, i, 0);
     }
-#endif
 
     /** Kill beacon */
     IOWR(PIO_BASE, 0, 0xFFFF);
+
+#endif
 
     /****************************************************************************/
     /*                             Robot system                                 */
