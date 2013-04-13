@@ -117,7 +117,7 @@ void strat_begin(strat_color_t color) {
 void strat_do_gift(int number) {
     if (strat.sub_state == 0 )
     {
-        strat_long_arm_down();
+        strat_short_arm_down();
         holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                     strat.gifts[number].x + COLOR_C,
                                                      COLOR_Y(2000-150));
@@ -139,7 +139,7 @@ void strat_do_gift(int number) {
                                                      strat.gifts[number].x + COLOR_C,
                                                      COLOR_Y(2000-150));
         while(!holonomic_end_of_traj(&robot.traj));
-        strat_long_arm_up();
+        strat_short_arm_up();
     }
     strat.sub_state = 0;
     strat.state++;
