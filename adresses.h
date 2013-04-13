@@ -27,6 +27,7 @@
 #else
 
 #define SERVOS_BASE         (int *)(0x0)
+#define PIO_BASE            (int *)(0x0)
 #define HEXMOTORCONTROLLER_BASE (int *)(0x0)
 #define MOTOR0_ADRESS       (int *)(0x0)
 #define MOTOR1_ADRESS       (int *)(0x0)
