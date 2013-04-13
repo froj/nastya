@@ -11,19 +11,19 @@
 struct strat_info strat;
 
 void strat_long_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 9000); 
+        cvra_servo_set((void*)SERVOS_BASE, 0, 11000); 
 }
 
 void strat_long_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 18000); 
+        cvra_servo_set((void*)SERVOS_BASE, 0, 15000); 
 }
 
 void strat_short_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 1, 9000); 
+        cvra_servo_set((void*)SERVOS_BASE, 1, 11000); 
 }
 
 void strat_short_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 1, 18000); 
+        cvra_servo_set((void*)SERVOS_BASE, 1, 15000); 
 }
 
 
@@ -84,11 +84,16 @@ void strat_begin(strat_color_t color) {
 
 }
 
-/** @brief Do the gift
+/** 
+ * @brief Do the gift
  */
 void strat_do_gift(int number) {
     strat_long_arm_down();
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, strat.gifts[number].x, COLOR_Y(2000-150));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                     strat.gifts[number].x,
+                                                     COLOR_Y(2000-150));
+    while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(95));
+    while(!holonomic_end_of_traj(&robot.traj));
     strat_long_arm_up();
 }

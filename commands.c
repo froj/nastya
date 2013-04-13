@@ -1,6 +1,8 @@
 #include <commandline.h>
 #include <string.h>
 #include <stdio.h>
+#include <cvra_servo.h>
+#include "adresses.h"
 #include "cvra_cs.h"
 #include "strat.h"
 
@@ -209,6 +211,10 @@ void cmd_do_gift(int argc, char** argv){
     strat_do_gift(atoi(argv[1]));
 }
 
+void cmd_servo(int argc, char** argv){
+    cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (int32_t)atoi(argv[2]));
+}
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -230,7 +236,8 @@ command_t commands_list[] = {
     COMMAND("circle", cmd_circle),
     COMMAND("start", cmd_start),
     COMMAND("do_gift", cmd_do_gift),
-	COMMAND("turn",cmd_turn),
+	COMMAND("turn", cmd_turn),
+    COMMAND("servo", cmd_servo),
     COMMAND("none",NULL), /* must be last. */
 };
 
