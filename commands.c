@@ -200,7 +200,7 @@ void cmd_exit(void) {
 void cmd_start(int argc, char** argv) {
     printf("Press a key to start the robot.\n");
     getchar();
-    //while((IORD(PIO_BASE, 0) & 0x1000) == 0);
+
     if (argc != 1)
     {
         printf("Usage : start color \n Color ={blue, red}\n");
@@ -273,7 +273,7 @@ command_t commands_list[] = {
     COMMAND("servo", cmd_servo),
     COMMAND("io", cmd_get_io),
         COMMAND("beacon", cmd_beacon),
-    //COMMAND("toggle_avoiding",cmd_toggle_avoiding),
+    //COMMAND("toggle_avoiding",cmd_toggle_avoiding),r
     COMMAND("none",NULL), /* must be last. */
 };
 
