@@ -72,6 +72,8 @@ void strat_start_position(void) {
 }
 
 void strat_begin(strat_color_t color) {
+    int i = 0;
+
     /* Starts the game timer. */
     strat.time = 0;
     strat.color = color;
@@ -84,6 +86,11 @@ void strat_begin(strat_color_t color) {
 
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
 
+    while(!holonomic_end_of_traj(&robot.traj));
+
+    for (i = 0; i ; i++) {
+        strat_do_gift(i);
+    }
 }
 
 /** 
