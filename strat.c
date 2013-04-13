@@ -107,13 +107,15 @@ void strat_begin(strat_color_t color) {
 void strat_do_gift(int number) {
     strat_short_arm_down();
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                     strat.gifts[number].x - 20,
+                                                     strat.gifts[number].x 
+                                                     + COLOR_C,
                                                      COLOR_Y(2000-150));
     while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(-90)));
     while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                     strat.gifts[number].x - 20,
+                                                     strat.gifts[number].x 
+                                                     + COLOR_C,
                                                      COLOR_Y(2000-150));
     while(!holonomic_end_of_traj(&robot.traj));
     strat_short_arm_up();
