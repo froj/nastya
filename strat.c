@@ -15,7 +15,7 @@ void strat_long_arm_up(void){
 }
 
 void strat_long_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 7000; 
+        cvra_servo_set((void*)SERVOS_BASE, 0, 7000); 
 }
 
 void strat_short_arm_up(void){
@@ -79,6 +79,7 @@ void strat_begin(strat_color_t color) {
     
     strat_set_objects();
     strat_start_position();
+
 
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
 

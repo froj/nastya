@@ -23,6 +23,8 @@
 
 #include <obstacle_avoidance.h>
 
+#include <cvra_pio.h>
+
 #include "strat.h"
 #include "cvra_param_robot.h"
 
