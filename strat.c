@@ -119,7 +119,7 @@ void strat_do_gift(int number) {
     {
         strat_long_arm_down();
         holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                    strat.gifts[number].x - 20,
+                                                    strat.gifts[number].x + COLOR_C,
                                                      COLOR_Y(2000-150));
         while(!holonomic_end_of_traj(&robot.traj));
         strat.sub_state++;
@@ -136,7 +136,7 @@ void strat_do_gift(int number) {
     if (strat.sub_state == 2)
     { 
         holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                     strat.gifts[number].x - 20,
+                                                     strat.gifts[number].x + COLOR_C,
                                                      COLOR_Y(2000-150));
         while(!holonomic_end_of_traj(&robot.traj));
         strat_long_arm_up();
@@ -152,6 +152,7 @@ void strat_do_gift(int number) {
     else
         strat_wait_90_seconds();
 }
+
 
 void strat_avoiding(void)
 {

@@ -55,6 +55,9 @@ typedef enum {RED, BLUE} strat_color_t;
 /** Computes the symmetrical angle depending on color. */
 #define COLOR_A(x) (strat.color == RED ? (x) : -(x))
 
+/** Computes correctional value for the servo position */
+#define COLOR_C (strat.color == BLUE ? (20) : -(20))
+
 /**
  * @brief A glass on the table.
  *
