@@ -216,6 +216,10 @@ void cmd_servo(int argc, char** argv){
     cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (uint32_t)atoi(argv[2]));
 }
 
+void cmd_get_io(int argc, char** argv){
+    printf("%d\n", (uint32_t)IORD(PIO_BASE, 0));
+}
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -239,6 +243,7 @@ command_t commands_list[] = {
     COMMAND("do_gift", cmd_do_gift),
 	COMMAND("turn", cmd_turn),
     COMMAND("servo", cmd_servo),
+    COMMAND("io", cmd_get_io),
     COMMAND("none",NULL), /* must be last. */
 };
 
