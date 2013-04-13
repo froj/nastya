@@ -6,6 +6,7 @@
 #include <scheduler.h>
 #include <aversive/error.h>
 #include <cvra_servo.h>
+#include <uptime.h>
 #include "adresses.h"
 
 struct strat_info strat;
@@ -19,11 +20,11 @@ void strat_long_arm_down(void){
 }
 
 void strat_short_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 15000); 
+        cvra_servo_set((void*)SERVOS_BASE, 0, 17000); 
 }
 
 void strat_short_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 15000); 
+        cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
 }
 
 
@@ -69,6 +70,7 @@ void strat_start_position(void) {
     holonomic_position_set_x_s16(&robot.pos, 88.5);
     holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
     holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
+
 }
 
 void strat_begin(strat_color_t color) {
@@ -83,21 +85,27 @@ void strat_begin(strat_color_t color) {
     strat_start_position();
 
     strat_long_arm_down();
+    strat_short_arm_down();
+
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 200, COLOR_Y(1800));
+
+    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
 
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
 
     while(!holonomic_end_of_traj(&robot.traj));
 
-    for (i = 0; i ; i++) {
+    for (i = 0; i < 4; i++) {
         strat_do_gift(i);
     }
+    strat_short_arm_down();
 }
 
 /** 
  * @brief Do the gift
  */
 void strat_do_gift(int number) {
-    strat_long_arm_down();
+    strat_short_arm_down();
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                      strat.gifts[number].x - 20,
                                                      COLOR_Y(2000-150));
@@ -108,5 +116,9 @@ void strat_do_gift(int number) {
                                                      strat.gifts[number].x - 20,
                                                      COLOR_Y(2000-150));
     while(!holonomic_end_of_traj(&robot.traj));
-    strat_long_arm_up();
+    strat_short_arm_up();
+
+    int32_t time = uptime_get();
+    while(time + 500000 > uptime_get());
+
 }
