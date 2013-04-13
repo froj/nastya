@@ -201,10 +201,12 @@ void cmd_start(int argc, char** argv) {
     printf("Press a key to start the robot.\n");
     getchar();
 
-    if (argc != 1)
+    if (argc != 2)
     {
         printf("Usage : start color \n Color ={blue, red}\n");
+        return;
     }
+
     if(!strcmp(argv[1], "red"))
         strat_begin(RED);
     else if(!strcmp(argv[1], "blue"))
