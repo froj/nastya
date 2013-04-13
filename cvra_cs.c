@@ -214,15 +214,17 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     holonomic_position_manage(&robot.pos);
     
     /** Check the flag d'avoiding, appeler strat_avoiding*/
-    if (robot.beacon.nb_edges && robot.avoiding)
+    if (robot.beacon.nb_edges && !robot.avoiding)
     {
+        printf("ROBOT DETECTED\n");
         robot.avoiding = 1;
         strat_avoiding();
     }
-    else if (!robot.beacon.nb_edges && robot.avoiding)
+    else if (robot.beacon.nb_edges == 0 && robot.avoiding)
     {
+        printf("OUT OF SIGHT\n");
         robot.avoiding = 0;
-        strat_restart_after_avoiding();
+        //strat_restart_after_avoiding();
     }
         
 

@@ -99,7 +99,7 @@ struct strat_info {
     /** Save the state for the strategical finite state machine */
     int state; /** Currently the gift we are working one  (in the future)*/
     int sub_state;
-    
+    int avoiding;
 
     int time; /**< Time since the beginning of the match, in seconds. */
 
