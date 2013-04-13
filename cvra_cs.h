@@ -67,6 +67,10 @@ struct _rob {
     
     struct h_trajectory traj;                 ///< Trivial trajectory manager.
     
+    int avoiding;
+    
+    /** waiting for this to be implemented */
+    int robot_in_sight;
     // Sans balises on n'en a pas besoin
     //struct blocking_detection angle_bd;     ///< Angle blocking detection manager.
     //struct blocking_detection distance_bd;  ///< Distance blocking detection manager.

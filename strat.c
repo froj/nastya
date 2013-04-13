@@ -32,6 +32,14 @@ static void increment_timer(__attribute__((unused))void *data) {
     strat.time++;
 }
 
+void strat_wait_90_seconds(void)
+{
+    //while (strat.time < 90);
+    cs_disable(&robot.wheel0_cs);
+    cs_disable(&robot.wheel1_cs);
+    cs_disable(&robot.wheel2_cs);
+}
+
 
 void strat_set_objects(void) {
     memset(&strat.glasses, 0, sizeof(glass_t)*12);
@@ -72,10 +80,10 @@ void strat_start_position(void) {
 }
 
 void strat_begin(strat_color_t color) {
-    int i = 0;
-
     /* Starts the game timer. */
     strat.time = 0;
+    strat.state = 0;
+    strat.sub_state = 0;
     strat.color = color;
     scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
     
@@ -88,25 +96,62 @@ void strat_begin(strat_color_t color) {
 
     while(!holonomic_end_of_traj(&robot.traj));
 
-    for (i = 0; i ; i++) {
-        strat_do_gift(i);
-    }
+    strat_do_gift(strat.state);
+    strat_wait_90_seconds();
 }
 
 /** 
  * @brief Do the gift
  */
 void strat_do_gift(int number) {
-    strat_long_arm_down();
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+    if (strat.sub_state == 0 )
+    {
+        strat_long_arm_down();
+        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                    strat.gifts[number].x - 20,
+                                                     COLOR_Y(2000-150));
+        while(!holonomic_end_of_traj(&robot.traj));
+        strat.sub_state++;
+    }
+    
+    if (strat.sub_state == 1)
+    {
+        holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(-90)));
+        while(!holonomic_end_of_traj(&robot.traj));
+    
+        strat.sub_state++;
+    }
+    
+    if (strat.sub_state == 2)
+    { 
+        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                      strat.gifts[number].x - 20,
                                                      COLOR_Y(2000-150));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(-90)));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                     strat.gifts[number].x - 20,
-                                                     COLOR_Y(2000-150));
-    while(!holonomic_end_of_traj(&robot.traj));
-    strat_long_arm_up();
+        while(!holonomic_end_of_traj(&robot.traj));
+        strat_long_arm_up();
+    }
+    strat.sub_state = 0;
+    strat.state++;
+    if (strat.state < 4)
+        strat_do_gift(strat.state);
+    else
+        strat_wait_90_seconds();
+}
+
+void strat_avoiding(void)
+{
+    /** stop current traj */
+    holonomic_delete_event(&robot.traj);
+    
+    /** to be sure stop current move */
+    holonomic_trajectory_set_var(&robot.traj,0,0,0);
+}
+
+void strat_restart_after_avoiding(void)
+{
+    /** Si on etait en train de faire des cadeaux */
+    if (strat.state < 4)
+        strat_do_gift(strat.state);
+    else
+        strat_wait_90_seconds();
 }

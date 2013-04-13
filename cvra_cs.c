@@ -198,6 +198,8 @@ void cvra_cs_init(void) {
     holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
     holonomic_trajectory_set_windows(&robot.traj, 10, 0.01);
     
+    robot.avoiding = 0;
+    
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
@@ -212,6 +214,19 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     
     rsh_update(&robot.rs);
     holonomic_position_manage(&robot.pos);
+    
+    /** Check the flag d'avoiding, appeler strat_avoiding*/
+    if (robot.robot_in_sight && !robot.avoiding)
+    {
+        robot.avoiding = 1;
+        strat_avoiding();
+    }
+    else if (!robot.robot_in_sight && robot.avoiding)
+    {
+        robot.avoiding = 0;
+        strat_restart_after_avoiding();
+    }
+        
 
     cs_manage(&robot.wheel0_cs);
     cs_manage(&robot.wheel1_cs);

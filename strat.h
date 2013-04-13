@@ -92,6 +92,11 @@ struct strat_info {
      * \image html doc/gifts_position.png "Indexes of the gifts."
      */
     gift_t gifts[4];
+    
+    /** Save the state for the strategical finite state machine */
+    int state; /** Currently the gift we are working one  (in the future)*/
+    int sub_state;
+    
 
     int time; /**< Time since the beginning of the match, in seconds. */
 
@@ -148,5 +153,8 @@ void strat_long_arm_up(void);
 void strat_long_arm_down(void);
 void strat_short_arm_up(void);
 void strat_short_arm_down(void);
+
+void strat_avoiding(void);
+void strat_restart_after_avoiding(void);
 
 #endif

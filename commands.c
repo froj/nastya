@@ -197,14 +197,22 @@ void cmd_cs_enable(int argc, char **argv) {
 void cmd_exit(void) {
     exit(0);
 }
-void cmd_start(int argc) {
+void cmd_start(int argc, char** argv) {
     printf("Press a key to start the robot.\n");
     getchar();
-    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
-    if (argc == 1)
+    //while((IORD(PIO_BASE, 0) & 0x1000) == 0);
+    if (argc != 1)
+    {
+        printf("Usage : start color \n Color ={blue, red}\n");
+    }
+    if(!strcmp(argv[1], "red"))
         strat_begin(RED);
-    else
+    else if(!strcmp(argv[1], "blue"))
         strat_begin(BLUE);
+    else {
+        printf("Color is blue or red\n");
+        return;}
+
     printf("Match done. Hope you enjoyed it !\n");
 }
 
@@ -218,6 +226,14 @@ void cmd_servo(int argc, char** argv){
 
 void cmd_get_io(int argc, char** argv){
     printf("%d\n", (uint32_t)IORD(PIO_BASE, 0));
+}
+
+void cmd_toggle_avoiding(void)
+{
+    if (robot.robot_in_sight)
+        robot.robot_in_sight = 0;
+    else
+        robot.robot_in_sight = 1;
 }
 
 
@@ -241,9 +257,10 @@ command_t commands_list[] = {
     COMMAND("circle", cmd_circle),
     COMMAND("start", cmd_start),
     COMMAND("do_gift", cmd_do_gift),
-	COMMAND("turn", cmd_turn),
+    COMMAND("turn", cmd_turn),
     COMMAND("servo", cmd_servo),
     COMMAND("io", cmd_get_io),
+    COMMAND("toggle_avoiding",cmd_toggle_avoiding),
     COMMAND("none",NULL), /* must be last. */
 };
 
