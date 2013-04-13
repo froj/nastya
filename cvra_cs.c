@@ -25,6 +25,7 @@
 #include <pid.h>
 #include <quadramp.h>
 #include <scheduler.h>
+#include <cvra_beacon.h>
 
 #include <aversive/error.h>
 #include "error_numbers.h"
@@ -54,9 +55,6 @@ void cvra_cs_init(void) {
         cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, i, 0);
         cvra_dc_set_pwm((void*)HEXMOTORCONTROLLER_BASE, i, 0);
     }
-
-    /** Kill beacon */
-    IOWR(PIO_BASE, 0, 0xFFFF);
 
 #endif
 
@@ -216,12 +214,12 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     holonomic_position_manage(&robot.pos);
     
     /** Check the flag d'avoiding, appeler strat_avoiding*/
-    if (robot.robot_in_sight && !robot.avoiding)
+    if (robot.beacon.nb_edges && robot.avoiding)
     {
         robot.avoiding = 1;
         strat_avoiding();
     }
-    else if (!robot.robot_in_sight && robot.avoiding)
+    else if (!robot.beacon.nb_edges && robot.avoiding)
     {
         robot.avoiding = 0;
         strat_restart_after_avoiding();

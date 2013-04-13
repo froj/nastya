@@ -20,6 +20,7 @@
 
 #include <cvra_adc.h>
 #include <cvra_dc.h>
+#include <cvra_beacon.h>
 
 #include <obstacle_avoidance.h>
 
@@ -50,6 +51,8 @@ struct _rob {
     struct pid_filter wheel0_pid;
     struct pid_filter wheel1_pid;
     struct pid_filter wheel2_pid;
+    
+    volatile cvra_beacon_t beacon;
 
     struct ramp_filter wheel0_ramp;
     struct ramp_filter wheel1_ramp;

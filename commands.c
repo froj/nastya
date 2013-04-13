@@ -228,14 +228,26 @@ void cmd_get_io(int argc, char** argv){
     printf("%d\n", (uint32_t)IORD(PIO_BASE, 0));
 }
 
-void cmd_toggle_avoiding(void)
-{
-    if (robot.robot_in_sight)
-        robot.robot_in_sight = 0;
-    else
-        robot.robot_in_sight = 1;
-}
+//void cmd_toggle_avoiding(void)
+//{
+    //if (robot.robot_in_sight)
+        //robot.robot_in_sight = 0;
+    //else
+        //robot.robot_in_sight = 1;
+//}
 
+void cmd_beacon(void) {
+    printf("==Beacon==\n");
+    printf("period = %u\n", (unsigned int)robot.beacon.period);
+    printf("firstedge = %u\n", (unsigned int)robot.beacon.firstedge);
+    printf("lastindex = %u\n", (unsigned int)robot.beacon.lastindex);
+    printf("nbedge = %d\n", (int)robot.beacon.nb_edges);
+
+/*    for(;;)
+        printf("angle : %d\n",(int)(robot.beacon.firstedge - robot.beacon.lastindex)/10000);  */
+
+}
+    
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -260,7 +272,8 @@ command_t commands_list[] = {
     COMMAND("turn", cmd_turn),
     COMMAND("servo", cmd_servo),
     COMMAND("io", cmd_get_io),
-    COMMAND("toggle_avoiding",cmd_toggle_avoiding),
+        COMMAND("beacon", cmd_beacon),
+    //COMMAND("toggle_avoiding",cmd_toggle_avoiding),
     COMMAND("none",NULL), /* must be last. */
 };
 

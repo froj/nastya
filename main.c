@@ -17,6 +17,7 @@
 #include <uptime.h>
 #include <string.h>
 #include <commandline.h>
+#include <cvra_beacon.h>
 
 /* nios2.h contient toutes les fonctions dont nous avons besoin pour dialoguer
  * avec le nios alt_irq_register, IORD, etc... */
@@ -124,7 +125,10 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
 
     /* Step 6 : Demarre la comm avec le PC, pas de retour de cette fonction. */
     commandline_init(commands_list);
-
+    
+    //cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ);
+    IOWR(AVOIDING_BASE, 3, 127);
+    
     for(;;) commandline_input_char(getchar());
         
     return 0;
