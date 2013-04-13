@@ -11,19 +11,19 @@
 struct strat_info strat;
 
 void strat_long_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 11000); 
-}
-
-void strat_long_arm_down(void){
         cvra_servo_set((void*)SERVOS_BASE, 0, 15000); 
 }
 
+void strat_long_arm_down(void){
+        cvra_servo_set((void*)SERVOS_BASE, 0, 7000; 
+}
+
 void strat_short_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 1, 11000); 
+        cvra_servo_set((void*)SERVOS_BASE, 1, 15000); 
 }
 
 void strat_short_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 1, 15000); 
+        cvra_servo_set((void*)SERVOS_BASE, 1, 7000); 
 }
 
 

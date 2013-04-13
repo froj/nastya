@@ -212,7 +212,7 @@ void cmd_do_gift(int argc, char** argv){
 }
 
 void cmd_servo(int argc, char** argv){
-    cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (int32_t)atoi(argv[2]));
+    cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (uint32_t)atoi(argv[2]));
 }
 
 
