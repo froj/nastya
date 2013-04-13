@@ -143,7 +143,7 @@ void strat_do_gift(int number) {
     }
     strat.sub_state = 0;
     strat.state++;
-    if (strat.state < 4)
+    if (strat.state < 5)
     {
         int32_t time = uptime_get();
         while(time + 500000 > uptime_get());
