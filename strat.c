@@ -108,8 +108,6 @@ void strat_begin(strat_color_t color) {
 
     strat_do_gift(strat.state);
     strat_wait_90_seconds();
-    strat_short_arm_down();
-
 }
 
 /** 
@@ -118,60 +116,72 @@ void strat_begin(strat_color_t color) {
 void strat_do_gift(int number) {
     if (!strat.avoiding)
     {
-    if (strat.sub_state == 0 )
-    {
-        strat_short_arm_down();
-        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                    strat.gifts[number].x + COLOR_C,
-                                                     COLOR_Y(2000-130));
-        while(!holonomic_end_of_traj(&robot.traj));
-        strat.sub_state++;
+        if (strat.sub_state == 0 )
+        {
+            strat_short_arm_down();
+            holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                        strat.gifts[number].x + COLOR_C,
+                                                         COLOR_Y(2000-130));
+            while(!holonomic_end_of_traj(&robot.traj));
+            strat.sub_state++;
+        }
+        
+        if (strat.sub_state == 1)
+        {
+            holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(-90)));
+            while(!holonomic_end_of_traj(&robot.traj));
+        
+            strat.sub_state++;
+        }
+        
+        if (strat.sub_state == 2)
+        { 
+            holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                         strat.gifts[number].x + COLOR_C,
+                                                         COLOR_Y(2000-130));
+            while(!holonomic_end_of_traj(&robot.traj));
+            strat_short_arm_up();
+        }
+        strat.sub_state = 0;
+        strat.state++;
+        if (strat.state < 5 && strat.state > -1)
+        {
+            int32_t time = uptime_get();
+            while(time + 500000 > uptime_get());
+                strat_do_gift(strat.state);
+        }
+        else
+            strat_wait_90_seconds();
     }
-    
-    if (strat.sub_state == 1)
-    {
-        holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(-90)));
-        while(!holonomic_end_of_traj(&robot.traj));
-    
-        strat.sub_state++;
-    }
-    
-    if (strat.sub_state == 2)
-    { 
-        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                     strat.gifts[number].x + COLOR_C,
-                                                     COLOR_Y(2000-130));
-        while(!holonomic_end_of_traj(&robot.traj));
-        strat_short_arm_up();
-    }
-    strat.sub_state = 0;
-    strat.state++;
-    if (strat.state < 4 && strat.state > -1)
-    {
-        int32_t time = uptime_get();
-        while(time + 500000 > uptime_get());
-            strat_do_gift(strat.state);
-    }
-    else
-        strat_wait_90_seconds();
+    strat_do_gift(strat.state);
 }
 
 
 void strat_avoiding(void)
 {
     strat.avoiding = 1;
+    
     /** stop current traj */
     holonomic_delete_event(&robot.traj);
     
+    /** @strat do gift */
+    //strat_do_gift(strat.state);
     /** to be sure stop current move */
-    holonomic_trajectory_set_var(&robot.traj,0,0,0);
+    rsh_set_speed(&robot.rs, 0);
+    rsh_set_rotation_speed(&robot.rs, 0);
+    cs_disable(&robot.wheel0_cs);
+cs_disable(&robot.wheel1_cs);
+        cs_disable(&robot.wheel2_cs);
+    cvra_dc_set_pwm0(HEXMOTORCONTROLLER_BASE,0);
+    cvra_dc_set_pwm1(HEXMOTORCONTROLLER_BASE,0);
+    cvra_dc_set_pwm2(HEXMOTORCONTROLLER_BASE,0);
+    while(1);
     
 }
 
 void strat_restart_after_avoiding(void)
 {
     strat.avoiding = 0;
-    strat.state = strat.prev_state;
     /** Si on etait en train de faire des cadeaux */
     if (strat.state < 4)
         strat_do_gift(strat.state);
