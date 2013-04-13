@@ -200,7 +200,6 @@ void cmd_exit(void) {
 void cmd_start(int argc) {
     printf("Press a key to start the robot.\n");
     getchar();
-    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
     if (argc == 1)
         strat_begin(RED);
     else
