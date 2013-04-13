@@ -6,6 +6,7 @@
 #include <scheduler.h>
 #include <aversive/error.h>
 #include <cvra_servo.h>
+#include <uptime.h>
 #include "adresses.h"
 
 struct strat_info strat;
@@ -19,11 +20,11 @@ void strat_long_arm_down(void){
 }
 
 void strat_short_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 15000); 
+        cvra_servo_set((void*)SERVOS_BASE, 0, 17000); 
 }
 
 void strat_short_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 15000); 
+        cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
 }
 
 
@@ -35,9 +36,11 @@ static void increment_timer(__attribute__((unused))void *data) {
 void strat_wait_90_seconds(void)
 {
     //while (strat.time < 90);
+    strat_short_arm_down();
     cs_disable(&robot.wheel0_cs);
     cs_disable(&robot.wheel1_cs);
     cs_disable(&robot.wheel2_cs);
+    strat_short_arm_down();
 }
 
 
@@ -77,6 +80,7 @@ void strat_start_position(void) {
     holonomic_position_set_x_s16(&robot.pos, 88.5);
     holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
     holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
+
 }
 
 void strat_begin(strat_color_t color) {
@@ -91,6 +95,11 @@ void strat_begin(strat_color_t color) {
     strat_start_position();
 
     strat_long_arm_down();
+    strat_short_arm_down();
+
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 200, COLOR_Y(1800));
+
+    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
 
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
 
@@ -98,6 +107,8 @@ void strat_begin(strat_color_t color) {
 
     strat_do_gift(strat.state);
     strat_wait_90_seconds();
+    strat_short_arm_down();
+
 }
 
 /** 
@@ -133,7 +144,11 @@ void strat_do_gift(int number) {
     strat.sub_state = 0;
     strat.state++;
     if (strat.state < 4)
-        strat_do_gift(strat.state);
+    {
+        int32_t time = uptime_get();
+        while(time + 500000 > uptime_get());
+            strat_do_gift(strat.state);
+    }
     else
         strat_wait_90_seconds();
 }
