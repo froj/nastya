@@ -35,6 +35,7 @@ static void increment_timer(__attribute__((unused))void *data) {
 
 void strat_wait_90_seconds(void)
 {
+    printf("Stoppping at end of 90 sec \n");
     //while (strat.time < 90);
     strat_short_arm_down();
     cs_disable(&robot.wheel0_cs);
@@ -84,7 +85,6 @@ void strat_start_position(void) {
 }
 
 void strat_begin(strat_color_t color) {
-    cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ);
     /* Starts the game timer. */
     strat.time = 0;
     strat.state = 0;
@@ -101,11 +101,16 @@ void strat_begin(strat_color_t color) {
  //   while(!holonomic_end_of_traj(&robot.traj));
 
     while((IORD(PIO_BASE, 0) & 0x1000) == 0);
+    printf("Cord pulled\n");
+    cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ);
+
+    
     scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
     while(!holonomic_end_of_traj(&robot.traj));
 
     strat_do_gift(strat.state);
+    printf("ALL GIFT DONE\n");
     strat_wait_90_seconds();
 }
 
@@ -135,16 +140,23 @@ void strat_do_gift(int number) {
         
         if (strat.sub_state == 2)
         { 
-            if (strat.state < 3)
+            if (strat.state < 2)
             {
             holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                          strat.gifts[number].x + COLOR_C,
                                                          COLOR_Y(2000-140));
             }
+            else if (strat.state == 2)
+            {
+                    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                         strat.gifts[number].x + COLOR_C,
+                                                         COLOR_Y(2000-110));
+                }
+            
             else{
                         holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                          strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-120));
+                                                         COLOR_Y(2000-100));
             }
             
             while(!holonomic_end_of_traj(&robot.traj));
@@ -169,6 +181,7 @@ void strat_do_gift(int number) {
 
 void strat_avoiding(void)
 {
+    printf("AVOIDING : stop\n");
     strat.avoiding = 1;
     
     /** stop current traj */
