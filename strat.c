@@ -90,7 +90,6 @@ void strat_begin(strat_color_t color) {
     strat.state = 0;
     strat.sub_state = 0;
     strat.color = color;
-    scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
     
     strat_set_objects();
     strat_start_position();
@@ -102,7 +101,7 @@ void strat_begin(strat_color_t color) {
  //   while(!holonomic_end_of_traj(&robot.traj));
 
     while((IORD(PIO_BASE, 0) & 0x1000) == 0);
-
+    scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
     while(!holonomic_end_of_traj(&robot.traj));
 
@@ -121,7 +120,7 @@ void strat_do_gift(int number) {
             strat_short_arm_down();
             holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                         strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-130));
+                                                         COLOR_Y(2000-140));
             while(!holonomic_end_of_traj(&robot.traj));
             strat.sub_state++;
         }
@@ -136,9 +135,18 @@ void strat_do_gift(int number) {
         
         if (strat.sub_state == 2)
         { 
+            if (strat.state < 3)
+            {
             holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                          strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-130));
+                                                         COLOR_Y(2000-140));
+            }
+            else{
+                        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                         strat.gifts[number].x + COLOR_C,
+                                                         COLOR_Y(2000-120));
+            }
+            
             while(!holonomic_end_of_traj(&robot.traj));
             strat_short_arm_up();
             

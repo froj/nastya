@@ -214,7 +214,7 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     rsh_update(&robot.rs);
     holonomic_position_manage(&robot.pos);
     
-    /** Check the flag d'avoiding, appeler strat_avoiding*/
+    ///** Check the flag d'avoiding, appeler strat_avoiding*/
     if (robot.beacon.nb_edges && !robot.avoiding)
     {
         printf("ROBOT DETECTED\n");
