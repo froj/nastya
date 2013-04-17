@@ -25,7 +25,10 @@
 #include <pid.h>
 #include <quadramp.h>
 #include <scheduler.h>
+
+#ifdef COMPILE_ON_ROBOT
 #include <cvra_beacon.h>
+#endif
 
 #include <aversive/error.h>
 #include "error_numbers.h"
@@ -214,6 +217,7 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     rsh_update(&robot.rs);
     holonomic_position_manage(&robot.pos);
     
+#ifdef COMPILE_ON_ROBOT
     ///** Check the flag d'avoiding, appeler strat_avoiding*/
     if (robot.beacon.nb_edges && !robot.avoiding)
     {
@@ -228,6 +232,7 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
         ////robot.avoiding = 0;
         ////strat_restart_after_avoiding();
     //}
+#endif
         
 
     cs_manage(&robot.wheel0_cs);

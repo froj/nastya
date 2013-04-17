@@ -71,6 +71,24 @@ void cmd_encoders(int argc, char **argv) {
     printf("\n");
 }
 
+/** Gets the encoder index values. */
+void cmd_index(int argc, char **argv) {
+#ifdef COMPILE_ON_ROBOT
+    int i;
+    for(i=0;i<6;i++){
+        if(argc > 1){
+            cvra_dc_set_index((void*)HEXMOTORCONTROLLER_BASE, i, 0);
+        }
+        printf("%d;", (int)cvra_dc_get_index((void*)HEXMOTORCONTROLLER_BASE, i));
+    }
+#else
+    (void)argc;
+    (void)argv;
+    printf("Not on robot, bitch.\n");
+#endif
+    printf("\n");
+}
+
 /** Setups PID. */
 void cmd_pid(int argc, char **argv) {
     if(argc < 2) {
@@ -236,6 +254,7 @@ void cmd_get_io(int argc, char** argv){
         //robot.robot_in_sight = 1;
 //}
 
+#ifdef COMPILE_ON_ROBOT
 void cmd_beacon(void) {
     printf("==Beacon==\n");
     printf("period = %u\n", (unsigned int)robot.beacon.period);
@@ -245,6 +264,44 @@ void cmd_beacon(void) {
 
 /*    for(;;)
         printf("angle : %d\n",(int)(robot.beacon.firstedge - robot.beacon.lastindex)/10000);  */
+
+}
+#endif
+
+void cmd_test_odometry(void){
+    strat_start_position();
+    strat_long_arm_down();
+    strat_short_arm_down();
+
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 300, 1700);
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+    while(!holonomic_end_of_traj(&robot.traj));
+
+    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
+
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
+    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
+    while(!holonomic_end_of_traj(&robot.traj));
 
 }
     
@@ -257,6 +314,7 @@ command_t commands_list[] = {
     COMMAND("pid", cmd_pid), 
     COMMAND("pwm", cmd_pwm),
     COMMAND("encoders", cmd_encoders),
+    COMMAND("index", cmd_index),
     COMMAND("pos", cmd_position),
     COMMAND("help", cmd_help),
     COMMAND("speed", cmd_speed),
@@ -272,7 +330,10 @@ command_t commands_list[] = {
     COMMAND("turn", cmd_turn),
     COMMAND("servo", cmd_servo),
     COMMAND("io", cmd_get_io),
-        COMMAND("beacon", cmd_beacon),
+#ifdef COMPILE_ON_ROBOT
+    COMMAND("beacon", cmd_beacon),
+#endif
+    COMMAND("odo_test", cmd_test_odometry),
     //COMMAND("toggle_avoiding",cmd_toggle_avoiding),r
     COMMAND("none",NULL), /* must be last. */
 };

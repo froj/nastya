@@ -84,7 +84,9 @@ void strat_start_position(void) {
 }
 
 void strat_begin(strat_color_t color) {
+#ifdef COMPILE_ON_ROBOT
     cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ);
+#endif
     /* Starts the game timer. */
     strat.time = 0;
     strat.state = 0;
