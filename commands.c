@@ -220,6 +220,25 @@ void cmd_do_gift(int argc, char** argv){
     strat_do_gift(atoi(argv[1]));
 }
 
+/** Wheel 0 -> ADC 4
+ *  Wheel 1 -> ADC 3
+ *  Wheel 2 -> ADC 5
+ */
+void cmd_print_currents() {
+    int i=0;
+    for(i=0;i<6;i++)
+        printf("%d : %d\n", i, cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, i));
+
+}
+
+void cmd_calibrate(void)
+{
+     holonomic_position_set_x_s16(&robot.pos, 88.5);
+    holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
+    holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
+    strat_do_calibration();
+}
+
 void cmd_servo(int argc, char** argv){
     cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (uint32_t)atoi(argv[2]));
 }
@@ -272,7 +291,9 @@ command_t commands_list[] = {
     COMMAND("turn", cmd_turn),
     COMMAND("servo", cmd_servo),
     COMMAND("io", cmd_get_io),
-        COMMAND("beacon", cmd_beacon),
+    COMMAND("beacon", cmd_beacon),
+    COMMAND("calibrate",cmd_calibrate),
+    COMMAND("current",cmd_print_currents),
     //COMMAND("toggle_avoiding",cmd_toggle_avoiding),r
     COMMAND("none",NULL), /* must be last. */
 };
