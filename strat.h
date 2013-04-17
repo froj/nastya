@@ -77,6 +77,14 @@ typedef struct {
     int last_try_time; /**< Last time we tried to do this gift, in s since match start. */
 } gift_t;
 
+/**
+ * A white candle on the cake.
+ */
+typedef struct {
+    point_t pos; /**< Position of the candle on the playing field. */
+    uint8_t done; /**< Flag set true if done. */
+} candle_t;
+
 /** This structure holds all the configuration data and state of the strategy. */
 struct strat_info {
     strat_color_t color;                /**< Color of our robot. */
@@ -95,6 +103,8 @@ struct strat_info {
      * \image html doc/gifts_position.png "Indexes of the gifts."
      */
     gift_t gifts[4];
+    /** @brief The white candles on the playing field.*/
+    candle_t candles[4];
     
     /** Save the state for the strategical finite state machine */
     int state; /** Currently the gift we are working one  (in the future)*/
