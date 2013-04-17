@@ -7,16 +7,7 @@
 #include <aversive/error.h>
 #include <cvra_servo.h>
 #include <uptime.h>
-#include <fast_math.h>
 #include "adresses.h"
-
-#define BASE_RAD 200    /**< [mm] */
-#define BACK_X 80
-#define BACK_Y 190
-/*
-#define BASE_SIN 76.537
-#define BASE_COS 184.776 */
-#define CANDLE_ANG 0.2617993878     /**< angle to the next candle [rad] */
 
 struct strat_info strat;
 
@@ -79,12 +70,6 @@ void strat_set_objects(void) {
     strat.glasses[9].pos.x = 1950; strat.glasses[9].pos.y = (1300);
     strat.glasses[10].pos.x = 2100; strat.glasses[10].pos.y = (1550);
     strat.glasses[11].pos.x = 2100; strat.glasses[11].pos.y = (1050);
-
-    /* Init white candles. */
-    strat.candles[0].pos.x = 1672.208; strat.candles[0].pos.y = 415.746;
-    strat.candles[1].pos.x = 1558.737; strat.candles[1].pos.y = 446.150;
-    strat.candles[2].pos.x = 1441.263; strat.candles[2].pos.y = 446.150;
-    strat.candles[3].pos.x = 1327.793; strat.candles[3].pos.y = 415.746;
 }
 
 
@@ -215,35 +200,4 @@ void strat_restart_after_avoiding(void)
         strat_do_gift(strat.state);
     else
         strat_wait_90_seconds();
-}
-
-/** @brief Get to the first candle and get into a good angle with it. */
-void strat_init_candle(int number)
-{
-    if (strat.sub_state == 3) {
-        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-            strat.candles[number].x - BACK_X - COLOR_C, COLOR_Y(strat.candles[number].y + BACK_Y));
-        while(!holonomic_end_of_traj(&robot.traj));
-    }
-
-    if (strat.sub_state == 4) {
-        holonomic_trajectory_turning_cap(&robot.traj, 
-            (holonomic_position_get_a_rad_float(&robot.pos) 
-            - COLOR_A(fast_atanf(holonomic_position_get_y_float(&robot.pos) 
-                / (holonomic_position_get_x_float(&robot.pos) - 1500))));
-        while(!holonomic_end_of_traj(&robot.traj));
-    }
-
-    /** @todo Descend arm. Angle is needed to be determined. */
-}
-
-/** @brief Move to next candle and descend it. */
-void strat_do_candle(int number)
-{
-    if (strat.sub_state == 5) {
-        holonomic_trajectory_moving_circle(&robot.traj, 1500, COLOR_Y(0), CANDLE_ANG);
-        while(!holonomic_end_of_traj(&robot.traj));
-    }
-
-    /** @todo Descend arm. */
 }
