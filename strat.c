@@ -35,6 +35,7 @@ static void increment_timer(__attribute__((unused))void *data) {
 
 void strat_wait_90_seconds(void)
 {
+    printf("Stoppping at end of 90 sec \n");
     //while (strat.time < 90);
     strat_short_arm_down();
     cs_disable(&robot.wheel0_cs);
