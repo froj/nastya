@@ -134,8 +134,6 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
     IOWR(AVOIDING_BASE, 3, 127);
 #endif
     
-
-    
     for(;;) commandline_input_char(getchar());
         
     return 0;
