@@ -40,11 +40,19 @@
 #define ROBOT_DISTANCE_WHEEL1_MM 77.75
 #define ROBOT_DISTANCE_WHEEL2_MM 77.75
 
+#define ROBOT_WHEEL_THICKNESS0_MM 12.5
+#define ROBOT_WHEEL_THICKNESS1_MM 12.5
+#define ROBOT_WHEEL_THICKNESS2_MM 12.5
+
 #define ROBOT_BETA_WHEEL0_RAD  (60.0*M_PI/180.0)
 #define ROBOT_BETA_WHEEL1_RAD  (180.0*M_PI/180.0)
 #define ROBOT_BETA_WHEEL2_RAD  (300.0*M_PI/180.0)
 
 #define ROBOT_ENCODER_RESOLUTION 16384
+
+#define ROBOT_INDEX_OFFSET0 4876
+#define ROBOT_INDEX_OFFSET1 4195
+#define ROBOT_INDEX_OFFSET2 2601
 
 //                       *********************************************
 //                                             Blocage

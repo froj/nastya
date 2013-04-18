@@ -150,12 +150,31 @@ void cvra_cs_init(void) {
                               ROBOT_DISTANCE_WHEEL1_MM,
                               ROBOT_DISTANCE_WHEEL2_MM};
 
+    double wheel_inner_distance[] = {
+                ROBOT_DISTANCE_WHEEL0_MM - ROBOT_WHEEL_THICKNESS0_MM / 2,
+                ROBOT_DISTANCE_WHEEL1_MM - ROBOT_WHEEL_THICKNESS1_MM / 2,
+                ROBOT_DISTANCE_WHEEL2_MM - ROBOT_WHEEL_THICKNESS2_MM / 2};
+
+    double wheel_outer_distance[] = {
+                ROBOT_DISTANCE_WHEEL0_MM + ROBOT_WHEEL_THICKNESS0_MM / 2,
+                ROBOT_DISTANCE_WHEEL1_MM + ROBOT_WHEEL_THICKNESS1_MM / 2,
+                ROBOT_DISTANCE_WHEEL2_MM + ROBOT_WHEEL_THICKNESS2_MM / 2};
+
+    int32_t index_offset[] = {
+                ROBOT_INDEX_OFFSET0,
+                ROBOT_INDEX_OFFSET1,
+                ROBOT_INDEX_OFFSET2};
+
+
     holonomic_position_set_physical_params(
             &robot.pos,
             beta,
             wheel_radius,
             wheel_distance,
-            ROBOT_ENCODER_RESOLUTION);
+            wheel_inner_distance,
+            wheel_outer_distance,
+            ROBOT_ENCODER_RESOLUTION,
+            index_offset);
 
     holonomic_position_set_update_frequency(&robot.pos, (float)ASSERV_FREQUENCY);
 
@@ -167,7 +186,16 @@ void cvra_cs_init(void) {
                                     (void*)HEXMOTORCONTROLLER_BASE,
                                     (void*)HEXMOTORCONTROLLER_BASE};
 
-    holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param);
+    int32_t (*encoder_index[])(void *) = {cvra_dc_get_index0,
+                                          cvra_dc_get_index1,
+                                          cvra_dc_get_index2};
+
+    void* encoder_index_param[] = { (void*)HEXMOTORCONTROLLER_BASE,
+                                    (void*)HEXMOTORCONTROLLER_BASE,
+                                    (void*)HEXMOTORCONTROLLER_BASE};
+
+    holonomic_position_set_mot_encoder(&robot.pos, motor_encoder, motor_encoder_param,
+                                       encoder_index, encoder_index_param);
 
 
     /****************************************************************************/
