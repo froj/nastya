@@ -75,10 +75,7 @@ void cmd_encoders(int argc, char **argv) {
 void cmd_index(int argc, char **argv) {
 #ifdef COMPILE_ON_ROBOT
     int i;
-    for(i=0;i<6;i++){
-        if(argc > 1){
-            cvra_dc_set_index((void*)HEXMOTORCONTROLLER_BASE, i, 0);
-        }
+    for(i=0;i<3;i++){
         printf("%d;", (int)cvra_dc_get_index((void*)HEXMOTORCONTROLLER_BASE, i));
     }
 #else
