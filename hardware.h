@@ -26,45 +26,30 @@
 #define _HARDWARE_H_
 
 #include <aversive.h>
-#include "arm.h"
 
-/** @typedef pump_mode_t
- * Holds the state (enabled and direction) of a pump.
- */
-typedef enum {OFF, /**< Pump is off. */
-    VENT_BAS, /**< Pumps through the bottom tube. */
-    RESERVED, /**< Reserved value (invalid value). */
-    VENT_LAT /**< Pumps through the side tube. */
-} pump_mode_t;
-
-/** @typedef pump_handle_t
- * @brief A pump number. */
-typedef enum {PUMP_RIGHT, /**< The right pump. */
-    PUMP_LEFT, /**< The left pump. */
-    PUMP_NONE /**< Reserved value for no pump. */
-} pump_handle_t;
+#define ADC_DISTANCE_LEFT 0
+#define ADC_DISTANCE_RIGHT 1
+#define ADC_PUMP_CURRENT_RIGHT 3
+#define ADC_PUMP_CURRENT_LEFT 2
+#define ADC_STARTER 4
+#define ADC_OBSTACLE_LEFT 5
+#define ADC_OBSTACLE_RIGHT 6
+#define ADC_NOT_CONNECTED 7
 
 /** Inits the IO pins. */
 void cvra_board_init(void);
 
 void cvra_board_manage_sensors(void * dummy);
-void cvra_get_avoiding_sensors(int *l, int *r);
+void nastya_get_avoiding_sensors(int *l, int *r);
 
+/** @brief : Update all the outputs */
 void cvra_board_manage_outputs(void);
-void cvra_pump_left_mode(pump_mode_t m);
-void cvra_pump_right_mode(pump_mode_t m);
-void cvra_pump_mode(pump_mode_t m, pump_handle_t curArm);
-
-void cvra_electroaimant_front_on(void);
-void cvra_electroaimant_front_off(void);
-void cvra_electroaimant_back_on(void);
-void cvra_electroaimant_back_off(void);
 
 /** Sets the baudrate of a given UART
  *
  * @author Antoine Albertelli, CVRA
  * @param [in] uart_adress The base adress of the altera UART module.
- * @param [in] baudrate	The desired baudrate
+ * @param [in] baudrate The desired baudrate
  */
 void cvra_set_uart_speed(int32_t *uart_adress, int baudrate);
 

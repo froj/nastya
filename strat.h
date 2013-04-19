@@ -47,13 +47,16 @@
 #define TRAJ_FLAGS_NEAR (TRAJ_FLAGS_STD|END_NEAR)
 
 /** This enum is used for specifying a team color. */
-typedef enum {BLUE, RED} strat_color_t;
+typedef enum {RED, BLUE} strat_color_t;
 
 /** Computes the symmetrical position depending on color. */ 
-#define COLOR_Y(x) (strat.color == RED ? (x) : 2100 - (x))
+#define COLOR_Y(x) (strat.color == RED ? (x) : 2000 - (x))
 
 /** Computes the symmetrical angle depending on color. */
 #define COLOR_A(x) (strat.color == RED ? (x) : -(x))
+
+/** Computes correctional value for the servo position */
+#define COLOR_C (strat.color == BLUE ? (20) : -(20))
 
 /**
  * @brief A glass on the table.
@@ -76,7 +79,7 @@ typedef struct {
 
 /** This structure holds all the configuration data and state of the strategy. */
 struct strat_info {
-    strat_color_t color;				/**< Color of our robot. */
+    strat_color_t color;                /**< Color of our robot. */
 
     /** @brief The glasses on the playing field.
      * \image html doc/glasses_position.png "Indexes of the glasses for the red team."
@@ -92,6 +95,11 @@ struct strat_info {
      * \image html doc/gifts_position.png "Indexes of the gifts."
      */
     gift_t gifts[4];
+    
+    /** Save the state for the strategical finite state machine */
+    int state; /** Currently the gift we are working one  (in the future)*/
+    int sub_state;
+    int avoiding;
 
     int time; /**< Time since the beginning of the match, in seconds. */
 
@@ -139,6 +147,17 @@ void strat_set_objects(void);
  * This function starts the match. It will \a not check for the starting cord
  * so the caller should do it.
  */
-void strat_begin(void);
+void strat_begin(strat_color_t color);
+
+
+
+void strat_do_gift(int number);
+void strat_long_arm_up(void);
+void strat_long_arm_down(void);
+void strat_short_arm_up(void);
+void strat_short_arm_down(void);
+
+void strat_avoiding(void);
+void strat_restart_after_avoiding(void);
 
 #endif
