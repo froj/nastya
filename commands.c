@@ -320,6 +320,18 @@ void cmd_test_odometry(void){
     while(!holonomic_end_of_traj(&robot.traj));
 
 }
+
+void cmd_index_setup(void){
+    int i;
+
+    for(i = 0; i < 400; i++){
+        int32_t time = uptime_get();
+        while(time + 10000 > uptime_get());
+        printf("%10d   %10d   %10d\n", uptime_get(),
+                                cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE),
+                                cvra_dc_get_index0(HEXMOTORCONTROLLER_BASE));
+    }
+}
     
 
 /** An array of all the commands. */
@@ -352,6 +364,7 @@ command_t commands_list[] = {
     COMMAND("calibrate",cmd_calibrate),
     COMMAND("current",cmd_print_currents),
     COMMAND("odo_test", cmd_test_odometry),
+    COMMAND("index_setup", cmd_index_setup),
     //COMMAND("toggle_avoiding",cmd_toggle_avoiding),r
     COMMAND("none",NULL), /* must be last. */
 };
