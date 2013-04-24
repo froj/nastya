@@ -52,7 +52,7 @@ void init_beacons(char *device) {
 
 
 void beaconTask(__attribute__((unused)) void *dummy) {
-	char buf;
+	unsigned char buf;
 	while(read(fileDescriptor, &buf, 1) > 0) {
 		switch(state) {
 		case MAGIC1:
