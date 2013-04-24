@@ -140,14 +140,15 @@ void strat_do_gift(int number) {
         { 
             if (strat.state < 3)
             {
-            holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                         strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-140));
+                holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                             strat.gifts[number].x + COLOR_C,
+                                                             COLOR_Y(2000-140));
             }
-            else{
-                        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                         strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-120));
+            else
+            {
+                holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
+                                                 strat.gifts[number].x + COLOR_C,
+                                                 COLOR_Y(2000-120));
             }
             
             while(!holonomic_end_of_traj(&robot.traj));
@@ -156,11 +157,12 @@ void strat_do_gift(int number) {
             int32_t time = uptime_get();
             while(time + 500000 > uptime_get());
         }
+
         strat.sub_state = 0;
         strat.state++;
+        
         if (strat.state < 4 && strat.state > -1)
         {
-            
                 strat_do_gift(strat.state);
         }
         else
@@ -183,8 +185,8 @@ void strat_avoiding(void)
     rsh_set_speed(&robot.rs, 0);
     rsh_set_rotation_speed(&robot.rs, 0);
     cs_disable(&robot.wheel0_cs);
-cs_disable(&robot.wheel1_cs);
-        cs_disable(&robot.wheel2_cs);
+    cs_disable(&robot.wheel1_cs);
+    cs_disable(&robot.wheel2_cs);
     cvra_dc_set_pwm0(HEXMOTORCONTROLLER_BASE,0);
     cvra_dc_set_pwm1(HEXMOTORCONTROLLER_BASE,0);
     cvra_dc_set_pwm2(HEXMOTORCONTROLLER_BASE,0);
@@ -211,51 +213,59 @@ void strat_do_calibration(void)
     /** Go to the right position */
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj,0);
+
+    holonomic_trajectory_turning_cap(&robot.traj, 0);
     while(!holonomic_end_of_traj(&robot.traj));
+
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
     while(!holonomic_end_of_traj(&robot.traj));
+
     
     /** Calibration */
-    pid_set_gains(&robot.wheel0_pid, 5, 0,0);
-    pid_set_gains(&robot.wheel1_pid, 5, 0,0);
-    pid_set_gains(&robot.wheel2_pid, 5, 0,0);
+    pid_set_gains(&robot.wheel0_pid, 5, 0, 0);
+    pid_set_gains(&robot.wheel1_pid, 5, 0, 0);
+    pid_set_gains(&robot.wheel2_pid, 5, 0, 0);
     
-    rsh_set_speed(&robot.rs,50);
-    rsh_set_direction(&robot.rs,-M_PI_2);
+    rsh_set_speed(&robot.rs, 50);
+    rsh_set_direction(&robot.rs, -M_PI_2);
     
-    int normal_x_2 = 15*cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3);
+    int normal_x_2 = 15 * cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3);
     
     /** Wheel  is the most affected since in the right direction */
     while(cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3) < normal_x_2); //TODO : timeout
     
     
-    holonomic_position_set(&robot.pos,holonomic_position_get_x_double(&robot.pos),
-    88.5,0);
-    rsh_set_speed(&robot.rs,0);
+    holonomic_position_set(&robot.pos,holonomic_position_get_x_double(&robot.pos), 88.5, 0);
+    rsh_set_speed(&robot.rs, 0);
     
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj,0);
+
+    holonomic_trajectory_turning_cap(&robot.traj, 0);
     while(!holonomic_end_of_traj(&robot.traj));
     
+
     int i;
     int32_t time;
-    for (i=3;i>=1;i--)
-    {
-    pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P/i, ROBOT_PID_WHEEL0_I/i,ROBOT_PID_WHEEL0_D/i);
-    pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P/i, ROBOT_PID_WHEEL1_I/i,ROBOT_PID_WHEEL1_D/i);
-    pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P/i, ROBOT_PID_WHEEL2_I/i,ROBOT_PID_WHEEL2_D/i);
-    time = uptime_get();
-    while(time + 50000 > uptime_get());
+
+    for (i = 3; i >= 1; i--){
+        pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P/i, ROBOT_PID_WHEEL0_I/i,ROBOT_PID_WHEEL0_D/i);
+        pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P/i, ROBOT_PID_WHEEL1_I/i,ROBOT_PID_WHEEL1_D/i);
+        pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P/i, ROBOT_PID_WHEEL2_I/i,ROBOT_PID_WHEEL2_D/i);
+
+        time = uptime_get();
+        while(time + 50000 > uptime_get());
     }
+    
     pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I,ROBOT_PID_WHEEL0_D);
     pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
     pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
     
-        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
     while(!holonomic_end_of_traj(&robot.traj));
+
     holonomic_trajectory_turning_cap(&robot.traj,0);
     while(!holonomic_end_of_traj(&robot.traj));
+
     printf("End of Calibration\n");
 }
