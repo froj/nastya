@@ -286,38 +286,30 @@ void cmd_beacon(void) {
 #endif
 
 void cmd_test_odometry(void){
-    strat_start_position();
+
+    holonomic_position_set_x_s16(&robot.pos, 88.5);
+    holonomic_position_set_y_s16(&robot.pos, 2000 - 213);
+    holonomic_position_set_a_s16(&robot.pos, 90);
+
     strat_long_arm_down();
     strat_short_arm_down();
 
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 300, 1700);
+
+
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(0));
     while(!holonomic_end_of_traj(&robot.traj));
 
     while((IORD(PIO_BASE, 0) & 0x1000) == 0);
 
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
-    while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(180));
     while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
+    holonomic_trajectory_turning_cap(&robot.traj, (TO_RAD(0));
     while(!holonomic_end_of_traj(&robot.traj));
 
 }
