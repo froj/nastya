@@ -309,7 +309,7 @@ void cmd_test_odometry(void){
     while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, (TO_RAD(0));
+    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(0));
     while(!holonomic_end_of_traj(&robot.traj));
 
 }
