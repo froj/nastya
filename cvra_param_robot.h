@@ -32,13 +32,13 @@
 //                       *********************************************
 //                                         Dimensions
 //                       *********************************************
-#define ROBOT_RADIUS_WHEEL0_MM  18.5
-#define ROBOT_RADIUS_WHEEL1_MM  18.5
-#define ROBOT_RADIUS_WHEEL2_MM  18.5
+#define ROBOT_RADIUS_WHEEL0_MM  18.1
+#define ROBOT_RADIUS_WHEEL1_MM  18.1
+#define ROBOT_RADIUS_WHEEL2_MM  18.1
 
-#define ROBOT_DISTANCE_WHEEL0_MM 77.75
-#define ROBOT_DISTANCE_WHEEL1_MM 77.75
-#define ROBOT_DISTANCE_WHEEL2_MM 77.75
+#define ROBOT_DISTANCE_WHEEL0_MM 76.2
+#define ROBOT_DISTANCE_WHEEL1_MM 76.2
+#define ROBOT_DISTANCE_WHEEL2_MM 76.2
 
 #define ROBOT_WHEEL_THICKNESS0_MM 12.5
 #define ROBOT_WHEEL_THICKNESS1_MM 12.5
@@ -50,9 +50,9 @@
 
 #define ROBOT_ENCODER_RESOLUTION 16384
 
-#define ROBOT_INDEX_OFFSET0 4876
-#define ROBOT_INDEX_OFFSET1 4195
-#define ROBOT_INDEX_OFFSET2 2601
+#define ROBOT_INDEX_OFFSET0 4860
+#define ROBOT_INDEX_OFFSET1 1953
+#define ROBOT_INDEX_OFFSET2 165
 
 //                       *********************************************
 //                                             Blocage

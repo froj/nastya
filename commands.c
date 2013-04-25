@@ -291,9 +291,8 @@ void cmd_test_odometry(void){
     holonomic_position_set_y_s16(&robot.pos, 2000 - 213);
     holonomic_position_set_a_s16(&robot.pos, 90);
 
-    strat_long_arm_down();
-    strat_short_arm_down();
-
+    strat_short_arm_up();
+    
 
 
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
@@ -305,7 +304,7 @@ void cmd_test_odometry(void){
 
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(180));
+    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(0));
     while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
     while(!holonomic_end_of_traj(&robot.traj));
