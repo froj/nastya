@@ -169,6 +169,15 @@ void strat_do_gift(int number) {
     strat_do_gift(strat.state);
 }
 
+/** Pause for a number of millisec 
+ *  Should be in another file ? */
+void strat_wait_ms (int time_ms)
+{
+    int32_t time = uptime_get();
+    time_ms *= 1000;     // Conversion to us
+    while(time + time_ms > uptime_get());
+    
+}
 
 void strat_avoiding(void)
 {
@@ -207,55 +216,121 @@ void strat_restart_after_avoiding(void)
  * no trajectory must be running */
 void strat_do_calibration(void)
 {
-    printf("Start calibration\n");
-    /** Go to the right position */
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    int stop_current, i;
+    //printf("Start calibration in X\n");
+    
+    ///* Go to the right position */
+    //holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    //while(!holonomic_end_of_traj(&robot.traj));
+    //holonomic_trajectory_turning_cap(&robot.traj,M_PI);
+    //while(!holonomic_end_of_traj(&robot.traj));
+    //holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    //while(!holonomic_end_of_traj(&robot.traj));
+    
+    ///* Calibration */
+    //pid_set_gains(&robot.wheel0_pid, 3, 0,0);
+    //pid_set_gains(&robot.wheel1_pid, 3, 0,0);
+    //pid_set_gains(&robot.wheel2_pid, 3, 0,0);
+    
+    //rsh_set_speed(&robot.rs,50);
+    //rsh_set_direction(&robot.rs, -M_PI_2);
+    
+    ///* Measure the normal current */
+    //stop_current = 10 * cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3);
+
+    ///* Wheel 1 is the most affected since in the right direction */
+    //while(cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3) < stop_current); //TODO : timeout
+    
+    
+    //holonomic_position_set(&robot.pos,holonomic_position_get_x_double(&robot.pos),
+    //88.5,0);
+    //rsh_set_speed(&robot.rs,0);
+    
+    //pid_set_gains(&robot.wheel0_pid, 10, 0,0);
+    //pid_set_gains(&robot.wheel1_pid, 10, 0,0);
+    //pid_set_gains(&robot.wheel2_pid, 10, 0,0);
+    
+    //holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    //while(!holonomic_end_of_traj(&robot.traj));
+    //holonomic_trajectory_turning_cap(&robot.traj,0);
+    //while(!holonomic_end_of_traj(&robot.traj));
+    
+    //for (i=5;i>=1;i--)
+    //{
+        //pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P/i, ROBOT_PID_WHEEL0_I/i,ROBOT_PID_WHEEL0_D/i);
+        //pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P/i, ROBOT_PID_WHEEL1_I/i,ROBOT_PID_WHEEL1_D/i);
+        //pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P/i, ROBOT_PID_WHEEL2_I/i,ROBOT_PID_WHEEL2_D/i);
+        //printf("setting PIDs, step %d\n",i);
+        //strat_wait_ms(1000);
+    //}
+    //pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I,ROBOT_PID_WHEEL0_D);
+    //pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
+    //pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
+    
+    //holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    
+    //while(!holonomic_end_of_traj(&robot.traj));
+    //holonomic_trajectory_turning_cap(&robot.traj,0);
+    //while(!holonomic_end_of_traj(&robot.traj));
+
+    /* ==================================================================================================
+     *                     Calibration in Y : there is a space in y = 800 
+     * ==================================================================================================*/
+    printf("Start calibration in Y\n");
+    
+    /* Go to the right position */
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, COLOR_Y(800));
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj,0);
+    holonomic_trajectory_turning_cap(&robot.traj,M_PI_2);
     while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 100, COLOR_Y(800));
     while(!holonomic_end_of_traj(&robot.traj));
     
-    /** Calibration */
-    pid_set_gains(&robot.wheel0_pid, 5, 0,0);
-    pid_set_gains(&robot.wheel1_pid, 5, 0,0);
-    pid_set_gains(&robot.wheel2_pid, 5, 0,0);
+    /* Calibration */
+    pid_set_gains(&robot.wheel0_pid, 3, 0,0);
+    pid_set_gains(&robot.wheel1_pid, 3, 0,0);
+    pid_set_gains(&robot.wheel2_pid, 3, 0,0);
     
     rsh_set_speed(&robot.rs,50);
-    rsh_set_direction(&robot.rs,-M_PI_2);
+    rsh_set_direction(&robot.rs, M_PI);
     
-    int normal_x_2 = 15*cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3);
+    /* Measure the normal current */
+    stop_current = 10 * cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3);
+
+    /* Wheel 1 is the most affected since in the right direction */
+    while(cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3) < stop_current); //TODO : timeout
     
-    /** Wheel  is the most affected since in the right direction */
-    while(cvra_dc_get_current(HEXMOTORCONTROLLER_BASE, 3) < normal_x_2); //TODO : timeout
     
-    
-    holonomic_position_set(&robot.pos,holonomic_position_get_x_double(&robot.pos),
-    88.5,0);
+    holonomic_position_set(&robot.pos, 88.5, holonomic_position_get_y_double(&robot.pos),0);
     rsh_set_speed(&robot.rs,0);
     
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    pid_set_gains(&robot.wheel0_pid, 10, 0,0);
+    pid_set_gains(&robot.wheel1_pid, 10, 0,0);
+    pid_set_gains(&robot.wheel2_pid, 10, 0,0);
+    
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, COLOR_Y(800));
     while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_turning_cap(&robot.traj,0);
     while(!holonomic_end_of_traj(&robot.traj));
     
-    int i;
-    int32_t time;
-    for (i=3;i>=1;i--)
+    for (i=5;i>=1;i--)
     {
-    pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P/i, ROBOT_PID_WHEEL0_I/i,ROBOT_PID_WHEEL0_D/i);
-    pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P/i, ROBOT_PID_WHEEL1_I/i,ROBOT_PID_WHEEL1_D/i);
-    pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P/i, ROBOT_PID_WHEEL2_I/i,ROBOT_PID_WHEEL2_D/i);
-    time = uptime_get();
-    while(time + 50000 > uptime_get());
+        pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P/i, ROBOT_PID_WHEEL0_I/i,ROBOT_PID_WHEEL0_D/i);
+        pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P/i, ROBOT_PID_WHEEL1_I/i,ROBOT_PID_WHEEL1_D/i);
+        pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P/i, ROBOT_PID_WHEEL2_I/i,ROBOT_PID_WHEEL2_D/i);
+        printf("setting PIDs, step %d\n",i);
+        strat_wait_ms(1000);
     }
     pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I,ROBOT_PID_WHEEL0_D);
     pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
     pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
     
-        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 700, COLOR_Y(200));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, COLOR_Y(800));
+    
     while(!holonomic_end_of_traj(&robot.traj));
     holonomic_trajectory_turning_cap(&robot.traj,0);
     while(!holonomic_end_of_traj(&robot.traj));
+    
+    
     printf("End of Calibration\n");
 }

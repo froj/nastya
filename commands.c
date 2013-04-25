@@ -1,6 +1,7 @@
 #include <commandline.h>
 #include <string.h>
 #include <stdio.h>
+#include <uptime.h>
 #include <cvra_servo.h>
 #include "adresses.h"
 #include "cvra_cs.h"
@@ -258,7 +259,7 @@ void cmd_servo(int argc, char** argv){
     cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (uint32_t)atoi(argv[2]));
 }
 
-void cmd_get_io(int argc, char** argv){
+void cmd_get_io(void){
     printf("%d\n", (uint32_t)IORD(PIO_BASE, 0));
 }
 

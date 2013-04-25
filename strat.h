@@ -159,5 +159,6 @@ void strat_short_arm_down(void);
 
 void strat_avoiding(void);
 void strat_restart_after_avoiding(void);
+void strat_start_position(void);
 
 #endif
