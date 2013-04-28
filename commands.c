@@ -263,13 +263,6 @@ void cmd_get_io(void){
     printf("%d\n", (uint32_t)IORD(PIO_BASE, 0));
 }
 
-//void cmd_toggle_avoiding(void)
-//{
-    //if (robot.robot_in_sight)
-        //robot.robot_in_sight = 0;
-    //else
-        //robot.robot_in_sight = 1;
-//}
 
 #ifdef COMPILE_ON_ROBOT
 void cmd_beacon(void) {
@@ -285,32 +278,33 @@ void cmd_beacon(void) {
 }
 #endif
 
-void cmd_test_odometry(void){
-
-    holonomic_position_set_x_s16(&robot.pos, 88.5);
-    holonomic_position_set_y_s16(&robot.pos, 2000 - 213);
-    holonomic_position_set_a_s16(&robot.pos, 90);
-
-    strat_short_arm_up();
-    
+void cmd_test_odometry(int argc, char** argv){
+    if(argc > 1){
+        holonomic_position_set_x_s16(&robot.pos, 88.5);
+        holonomic_position_set_y_s16(&robot.pos, 2000 - 213);
+        holonomic_position_set_a_s16(&robot.pos, 90);
 
 
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(0));
-    while(!holonomic_end_of_traj(&robot.traj));
+        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
+        while(!holonomic_end_of_traj(&robot.traj));
+        holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(0));
+        while(!holonomic_end_of_traj(&robot.traj));
 
-    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
+        while((IORD(PIO_BASE, 0) & 0x1000) == 0);
 
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(0));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, TO_RAD(0));
-    while(!holonomic_end_of_traj(&robot.traj));
-
+        holonomic_trajectory_turning_cap(&robot.traj, TO_RAD((int)atoi(argv[1])));
+        while(!holonomic_end_of_traj(&robot.traj));
+        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
+        while(!holonomic_end_of_traj(&robot.traj));
+        holonomic_trajectory_turning_cap(&robot.traj, TO_RAD((int)atoi(argv[1])));
+        while(!holonomic_end_of_traj(&robot.traj));
+        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
+        while(!holonomic_end_of_traj(&robot.traj));
+        holonomic_trajectory_turning_cap(&robot.traj, TO_RAD((int)atoi(argv[1])));
+        while(!holonomic_end_of_traj(&robot.traj));
+    }else{
+        printf("usage: odo_test HEADING_IN_DEG");
+    }
 }
 
 void cmd_index_setup(void){
@@ -357,7 +351,6 @@ command_t commands_list[] = {
     COMMAND("current",cmd_print_currents),
     COMMAND("odo_test", cmd_test_odometry),
     COMMAND("index_setup", cmd_index_setup),
-    //COMMAND("toggle_avoiding",cmd_toggle_avoiding),r
     COMMAND("none",NULL), /* must be last. */
 };
 
