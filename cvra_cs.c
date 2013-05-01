@@ -78,9 +78,9 @@ void cvra_cs_init(void) {
     pid_init(&robot.wheel2_pid);
     
     // CALIBRATION : Mettre les gains < 0 si le moteur compense dans le mauvais sens
-    pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I,ROBOT_PID_WHEEL0_D);
-    pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I,ROBOT_PID_WHEEL1_D);
-    pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I,ROBOT_PID_WHEEL2_D);
+    pid_set_gains(&robot.wheel0_pid, ROBOT_PID_WHEEL0_P, ROBOT_PID_WHEEL0_I, ROBOT_PID_WHEEL0_D);
+    pid_set_gains(&robot.wheel1_pid, ROBOT_PID_WHEEL1_P, ROBOT_PID_WHEEL1_I, ROBOT_PID_WHEEL1_D);
+    pid_set_gains(&robot.wheel2_pid, ROBOT_PID_WHEEL2_P, ROBOT_PID_WHEEL2_I, ROBOT_PID_WHEEL2_D);
     
     //pid_set_maximums(&robot.angle_pid, 0, 5000, 30000);
     
@@ -139,16 +139,16 @@ void cvra_cs_init(void) {
     holonomic_position_init(&robot.pos);
 
     double beta[] = {ROBOT_BETA_WHEEL0_RAD,
-                    ROBOT_BETA_WHEEL1_RAD,
-                    ROBOT_BETA_WHEEL2_RAD};
+                     ROBOT_BETA_WHEEL1_RAD,
+                     ROBOT_BETA_WHEEL2_RAD};
 
     double wheel_radius[] = {ROBOT_RADIUS_WHEEL0_MM,
-                            ROBOT_RADIUS_WHEEL1_MM,
-                            ROBOT_RADIUS_WHEEL2_MM};
+                             ROBOT_RADIUS_WHEEL1_MM,
+                             ROBOT_RADIUS_WHEEL2_MM};
 
     double wheel_distance[] = {ROBOT_DISTANCE_WHEEL0_MM,
-                              ROBOT_DISTANCE_WHEEL1_MM,
-                              ROBOT_DISTANCE_WHEEL2_MM};
+                               ROBOT_DISTANCE_WHEEL1_MM,
+                               ROBOT_DISTANCE_WHEEL2_MM};
 
     double wheel_inner_distance[] = {
                 ROBOT_DISTANCE_WHEEL0_MM - ROBOT_WHEEL_THICKNESS0_MM / 2,
@@ -204,18 +204,18 @@ void cvra_cs_init(void) {
     
     /******************************** ANGLE *************************************/
     quadramp_init(&robot.angle_qr);
-    quadramp_set_2nd_order_vars(&robot.angle_qr,10000,10000);
-    quadramp_set_1st_order_vars(&robot.angle_qr,10000,10000);
+    quadramp_set_2nd_order_vars(&robot.angle_qr, 10000, 10000);
+    quadramp_set_1st_order_vars(&robot.angle_qr, 10000, 10000);
     
     
     ///******************************** OMEGA ************************************/
     ramp_init(&robot.omega_r);
-    ramp_set_vars(&robot.omega_r, 400,400);
+    ramp_set_vars(&robot.omega_r, 400, 400);
     
     
     ///******************************** SPEED *************************************/
     ramp_init(&robot.speed_r);
-    ramp_set_vars(&robot.speed_r,100,100);
+    ramp_set_vars(&robot.speed_r, 100, 100);
     
 
     ///****************************************************************************/
