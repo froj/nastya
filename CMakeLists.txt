@@ -7,8 +7,6 @@ project(cvra-simu)
 set(CMAKE_BUILD_TYPE Debug)
 file(GLOB_RECURSE
     nastya_source
-    nastya/arm.c
-    nastya/armFunc.c
     nastya/com_balises.c
     nastya/comm_pc.c
     nastya/cvra_cs.c
@@ -19,6 +17,7 @@ file(GLOB_RECURSE
     nastya/strat.c
     nastya/move_queue.c
     nastya/commands.c
+    nastya/pingpongcannon.c
 )
 
 file(GLOB_RECURSE
