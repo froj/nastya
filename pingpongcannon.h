@@ -22,7 +22,7 @@ typedef struct {
 
     int32_t shoot_speed;
 
-} ppc_t
+} ppc_t;
 
 
 void ppc_init(ppc_t *cannon);
@@ -31,7 +31,9 @@ void ppc_manage(ppc_t *cannon);
 
 void pcc_manage_cs(ppc_t *cannon);
 
-void ppc_aspirate(ppc_t *cannon);
+void ppc_aspiration_on(ppc_t *cannon);
+void ppc_aspiration_off(ppc_t *cannon);
+void ppc_aspiration_invert(ppc_t *cannon);
 
 void ppc_shoot(ppc_t *cannon);
 
