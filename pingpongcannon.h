@@ -41,5 +41,8 @@ void ppc_eject(ppc_t *cannon);
 
 void ppc_test_ball(ppc_t *cannon);
 
+void ppc_aspirator_down(void);
+void ppc_aspirator_up(void);
+
 
 #endif

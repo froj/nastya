@@ -68,3 +68,13 @@ void ppc_eject(ppc_t *cannon){
 void ppc_test_ball(ppc_t *cannon){
 
 }
+
+void ppc_aspirater_down(void)
+{
+    cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
+}
+
+void ppc_aspirater_up(void)
+{
+    cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
+}
