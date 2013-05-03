@@ -5,20 +5,20 @@
 #ifndef _PINGPONG_H_
 #define _PINGPONG_H_
 
-typedef ppc_cannon_state {
+enum ppc_cannon_state {
     SUCK,
     BLOW,
     SHOOT
 };
 
-typedef ppc_drum_state {
+enum ppc_drum_state {
     EMPTY,
     LOADED_SHOOT,
     LOADED_EJECT,
     UNDERWAY,
     UNDERWAY_LOADED_SHOOT,
     UNDERWAY_LOADED_EJECT
-}
+};
 
 typedef struct {
 

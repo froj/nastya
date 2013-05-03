@@ -29,7 +29,9 @@ void ppc_init(ppc_t *cannon){
     pid_set_out_shift(&cannon->cannon_pid, 10); //TODO
     cs_set_correct_filter(&cannon->cannon_cs, pid_do_filter, &cannon->cannon_pid);
     cs_set_process_in(&cannon->cannon_cs, cvra_servo_set0, (void*)SERVOS_BASE);
+#ifdef COMPILE_ON_ROBOT
     cs_set_process_out(&cannon->drum_cs, ppc_set_shooting_speed, (void*)FANSPEED_BASE);
+#endif
     cs_set_consign(&cannon->cannon_cs, 0);
 
     cs_enable(&cannon->drum_cs);
