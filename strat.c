@@ -11,22 +11,6 @@
 
 struct strat_info strat;
 
-void strat_long_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 1, 15000); 
-}
-
-void strat_long_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 1, 7000); 
-}
-
-void strat_short_arm_up(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 17000); 
-}
-
-void strat_short_arm_down(void){
-        cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
-}
-
 
 /** Increments the match timer, called every second. */
 static void increment_timer(__attribute__((unused))void *data) {
@@ -70,6 +54,9 @@ void strat_set_objects(void) {
     strat.glasses[9].pos.x = 1950; strat.glasses[9].pos.y = (1300);
     strat.glasses[10].pos.x = 2100; strat.glasses[10].pos.y = (1550);
     strat.glasses[11].pos.x = 2100; strat.glasses[11].pos.y = (1050);
+
+    strat.cake.pos.x = 1440; strat.cake.pos.y = 100;
+    strat.cake.r = 420;
 }
 
 
@@ -95,13 +82,8 @@ void strat_begin(strat_color_t color) {
     strat.color = color;
     
     strat_set_objects();
-    strat_start_position();
 
-    strat_long_arm_down();
-    strat_short_arm_down();
-
- //   holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 200, COLOR_Y(2000-300));
- //   while(!holonomic_end_of_traj(&robot.traj));
+    strat_do_calibration();
 
     while((IORD(PIO_BASE, 0) & 0x1000) == 0);
     scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);

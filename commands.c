@@ -319,6 +319,33 @@ void cmd_index_setup(void){
     }
 }
     
+void cmd_shoot(void){
+    ppc_shoot(&robot.cannon);
+}
+
+void cmd_eject(void){
+    ppc_eject(&robot.cannon);
+}
+
+void cmd_set_shooting_speed(int argc, char** argv){
+    cs_set_consign(&robot.connon.cannon_cs, atoi(argv[1]));
+}
+
+void cmd_reset_drum(void){
+    cs_set_consign(&robot.cannon.drum_cs, 0);
+    cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, 3, 0);
+}
+
+void cmd_disable_drum(void){
+    cs_set_consign(&robot.cannon.drum_cs, 0);
+    cs_disable(&robot.cannon.drum_cs);
+}
+
+void cmd_enable_drum(void){
+    cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, 3, 0);
+    cs_set_consign(&robot.cannon.drum_cs, 0);
+    cs_enable(&robot.cannon.drum_cs);
+}
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -351,6 +378,12 @@ command_t commands_list[] = {
     COMMAND("current",cmd_print_currents),
     COMMAND("odo_test", cmd_test_odometry),
     COMMAND("index_setup", cmd_index_setup),
+    COMMAND("shoot", cmd_shoot),
+    COMMAND("eject", cmd_eject),
+    COMMAND("shotting_speed", cmd_set_shooting_speed),
+    COMMAND("reset_drum", cmd_reset_drum),
+    COMMAND("enable_drum", cmd_enable_drum),
+    COMMAND("disable_drum", cmd_disable_drum),
     COMMAND("none",NULL), /* must be last. */
 };
 
