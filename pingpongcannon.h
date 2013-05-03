@@ -70,5 +70,8 @@ void ppc_eject(ppc_t *cannon);
 
 void ppc_set_shooting_speed(void *base, int32_t value);
 
+void ppc_aspirator_down(void);
+void ppc_aspirator_up(void);
+
 
 #endif

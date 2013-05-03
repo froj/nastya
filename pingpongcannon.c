@@ -193,6 +193,17 @@ int32_t get_light_barrier_state(int32_t mask){
     return IORD(PIO_BASE, 0) & mask;
 }
 
+
 void ppc_set_shooting_speed(void *base, int32_t value){
     IOWR(base, 0, value);
+}
+
+void ppc_aspirater_down(void)
+{
+    cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
+}
+
+void ppc_aspirater_up(void)
+{
+    cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
 }
