@@ -57,6 +57,7 @@ void cvra_cs_init(void) {
     for(i=0;i<6;i++) {
         cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, i, 0);
         cvra_dc_set_pwm((void*)HEXMOTORCONTROLLER_BASE, i, 0);
+        cvra_servo_set((void*)SERVOS_BASE, i, 5000);
     }
 
 #endif
@@ -233,6 +234,11 @@ void cvra_cs_init(void) {
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
             / ASSERV_FREQUENCY) / SCHEDULER_UNIT, 130);
+
+    
+    //CANNON BITCH!
+    ppc_init(&robot.cannon);
+    //TODO set the bit-masks for the light barriers
 }
 
 

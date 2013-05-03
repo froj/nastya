@@ -12,6 +12,7 @@
 #include <holonomic/trajectory_manager.h>
 #include <holonomic/robot_system.h>
 #include <holonomic/position_manager.h>
+#include "pingpongcannon.h"
 #include <control_system_manager.h>
 #include <pid.h>
 #include <quadramp.h>
@@ -82,6 +83,8 @@ struct _rob {
     // Sans balises on n'en a pas besoin
     //struct blocking_detection angle_bd;     ///< Angle blocking detection manager.
     //struct blocking_detection distance_bd;  ///< Distance blocking detection manager.
+
+    ppc_t cannon;
 
     uint8_t is_aligning:1;                  ///< =1 if the robot is aligning on border
     
