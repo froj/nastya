@@ -260,23 +260,8 @@ void cmd_servo(int argc, char** argv){
 }
 
 void cmd_get_io(void){
-    printf("%d\n", (uint32_t)IORD(PIO_BASE, 0));
+    printf("%x\n", (uint32_t)IORD(PIO_BASE, 0));
 }
-
-
-#ifdef COMPILE_ON_ROBOT
-void cmd_beacon(void) {
-    printf("==Beacon==\n");
-    printf("period = %u\n", (unsigned int)robot.beacon.period);
-    printf("firstedge = %u\n", (unsigned int)robot.beacon.firstedge);
-    printf("lastindex = %u\n", (unsigned int)robot.beacon.lastindex);
-    printf("nbedge = %d\n", (int)robot.beacon.nb_edges);
-
-/*    for(;;)
-        printf("angle : %d\n",(int)(robot.beacon.firstedge - robot.beacon.lastindex)/10000);  */
-
-}
-#endif
 
 void cmd_test_odometry(int argc, char** argv){
     if(argc > 1){
@@ -328,7 +313,7 @@ void cmd_eject(void){
 }
 
 void cmd_set_shooting_speed(int argc, char** argv){
-    cs_set_consign(&robot.connon.cannon_cs, atoi(argv[1]));
+    cs_set_consign(&robot.cannon.cannon_cs, atoi(argv[1]));
 }
 
 void cmd_reset_drum(void){
@@ -342,10 +327,37 @@ void cmd_disable_drum(void){
 }
 
 void cmd_enable_drum(void){
-    cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, 3, 0);
+    cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, 4, 0);
     cs_set_consign(&robot.cannon.drum_cs, 0);
     cs_enable(&robot.cannon.drum_cs);
 }
+
+void cmd_detect_incoming_ball(void){
+    while(!robot.cannon.light_barrier_in_state ||
+       ppc_get_light_barrier_state(robot.cannon.light_barrier_in_mask));
+    printf("Incoming\n");
+        
+}
+
+void cmd_detect_shooting_ball(void){
+    while(robot.cannon.light_barrier_shoot_state ||
+       !ppc_get_light_barrier_state(robot.cannon.light_barrier_shoot_mask));
+    printf("Fire in the hole\n");
+        
+}
+
+void cmd_detect_eject_ball(void){
+    while(robot.cannon.light_barrier_eject_state ||
+       !ppc_get_light_barrier_state(robot.cannon.light_barrier_eject_mask));
+    printf("Ejected\n");
+        
+}
+
+void cmd_set_drum(int argc, char** argv){
+    cs_set_consign(&robot.cannon.drum_cs, atoi(argv[1]));
+}
+
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -371,20 +383,21 @@ command_t commands_list[] = {
     COMMAND("turn", cmd_turn),
     COMMAND("servo", cmd_servo),
     COMMAND("io", cmd_get_io),
-#ifdef COMPILE_ON_ROBOT
-    COMMAND("beacon", cmd_beacon),
-#endif
     COMMAND("calibrate",cmd_calibrate),
     COMMAND("current",cmd_print_currents),
     COMMAND("odo_test", cmd_test_odometry),
     COMMAND("index_setup", cmd_index_setup),
     COMMAND("shoot", cmd_shoot),
     COMMAND("eject", cmd_eject),
-    COMMAND("shotting_speed", cmd_set_shooting_speed),
+    COMMAND("shooting_speed", cmd_set_shooting_speed),
+    COMMAND("set_drum", cmd_set_drum),
     COMMAND("reset_drum", cmd_reset_drum),
     COMMAND("enable_drum", cmd_enable_drum),
     COMMAND("disable_drum", cmd_disable_drum),
-    COMMAND("none",NULL), /* must be last. */
+    COMMAND("detect_in", cmd_detect_incoming_ball),
+    COMMAND("detect_shot", cmd_detect_shooting_ball),
+    COMMAND("detect_eject", cmd_detect_eject_ball),
+    COMMAND("none",NULL) /* must be last. */
 };
 
 
