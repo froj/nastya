@@ -6,6 +6,8 @@
 #include "pingpongcannon.h"
 
 
+int32_t get_shooting_speed(ppc_t *cannon);
+int32_t get_light_barrier_state(int32_t mask);
 
 void ppc_init(ppc_t *cannon){
     memset(cannon, 0, sizeof(ppc_t));
@@ -27,8 +29,7 @@ void ppc_init(ppc_t *cannon){
     pid_set_out_shift(&cannon->cannon_pid, 10); //TODO
     cs_set_correct_filter(&cannon->cannon_cs, pid_do_filter, &cannon->cannon_pid);
     cs_set_process_in(&cannon->cannon_cs, cvra_servo_set0, (void*)SERVOS_BASE);
-    //TODO
-    //cs_set_process_out(&cannon->drum_cs, TODO, (void*)HEXMOTORCONTROLLER_BASE);
+    cs_set_process_out(&cannon->drum_cs, ppc_set_shooting_speed, (void*)FANSPEED_BASE);
     cs_set_consign(&cannon->cannon_cs, 0);
 
     cs_enable(&cannon->drum_cs);
@@ -38,6 +39,118 @@ void ppc_init(ppc_t *cannon){
 
 void ppc_manage(ppc_t *cannon){
     
+    switch(cannon->drum_state){
+
+    default:
+    case EMPTY:
+        if(cannon->light_barrier_in_state &&
+           !get_light_barrier_state(cannon->light_barrier_in_mask)){
+            if(get_light_barrier_state(cannon->light_barrier_color_mask)){
+                cannon->drum_state = LOADED_SHOOT;
+            }else{
+                cannon->drum_state = LOADED_EJECT;
+            }
+        }
+        break;
+
+    case LOADED_SHOOT:
+        break;
+
+    case LOADED_EJECT:
+        break;
+
+    case UNDERWAY:
+        if((!get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
+           cannon->light_barrier_shoot_state) ||
+           (!get_light_barrier_state(cannon->light_barrier_eject_mask) &&
+           cannon->light_barrier_eject_state)){
+
+            if(cannon->light_barrier_in_state &&
+               !get_light_barrier_state(cannon->light_barrier_in_mask)){
+                if(get_light_barrier_state(cannon->light_barrier_color_mask)){
+                    cannon->drum_state = LOADED_SHOOT;
+                }else{
+                    cannon->drum_state = LOADED_EJECT;
+                }
+            }else{
+                cannon->drum_state = EMPTY;
+            }
+        }else{
+            if(cannon->light_barrier_in_state &&
+               !get_light_barrier_state(cannon->light_barrier_in_mask)){
+                if(get_light_barrier_state(cannon->light_barrier_color_mask)){
+                    cannon->drum_state = UNDERWAY_LOADED_SHOOT;
+                }else{
+                    cannon->drum_state = UNDERWAY_LOADED_EJECT;
+                }
+            }
+        }
+        break;
+
+    case UNDERWAY_LOADED_SHOOT:
+        if((!get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
+           cannon->light_barrier_shoot_state) ||
+           (!get_light_barrier_state(cannon->light_barrier_eject_mask) &&
+           cannon->light_barrier_eject_state)){
+
+            cannon->drum_state = LOADED_SHOOT;
+        }
+        break;
+
+    case UNDERWAY_LOADED_EJECT:
+        if((!get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
+           cannon->light_barrier_shoot_state) ||
+           (!get_light_barrier_state(cannon->light_barrier_eject_mask) &&
+           cannon->light_barrier_eject_state)){
+
+            cannon->drum_state = LOADED_EJECT;
+        }
+        break;
+
+    }
+
+
+
+    switch(cannon->cannon_state){
+
+    case SUCK:
+        
+        break;
+
+    case SHOOT:
+        switch(cannon->drum_state){
+        default:
+        case EMPTY:
+        case UNDERWAY:
+        case UNDERWAY_LOADED_SHOOT:
+        case UNDERWAY_LOADED_EJECT:
+            break;
+
+        case LOADED_SHOOT:
+            ppc_shoot(cannon);
+            cannon->drum_state = UNDERWAY;
+            break;
+
+        case LOADED_EJECT:
+            ppc_eject(cannon);
+            cannon->drum_state = UNDERWAY;
+            break;
+        }
+
+        break;
+
+    default:
+        break;
+
+    }
+
+    cannon->light_barrier_in_state =
+        get_light_barrier_state(cannon->light_barrier_in_mask);
+    cannon->light_barrier_shoot_state =
+        get_light_barrier_state(cannon->light_barrier_shoot_mask);
+    cannon->light_barrier_eject_state =
+        get_light_barrier_state(cannon->light_barrier_eject_mask);
+
 }
 
 void pcc_manage_cs(ppc_t *cannon){
@@ -58,13 +171,28 @@ void ppc_aspiration_invert(ppc_t *cannon){
 }
 
 void ppc_shoot(ppc_t *cannon){
+    const int32_t drum_pos = cannon->drum_encoder_val;
 
+    cs_set_consign(&cannon->cannon_cs, get_shooting_speed(cannon));
+    cs_set_consign(&cannon->drum_cs,
+                    cannon->drum_encoder_val + cannon->drum_encoder_res / 3); // + or - ?
 }
 
 void ppc_eject(ppc_t *cannon){
-
+    cs_set_consign(&cannon->drum_cs,
+                    cannon->drum_encoder_val - cannon->drum_encoder_res / 3); // + or - ?
 }
 
-void ppc_test_ball(ppc_t *cannon){
+int32_t get_shooting_speed(ppc_t *cannon){
+    /* TODO
+     * should depend on the distance to the cake (which is btw a lie..)
+     */
+}
 
+int32_t get_light_barrier_state(int32_t mask){
+    return IORD(PIO_BASE, 0) & mask;
+}
+
+void ppc_set_shooting_speed(void *base, int32_t value){
+    IOWR(base, 0, value);
 }
