@@ -6,6 +6,7 @@
 #define _PINGPONG_H_
 
 enum ppc_cannon_state {
+    IDLE,
     SUCK,
     BLOW,
     SHOOT
@@ -58,7 +59,7 @@ void ppc_init(ppc_t *cannon);
 
 void ppc_manage(ppc_t *cannon);
 
-void pcc_manage_cs(ppc_t *cannon);
+void ppc_manage_cs(ppc_t *cannon);
 
 void ppc_aspiration_on(ppc_t *cannon);
 void ppc_aspiration_off(ppc_t *cannon);

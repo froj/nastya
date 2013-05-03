@@ -1,4 +1,5 @@
 #include <aversive.h>
+#include <scheduler.h>
 #include <string.h>
 #include <cvra_servo.h>
 #include <cvra_dc.h>
@@ -14,7 +15,7 @@ void ppc_init(ppc_t *cannon){
 
     cs_init(&cannon->drum_cs);
     pid_init(&cannon->drum_pid);
-    pid_set_maximums(&cannon->drum_pid, 0, 0, 0); //TODO
+    pid_set_maximums(&cannon->drum_pid, 0, 0, 450); //TODO
     pid_set_gains(&cannon->drum_pid, 100, 0, 0); //TODO
     pid_set_out_shift(&cannon->drum_pid, 10); //TODO
     cs_set_correct_filter(&cannon->drum_cs, pid_do_filter, &cannon->drum_pid);
@@ -24,7 +25,7 @@ void ppc_init(ppc_t *cannon){
 
     cs_init(&cannon->cannon_cs);
     pid_init(&cannon->cannon_pid);
-    pid_set_maximums(&cannon->cannon_pid, 0, 0, 0); //TODO
+    pid_set_maximums(&cannon->cannon_pid, 0, 0, 15000);
     pid_set_gains(&cannon->cannon_pid, 100, 10, 0); //TODO
     pid_set_out_shift(&cannon->cannon_pid, 10); //TODO
     cs_set_correct_filter(&cannon->cannon_cs, pid_do_filter, &cannon->cannon_pid);
@@ -32,11 +33,16 @@ void ppc_init(ppc_t *cannon){
 #ifdef COMPILE_ON_ROBOT
     cs_set_process_out(&cannon->drum_cs, ppc_set_shooting_speed, (void*)FANSPEED_BASE);
 #endif
-    cs_set_consign(&cannon->cannon_cs, 0);
+    cs_set_consign(&cannon->cannon_cs, 5000);
 
     cs_enable(&cannon->drum_cs);
     cs_enable(&cannon->cannon_cs);
 
+    scheduler_add_periodical_event(ppc_manage_cs, (void *)cannon, 10000 / SCHEDULER_UNIT);
+    scheduler_add_periodical_event(ppc_manage, (void *)cannon, 10000 / SCHEDULER_UNIT);
+
+    cannon->drum_state = EMPTY;
+    cannon->cannon_state = IDLE;
 }
 
 void ppc_manage(ppc_t *cannon){
@@ -53,6 +59,7 @@ void ppc_manage(ppc_t *cannon){
                 cannon->drum_state = LOADED_EJECT;
             }
         }
+        cs_set_consign(cannon->cannon_cs, 5000);
         break;
 
     case LOADED_SHOOT:
@@ -142,6 +149,8 @@ void ppc_manage(ppc_t *cannon){
         break;
 
     default:
+    case IDLE:
+    case BLOW:
         break;
 
     }
@@ -155,7 +164,7 @@ void ppc_manage(ppc_t *cannon){
 
 }
 
-void pcc_manage_cs(ppc_t *cannon){
+void ppc_manage_cs(ppc_t *cannon){
     cs_manage(&cannon->drum_cs);
     cs_manage(&cannon->cannon_cs);
 }
@@ -189,6 +198,7 @@ int32_t get_shooting_speed(ppc_t *cannon){
     /* TODO
      * should depend on the distance to the cake (which is btw a lie..)
      */
+    return 15000;
 }
 
 int32_t get_light_barrier_state(int32_t mask){
