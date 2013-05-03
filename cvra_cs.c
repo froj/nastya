@@ -253,13 +253,13 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     
 #ifdef COMPILE_ON_ROBOT
     ///** Check the flag d'avoiding, appeler strat_avoiding*/
-    if (robot.beacon.nb_edges && !robot.avoiding)
-    {
-        printf("ROBOT DETECTED\n");
-        robot.avoiding = 1;
-        strat_avoiding();
-        
-    }
+    //if (robot.beacon.nb_edges && !robot.avoiding)
+    //{
+    //    printf("ROBOT DETECTED\n");
+    //    robot.avoiding = 1;
+    //    strat_avoiding();
+    //    
+    //}
     //else if ((robot.beacon.nb_edges == 0) && robot.avoiding)
     //{
         //printf("OUT OF SIGHT\n");

@@ -21,11 +21,9 @@ void strat_wait_90_seconds(void)
 {
     printf("Stoppping at end of 90 sec \n");
     //while (strat.time < 90);
-    strat_short_arm_down();
     cs_disable(&robot.wheel0_cs);
     cs_disable(&robot.wheel1_cs);
     cs_disable(&robot.wheel2_cs);
-    strat_short_arm_down();
 }
 
 
@@ -73,7 +71,7 @@ void strat_start_position(void) {
 
 void strat_begin(strat_color_t color) {
 #ifdef COMPILE_ON_ROBOT
-    cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ);
+    cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ, 127, -5.8618, 109.43);
 #endif
     /* Starts the game timer. */
     strat.time = 0;
@@ -102,7 +100,6 @@ void strat_do_gift(int number) {
     {
         if (strat.sub_state == 0 )
         {
-            strat_short_arm_down();
             holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
                                                         strat.gifts[number].x + COLOR_C,
                                                          COLOR_Y(2000-140));
@@ -133,7 +130,6 @@ void strat_do_gift(int number) {
             }
             
             while(!holonomic_end_of_traj(&robot.traj));
-            strat_short_arm_up();
             
             int32_t time = uptime_get();
             while(time + 500000 > uptime_get());

@@ -80,7 +80,7 @@ typedef struct {
 typedef struct {
     point_t pos;
     int r;
-} cake_t
+} cake_t;
 
 /** This structure holds all the configuration data and state of the strategy. */
 struct strat_info {
