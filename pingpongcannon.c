@@ -14,8 +14,8 @@ void ppc_init(ppc_t *cannon){
 
     cs_init(&cannon->drum_cs);
     pid_init(&cannon->drum_pid);
-    pid_set_maximums(&cannon->drum_pid, 0, 0, 450); //TODO
-    pid_set_gains(&cannon->drum_pid, -10, 0, 0); //TODO
+    pid_set_maximums(&cannon->drum_pid, 0, 2000, 450); //TODO
+    pid_set_gains(&cannon->drum_pid, -500, 0, -300); //TODO
     pid_set_out_shift(&cannon->drum_pid, 10); //TODO
     cs_set_correct_filter(&cannon->drum_cs, pid_do_filter, &cannon->drum_pid);
     cs_set_process_in(&cannon->drum_cs, cvra_dc_set_pwm4, (void*)HEXMOTORCONTROLLER_BASE);
@@ -30,7 +30,7 @@ void ppc_init(ppc_t *cannon){
     cs_set_correct_filter(&cannon->cannon_cs, pid_do_filter, &cannon->cannon_pid);
     cs_set_process_in(&cannon->cannon_cs, cvra_servo_set0, (void*)SERVOS_BASE);
 #ifdef COMPILE_ON_ROBOT
-    cs_set_process_out(&cannon->drum_cs, ppc_set_shooting_speed, (void*)FANSPEED_BASE);
+    cs_set_process_out(&cannon->cannon_cs, ppc_set_shooting_speed, (void*)FANSPEED_BASE);
 #endif
     cs_set_consign(&cannon->cannon_cs, 5000);
 
@@ -38,7 +38,7 @@ void ppc_init(ppc_t *cannon){
     cs_enable(&cannon->cannon_cs);
 
     scheduler_add_periodical_event(ppc_manage_cs, (void *)cannon, 10000 / SCHEDULER_UNIT);
-    scheduler_add_periodical_event(ppc_manage, (void *)cannon, 1000 / SCHEDULER_UNIT);
+    //scheduler_add_periodical_event(ppc_manage, (void *)cannon, 1000 / SCHEDULER_UNIT);
 
     cannon->drum_state = EMPTY;
     cannon->cannon_state = IDLE;
@@ -47,6 +47,8 @@ void ppc_init(ppc_t *cannon){
     cannon->light_barrier_in_mask = 0x0200;
     cannon->light_barrier_eject_mask = 0x0400;
     cannon->light_barrier_shoot_mask = 0x0800;
+
+    cannon->drum_encoder_res = 19932;
 }
 
 void ppc_manage(ppc_t *cannon){
@@ -170,7 +172,8 @@ void ppc_manage(ppc_t *cannon){
 
 void ppc_manage_cs(ppc_t *cannon){
     cs_manage(&cannon->drum_cs);
-    cs_manage(&cannon->cannon_cs);
+    cannon->drum_encoder_val = cvra_dc_get_encoder4(HEXMOTORCONTROLLER_BASE);
+    //cs_manage(&cannon->cannon_cs);
 }
 
 void ppc_aspiration_on(ppc_t *cannon){

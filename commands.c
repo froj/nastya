@@ -357,6 +357,9 @@ void cmd_set_drum(int argc, char** argv){
     cs_set_consign(&robot.cannon.drum_cs, atoi(argv[1]));
 }
 
+void cmd_set_drum_pid(int argc, char** argv){
+    pid_set_gains(&robot.cannon.drum_pid, atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
+}
 
 
 /** An array of all the commands. */
@@ -394,6 +397,7 @@ command_t commands_list[] = {
     COMMAND("reset_drum", cmd_reset_drum),
     COMMAND("enable_drum", cmd_enable_drum),
     COMMAND("disable_drum", cmd_disable_drum),
+    COMMAND("drum_pid", cmd_set_drum_pid),
     COMMAND("detect_in", cmd_detect_incoming_ball),
     COMMAND("detect_shot", cmd_detect_shooting_ball),
     COMMAND("detect_eject", cmd_detect_eject_ball),
