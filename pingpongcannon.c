@@ -33,7 +33,6 @@ void ppc_init(ppc_t *cannon){
     //scheduler_add_periodical_event(ppc_manage, (void *)cannon, 1000 / SCHEDULER_UNIT);
 
     cannon->drum_state = EMPTY;
-    cannon->cannon_state = IDLE;
 
     cannon->light_barrier_color_mask = 0x0100;
     cannon->light_barrier_in_mask = 0x0200;
@@ -44,6 +43,11 @@ void ppc_init(ppc_t *cannon){
 }
 
 void ppc_manage(ppc_t *cannon){
+    //TODO
+    ppc_manage_shoot(cannon);
+}
+
+void ppc_manage_shoot(ppc_t *cannon){
     
     switch(cannon->drum_state){
 
@@ -61,9 +65,13 @@ void ppc_manage(ppc_t *cannon){
         break;
 
     case LOADED_SHOOT:
+        ppc_shoot(cannon);
+        cannon->drum_state = UNDERWAY;
         break;
 
     case LOADED_EJECT:
+        ppc_eject(cannon);
+        cannon->drum_state = UNDERWAY;
         break;
 
     case UNDERWAY:
@@ -117,41 +125,6 @@ void ppc_manage(ppc_t *cannon){
     }
 
 
-
-    switch(cannon->cannon_state){
-
-    case SUCK:
-        
-        break;
-
-    case SHOOT:
-        switch(cannon->drum_state){
-        default:
-        case EMPTY:
-        case UNDERWAY:
-        case UNDERWAY_LOADED_SHOOT:
-        case UNDERWAY_LOADED_EJECT:
-            break;
-
-        case LOADED_SHOOT:
-            ppc_shoot(cannon);
-            cannon->drum_state = UNDERWAY;
-            break;
-
-        case LOADED_EJECT:
-            ppc_eject(cannon);
-            cannon->drum_state = UNDERWAY;
-            break;
-        }
-
-        break;
-
-    default:
-    case IDLE:
-    case BLOW:
-        break;
-
-    }
 
     cannon->light_barrier_in_state =
         ppc_get_light_barrier_state(cannon->light_barrier_in_mask);

@@ -5,13 +5,6 @@
 #ifndef _PINGPONG_H_
 #define _PINGPONG_H_
 
-enum ppc_cannon_state {
-    IDLE,
-    SUCK,
-    BLOW,
-    SHOOT
-};
-
 enum ppc_drum_state {
     EMPTY,
     LOADED_SHOOT,
@@ -23,7 +16,6 @@ enum ppc_drum_state {
 
 typedef struct {
 
-    enum ppc_cannon_state cannon_state;
     enum ppc_drum_state drum_state;
 
     struct holonomic_robot_position *pos;
@@ -58,8 +50,8 @@ typedef struct {
 void ppc_init(ppc_t *cannon);
 
 void ppc_manage(ppc_t *cannon);
-
 void ppc_manage_cs(ppc_t *cannon);
+void ppc_manage_shoot(ppc_t *cannon);
 
 void ppc_aspiration_on(ppc_t *cannon);
 void ppc_aspiration_off(ppc_t *cannon);
