@@ -12,30 +12,22 @@ int32_t get_shooting_speed(ppc_t *cannon);
 void ppc_init(ppc_t *cannon){
     memset(cannon, 0, sizeof(ppc_t));
 
+    cvra_servo_set((void*)SERVOS_BASE, 1, 12000);
+    cvra_servo_set((void*)SERVOS_BASE, 2, 10000);
+    cvra_servo_set((void*)SERVOS_BASE, 3, 10000);
+
     cs_init(&cannon->drum_cs);
     pid_init(&cannon->drum_pid);
-    pid_set_maximums(&cannon->drum_pid, 0, 2000, 450); //TODO
-    pid_set_gains(&cannon->drum_pid, -500, 0, -300); //TODO
+    pid_set_maximums(&cannon->drum_pid, 0, 2000, 150); 
+    pid_set_gains(&cannon->drum_pid, -500, 0, -300);
     pid_set_out_shift(&cannon->drum_pid, 10); //TODO
     cs_set_correct_filter(&cannon->drum_cs, pid_do_filter, &cannon->drum_pid);
     cs_set_process_in(&cannon->drum_cs, cvra_dc_set_pwm4, (void*)HEXMOTORCONTROLLER_BASE);
     cs_set_process_out(&cannon->drum_cs, cvra_dc_get_encoder4, (void*)HEXMOTORCONTROLLER_BASE);
     cs_set_consign(&cannon->drum_cs, 0);
 
-    cs_init(&cannon->cannon_cs);
-    pid_init(&cannon->cannon_pid);
-    pid_set_maximums(&cannon->cannon_pid, 0, 0, 15000);
-    pid_set_gains(&cannon->cannon_pid, 100, 10, 0); //TODO
-    pid_set_out_shift(&cannon->cannon_pid, 10); //TODO
-    cs_set_correct_filter(&cannon->cannon_cs, pid_do_filter, &cannon->cannon_pid);
-    cs_set_process_in(&cannon->cannon_cs, cvra_servo_set0, (void*)SERVOS_BASE);
-#ifdef COMPILE_ON_ROBOT
-    cs_set_process_out(&cannon->cannon_cs, ppc_set_shooting_speed, (void*)FANSPEED_BASE);
-#endif
-    cs_set_consign(&cannon->cannon_cs, 5000);
 
     cs_enable(&cannon->drum_cs);
-    cs_enable(&cannon->cannon_cs);
 
     scheduler_add_periodical_event(ppc_manage_cs, (void *)cannon, 10000 / SCHEDULER_UNIT);
     //scheduler_add_periodical_event(ppc_manage, (void *)cannon, 1000 / SCHEDULER_UNIT);
@@ -173,15 +165,20 @@ void ppc_manage(ppc_t *cannon){
 void ppc_manage_cs(ppc_t *cannon){
     cs_manage(&cannon->drum_cs);
     cannon->drum_encoder_val = cvra_dc_get_encoder4(HEXMOTORCONTROLLER_BASE);
-    //cs_manage(&cannon->cannon_cs);
 }
 
 void ppc_aspiration_on(ppc_t *cannon){
-    cvra_servo_set((void*)SERVOS_BASE, 1, 15000); 
+    int32_t uptime;
+    cvra_servo_set((void*)SERVOS_BASE, 2, 14000); 
+    uptime = uptime_get();
+    while(uptime_get() < uptime + 500000);
 }
 
 void ppc_aspiration_off(ppc_t *cannon){
-    cvra_servo_set((void*)SERVOS_BASE, 1, 7000); 
+    int32_t uptime;
+    cvra_servo_set((void*)SERVOS_BASE, 2, 10000);
+    uptime = uptime_get();
+    while(uptime_get() < uptime + 500000);
 }
 
 void ppc_aspiration_invert(ppc_t *cannon){
@@ -189,16 +186,30 @@ void ppc_aspiration_invert(ppc_t *cannon){
 }
 
 void ppc_shoot(ppc_t *cannon){
-    const int32_t drum_pos = cannon->drum_encoder_val;
-
-    cs_set_consign(&cannon->cannon_cs, get_shooting_speed(cannon));
+    int32_t uptime;
+    uptime = uptime_get();
     cs_set_consign(&cannon->drum_cs,
-                    cannon->drum_encoder_val + cannon->drum_encoder_res / 3); // + or - ?
+                    cannon->drum_encoder_val - cannon->drum_encoder_res / 3);
+    while(uptime_get() < uptime + 1000000);
 }
 
 void ppc_eject(ppc_t *cannon){
     cs_set_consign(&cannon->drum_cs,
-                    cannon->drum_encoder_val - cannon->drum_encoder_res / 3); // + or - ?
+                    cannon->drum_encoder_val + cannon->drum_encoder_res / 3);
+}
+
+void ppc_start_cannon(void){
+    int32_t uptime;
+    cvra_servo_set((void*)SERVOS_BASE, 3, 15000);
+    uptime = uptime_get();
+    while(uptime_get() < uptime + 1500000);
+}
+
+void ppc_stop_cannon(void){
+    int32_t uptime;
+    cvra_servo_set((void*)SERVOS_BASE, 3, 10000);
+    uptime = uptime_get();
+    while(uptime_get() < uptime + 500000);
 }
 
 int32_t get_shooting_speed(ppc_t *cannon){

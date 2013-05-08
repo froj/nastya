@@ -305,7 +305,9 @@ void cmd_index_setup(void){
 }
     
 void cmd_shoot(void){
+    ppc_start_cannon();
     ppc_shoot(&robot.cannon);
+    ppc_stop_cannon();
 }
 
 void cmd_eject(void){
