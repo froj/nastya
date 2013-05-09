@@ -48,7 +48,7 @@ void ppc_manage(ppc_t *cannon){
 }
 
 void ppc_manage_shoot(ppc_t *cannon){
-    
+ //evil change muharhar  
     switch(cannon->drum_state){
 
     default:
