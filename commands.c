@@ -263,6 +263,10 @@ void cmd_get_io(void){
     printf("%x\n", (uint32_t)IORD(PIO_BASE, 0));
 }
 
+void cmd_set_io(int argc, char **argv){
+    IOWR(PIO_BASE, 0, (int32_t)atoi(argv[1]));
+}
+
 void cmd_test_odometry(int argc, char** argv){
     if(argc > 1){
         holonomic_position_set_x_s16(&robot.pos, 88.5);
@@ -335,8 +339,7 @@ void cmd_enable_drum(void){
 }
 
 void cmd_detect_incoming_ball(void){
-    while(!robot.cannon.light_barrier_in_state ||
-       ppc_get_light_barrier_state(robot.cannon.light_barrier_in_mask));
+    while(ppc_get_light_barrier_state(robot.cannon.light_barrier_in_mask));
     printf("Incoming\n");
         
 }
@@ -367,7 +370,6 @@ void cmd_set_drum_pid(int argc, char** argv){
 /** An array of all the commands. */
 command_t commands_list[] = {
     COMMAND("test_argv",test_func),
-    COMMAND("reset", cmd_reset),
     COMMAND("start",cmd_start),
     COMMAND("pid", cmd_pid), 
     COMMAND("pwm", cmd_pwm),
@@ -388,6 +390,7 @@ command_t commands_list[] = {
     COMMAND("turn", cmd_turn),
     COMMAND("servo", cmd_servo),
     COMMAND("io", cmd_get_io),
+    COMMAND("io_set", cmd_set_io),
     COMMAND("calibrate",cmd_calibrate),
     COMMAND("current",cmd_print_currents),
     COMMAND("odo_test", cmd_test_odometry),
@@ -403,6 +406,7 @@ command_t commands_list[] = {
     COMMAND("detect_in", cmd_detect_incoming_ball),
     COMMAND("detect_shot", cmd_detect_shooting_ball),
     COMMAND("detect_eject", cmd_detect_eject_ball),
+    COMMAND("reset", cmd_reset),
     COMMAND("none",NULL) /* must be last. */
 };
 

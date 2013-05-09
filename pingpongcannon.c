@@ -12,7 +12,7 @@ int32_t get_shooting_speed(ppc_t *cannon);
 void ppc_init(ppc_t *cannon){
     memset(cannon, 0, sizeof(ppc_t));
 
-    cvra_servo_set((void*)SERVOS_BASE, 1, 12000);
+    cvra_servo_set((void*)SERVOS_BASE, 0, 20000);
     cvra_servo_set((void*)SERVOS_BASE, 2, 10000);
     cvra_servo_set((void*)SERVOS_BASE, 3, 10000);
 
@@ -30,7 +30,7 @@ void ppc_init(ppc_t *cannon){
     cs_enable(&cannon->drum_cs);
 
     scheduler_add_periodical_event(ppc_manage_cs, (void *)cannon, 10000 / SCHEDULER_UNIT);
-    //scheduler_add_periodical_event(ppc_manage, (void *)cannon, 1000 / SCHEDULER_UNIT);
+//    scheduler_add_periodical_event(ppc_manage, (void *)cannon, 1000000 / SCHEDULER_UNIT);
 
     cannon->drum_state = EMPTY;
 
@@ -39,7 +39,7 @@ void ppc_init(ppc_t *cannon){
     cannon->light_barrier_eject_mask = 0x0400;
     cannon->light_barrier_shoot_mask = 0x0800;
 
-    cannon->drum_encoder_res = 19932;
+    cannon->drum_encoder_res = 19832;
 }
 
 void ppc_manage(ppc_t *cannon){
@@ -53,6 +53,7 @@ void ppc_manage_shoot(ppc_t *cannon){
 
     default:
     case EMPTY:
+        printf("EMPTY\n");
         if(cannon->light_barrier_in_state &&
            !ppc_get_light_barrier_state(cannon->light_barrier_in_mask)){
             if(ppc_get_light_barrier_state(cannon->light_barrier_color_mask)){
@@ -61,20 +62,23 @@ void ppc_manage_shoot(ppc_t *cannon){
                 cannon->drum_state = LOADED_EJECT;
             }
         }
-        cs_set_consign(&cannon->cannon_cs, 5000);
         break;
 
     case LOADED_SHOOT:
+        printf("LOADED_SHOOT\n");
+        ppc_start_cannon();
         ppc_shoot(cannon);
         cannon->drum_state = UNDERWAY;
         break;
 
     case LOADED_EJECT:
+        printf("LOADED_EJECT\n");
         ppc_eject(cannon);
         cannon->drum_state = UNDERWAY;
         break;
 
     case UNDERWAY:
+        printf("UNDERWAY\n");
         if((!ppc_get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
            cannon->light_barrier_shoot_state) ||
            (!ppc_get_light_barrier_state(cannon->light_barrier_eject_mask) &&
@@ -103,6 +107,7 @@ void ppc_manage_shoot(ppc_t *cannon){
         break;
 
     case UNDERWAY_LOADED_SHOOT:
+        printf("UNDERWAY_LOADED_SHOOT\n");
         if((!ppc_get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
            cannon->light_barrier_shoot_state) ||
            (!ppc_get_light_barrier_state(cannon->light_barrier_eject_mask) &&
@@ -113,6 +118,7 @@ void ppc_manage_shoot(ppc_t *cannon){
         break;
 
     case UNDERWAY_LOADED_EJECT:
+        printf("UNDERWAY_LOADED_EJECT\n");
         if((!ppc_get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
            cannon->light_barrier_shoot_state) ||
            (!ppc_get_light_barrier_state(cannon->light_barrier_eject_mask) &&
@@ -186,6 +192,9 @@ void ppc_stop_cannon(void){
 }
 
 int32_t get_shooting_speed(ppc_t *cannon){
+    /*
+       why do we pass a *cannon? (=
+    */
     /* TODO
      * should depend on the distance to the cake (which is btw a lie..)
      */
