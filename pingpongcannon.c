@@ -44,7 +44,12 @@ void ppc_init(ppc_t *cannon){
 
 void ppc_manage(ppc_t *cannon){
     //TODO
-    ppc_manage_shoot(cannon);
+    if(is_blocked(cannon)){
+        deblock_drum(cannon);
+    }
+    else{
+        ppc_manage_shoot(cannon);
+    }
 }
 
 void ppc_manage_shoot(ppc_t *cannon){
@@ -209,8 +214,14 @@ int32_t ppc_get_light_barrier_state(int32_t mask){
 
 
 uint8_t is_blocked(ppc_t *cannon){ 
-    return (pid_get_value_D(cannon->drum_pid) == 0 && 
-            cs_get_error(cannon->drum_cs) >= cannon->drum_encoder_res/6);
+    return (pid_get_value_D(&cannon->drum_pid) == 0 && 
+            cs_get_error(&cannon->drum_cs) >= &cannon->drum_encoder_res/6);
+}
+
+void deblock_drum(ppc_t *cannon){
+    cs_set_consign(&cannon->drum_cs,
+                &cannon->drum_encoder_val + cs_get_error(&cannon->drum_cs));
+
 }
 
 
