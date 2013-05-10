@@ -18,8 +18,8 @@ void ppc_init(ppc_t *cannon){
 
     cs_init(&cannon->drum_cs);
     pid_init(&cannon->drum_pid);
-    pid_set_maximums(&cannon->drum_pid, 0, 2000, 150); 
-    pid_set_gains(&cannon->drum_pid, -500, 0, -300);
+    pid_set_maximums(&cannon->drum_pid, 0, 2000, 200); 
+    pid_set_gains(&cannon->drum_pid, -600, -125, -400);
     pid_set_out_shift(&cannon->drum_pid, 10); //TODO
     cs_set_correct_filter(&cannon->drum_cs, pid_do_filter, &cannon->drum_pid);
     cs_set_process_in(&cannon->drum_cs, cvra_dc_set_pwm4, (void*)HEXMOTORCONTROLLER_BASE);
@@ -30,7 +30,7 @@ void ppc_init(ppc_t *cannon){
     cs_enable(&cannon->drum_cs);
 
     scheduler_add_periodical_event(ppc_manage_cs, (void *)cannon, 10000 / SCHEDULER_UNIT);
-//    scheduler_add_periodical_event(ppc_manage, (void *)cannon, 1000000 / SCHEDULER_UNIT);
+    scheduler_add_periodical_event(ppc_manage, (void *)cannon, 50000 / SCHEDULER_UNIT);
 
     cannon->drum_state = EMPTY;
 
@@ -39,7 +39,7 @@ void ppc_init(ppc_t *cannon){
     cannon->light_barrier_eject_mask = 0x0400;
     cannon->light_barrier_shoot_mask = 0x0800;
 
-    cannon->drum_encoder_res = 19832;
+    cannon->drum_encoder_res = 19970;
 }
 
 void ppc_manage(ppc_t *cannon){
@@ -48,14 +48,14 @@ void ppc_manage(ppc_t *cannon){
 }
 
 void ppc_manage_shoot(ppc_t *cannon){
- //evil change muharhar  
     switch(cannon->drum_state){
 
     default:
     case EMPTY:
-        printf("EMPTY\n");
+        //printf("EMPTY %u\n", cannon->light_barrier_in_state);
         if(cannon->light_barrier_in_state &&
            !ppc_get_light_barrier_state(cannon->light_barrier_in_mask)){
+            printf("change da fuckin state to loaded, biatch\n");
             if(ppc_get_light_barrier_state(cannon->light_barrier_color_mask)){
                 cannon->drum_state = LOADED_SHOOT;
             }else{
@@ -65,20 +65,20 @@ void ppc_manage_shoot(ppc_t *cannon){
         break;
 
     case LOADED_SHOOT:
-        printf("LOADED_SHOOT\n");
+        //printf("LOADED_SHOOT\n");
         ppc_start_cannon();
         ppc_shoot(cannon);
         cannon->drum_state = UNDERWAY;
         break;
 
     case LOADED_EJECT:
-        printf("LOADED_EJECT\n");
+        //printf("LOADED_EJECT\n");
         ppc_eject(cannon);
         cannon->drum_state = UNDERWAY;
         break;
 
     case UNDERWAY:
-        printf("UNDERWAY\n");
+        //printf("UNDERWAY\n");
         if((!ppc_get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
            cannon->light_barrier_shoot_state) ||
            (!ppc_get_light_barrier_state(cannon->light_barrier_eject_mask) &&
@@ -92,6 +92,7 @@ void ppc_manage_shoot(ppc_t *cannon){
                     cannon->drum_state = LOADED_EJECT;
                 }
             }else{
+                ppc_stop_cannon();
                 cannon->drum_state = EMPTY;
             }
         }else{
@@ -107,7 +108,7 @@ void ppc_manage_shoot(ppc_t *cannon){
         break;
 
     case UNDERWAY_LOADED_SHOOT:
-        printf("UNDERWAY_LOADED_SHOOT\n");
+        //printf("UNDERWAY_LOADED_SHOOT\n");
         if((!ppc_get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
            cannon->light_barrier_shoot_state) ||
            (!ppc_get_light_barrier_state(cannon->light_barrier_eject_mask) &&
@@ -118,7 +119,7 @@ void ppc_manage_shoot(ppc_t *cannon){
         break;
 
     case UNDERWAY_LOADED_EJECT:
-        printf("UNDERWAY_LOADED_EJECT\n");
+        //printf("UNDERWAY_LOADED_EJECT\n");
         if((!ppc_get_light_barrier_state(cannon->light_barrier_shoot_mask) &&
            cannon->light_barrier_shoot_state) ||
            (!ppc_get_light_barrier_state(cannon->light_barrier_eject_mask) &&
@@ -151,6 +152,7 @@ void ppc_aspiration_on(ppc_t *cannon){
     cvra_servo_set((void*)SERVOS_BASE, 2, 14000); 
     uptime = uptime_get();
     while(uptime_get() < uptime + 500000);
+    IOWR(PIO_BASE, 0, 0x0080);
 }
 
 void ppc_aspiration_off(ppc_t *cannon){
@@ -161,7 +163,7 @@ void ppc_aspiration_off(ppc_t *cannon){
 }
 
 void ppc_aspiration_invert(ppc_t *cannon){
-
+    
 }
 
 void ppc_shoot(ppc_t *cannon){
@@ -169,7 +171,7 @@ void ppc_shoot(ppc_t *cannon){
     uptime = uptime_get();
     cs_set_consign(&cannon->drum_cs,
                     cannon->drum_encoder_val - cannon->drum_encoder_res / 3);
-    while(uptime_get() < uptime + 1000000);
+    //while(uptime_get() < uptime + 1000000);
 }
 
 void ppc_eject(ppc_t *cannon){
@@ -212,10 +214,10 @@ void ppc_set_shooting_speed(void *base, int32_t value){
 
 void ppc_aspirater_down(void)
 {
-    cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
+    cvra_servo_set((void*)SERVOS_BASE, 0, 21000); 
 }
 
 void ppc_aspirater_up(void)
 {
-    cvra_servo_set((void*)SERVOS_BASE, 0, 8000); 
+    cvra_servo_set((void*)SERVOS_BASE, 0, 11000); 
 }

@@ -264,7 +264,7 @@ void cmd_get_io(void){
 }
 
 void cmd_set_io(int argc, char **argv){
-    IOWR(PIO_BASE, 0, (int32_t)atoi(argv[1]));
+    cvra_pio_set(atoi(argv[1]), atoi(argv[2]));
 }
 
 void cmd_test_odometry(int argc, char** argv){
@@ -366,6 +366,29 @@ void cmd_set_drum_pid(int argc, char** argv){
     pid_set_gains(&robot.cannon.drum_pid, atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
 }
 
+void cmd_blow(void){
+    cvra_servo_set(9, 1);
+}
+
+void cmd_suck(void){
+    cvra_servo_set(9, 0);
+}
+
+void cmd_load(void){
+    cs_set_consign(&robot.cannon.drum_cs, 3300);
+    cmd_suck();
+    cvra_servo_set((void*)SERVOS_BASE, 2, 13000);
+}
+
+void cmd_start_shoot(void){
+    cvra_servo_set((void*)SERVOS_BASE, 2, 9000);
+    cs_set_consign(&robot.cannon.drum_cs, 0);
+}
+
+void cmd_set_state(void){
+    robot.cannon.drum_state = LOADED_SHOOT;
+}
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
@@ -406,7 +429,12 @@ command_t commands_list[] = {
     COMMAND("detect_in", cmd_detect_incoming_ball),
     COMMAND("detect_shot", cmd_detect_shooting_ball),
     COMMAND("detect_eject", cmd_detect_eject_ball),
+    COMMAND("blow", cmd_blow),
+    COMMAND("suck", cmd_suck),
     COMMAND("reset", cmd_reset),
+    COMMAND("load", cmd_load),
+    COMMAND("start_shoot", cmd_start_shoot),
+    COMMAND("state", cmd_set_state),
     COMMAND("none",NULL) /* must be last. */
 };
 
