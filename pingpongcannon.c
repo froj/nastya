@@ -219,9 +219,11 @@ uint8_t is_blocked(ppc_t *cannon){
 }
 
 void deblock_drum(ppc_t *cannon){
+    int32_t old_consign = cs_get_consign(&cannon->drum_cs);
     cs_set_consign(&cannon->drum_cs,
                 &cannon->drum_encoder_val + cs_get_error(&cannon->drum_cs));
-
+    cs_set_consign(&cannon->drum_cs,old_consign);
+    &cannon->drum_state = UNDERWAY;
 }
 
 
