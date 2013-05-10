@@ -6,7 +6,6 @@
 #include "adresses.h"
 #include "pingpongcannon.h"
 
-
 int32_t get_shooting_speed(ppc_t *cannon);
 
 void ppc_init(ppc_t *cannon){
@@ -39,7 +38,8 @@ void ppc_init(ppc_t *cannon){
     cannon->light_barrier_eject_mask = 0x0400;
     cannon->light_barrier_shoot_mask = 0x0800;
 
-    cannon->drum_encoder_res = 19832;
+    cannon->drum_encoder_res = 19970;
+
 }
 
 void ppc_manage(ppc_t *cannon){
@@ -203,6 +203,12 @@ int32_t get_shooting_speed(ppc_t *cannon){
 
 int32_t ppc_get_light_barrier_state(int32_t mask){
     return IORD(PIO_BASE, 0) & mask;
+}
+
+
+uint8_t is_blocked(ppc_t *cannon){ 
+    return (pid_get_value_D(cannon->drum_pid) == 0 && 
+            cs_get_error(cannon->drum_cs) >= cannon->drum_encoder_res/6);
 }
 
 
