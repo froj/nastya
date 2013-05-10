@@ -46,12 +46,12 @@ void ppc_init(ppc_t *cannon){
 
 void ppc_manage(ppc_t *cannon){
     //TODO
-//    if(is_blocked(cannon)){
-//        deblock_drum(cannon);
-//    }
-//    else{
+    if(is_blocked(cannon)){
+        deblock_drum(cannon);
+    }
+    else{
         ppc_manage_shoot(cannon);
-//    }
+    }
 }
 
 void ppc_manage_shoot(ppc_t *cannon){
