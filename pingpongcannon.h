@@ -66,5 +66,6 @@ void ppc_aspirator_down(void);
 void ppc_aspirator_up(void);
 
 int32_t ppc_get_light_barrier_state(int32_t mask);
+void gpio_set(int channel, int value);
 
 #endif
