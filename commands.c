@@ -264,7 +264,7 @@ void cmd_get_io(void){
 }
 
 void cmd_set_io(int argc, char **argv){
-    cvra_pio_set(atoi(argv[1]), atoi(argv[2]));
+    gpio_set(atoi(argv[1]), atoi(argv[2]));
 }
 
 void cmd_test_odometry(int argc, char** argv){
@@ -318,9 +318,6 @@ void cmd_eject(void){
     ppc_eject(&robot.cannon);
 }
 
-void cmd_set_shooting_speed(int argc, char** argv){
-    cs_set_consign(&robot.cannon.cannon_cs, atoi(argv[1]));
-}
 
 void cmd_reset_drum(void){
     cs_set_consign(&robot.cannon.drum_cs, 0);
@@ -328,10 +325,7 @@ void cmd_reset_drum(void){
 }
 
 void cmd_disable_drum(void){
-    cs_set_consign(&robot.cannon.drum_cs, 0);
-    cs_disable(&robot.cannon.drum_cs);
-}
-
+    cs_set_consign(&robot.cannon.drum_cs, 0); cs_disable(&robot.cannon.drum_cs); } 
 void cmd_enable_drum(void){
     cvra_dc_set_encoder((void*)HEXMOTORCONTROLLER_BASE, 4, 0);
     cs_set_consign(&robot.cannon.drum_cs, 0);
@@ -367,22 +361,24 @@ void cmd_set_drum_pid(int argc, char** argv){
 }
 
 void cmd_blow(void){
-    cvra_servo_set(9, 1);
+    gpio_set(9, 1);
 }
 
 void cmd_suck(void){
-    cvra_servo_set(9, 0);
+    gpio_set(9, 0);
 }
 
 void cmd_load(void){
-    cs_set_consign(&robot.cannon.drum_cs, 3300);
     cmd_suck();
+    cs_set_consign(&robot.cannon.drum_cs, 3300);
+    gpio_set(7, 1);
     cvra_servo_set((void*)SERVOS_BASE, 2, 13000);
 }
 
 void cmd_start_shoot(void){
-    cvra_servo_set((void*)SERVOS_BASE, 2, 9000);
-    cs_set_consign(&robot.cannon.drum_cs, 0);
+    cmd_blow(); 
+    cvra_servo_set((void*)SERVOS_BASE, 2, 12000);
+    gpio_set(7, 0);
 }
 
 void cmd_set_state(void){
@@ -420,7 +416,6 @@ command_t commands_list[] = {
     COMMAND("index_setup", cmd_index_setup),
     COMMAND("shoot", cmd_shoot),
     COMMAND("eject", cmd_eject),
-    COMMAND("shooting_speed", cmd_set_shooting_speed),
     COMMAND("set_drum", cmd_set_drum),
     COMMAND("reset_drum", cmd_reset_drum),
     COMMAND("enable_drum", cmd_enable_drum),

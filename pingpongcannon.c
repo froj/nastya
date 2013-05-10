@@ -30,7 +30,7 @@ void ppc_init(ppc_t *cannon){
     cs_enable(&cannon->drum_cs);
 
     scheduler_add_periodical_event(ppc_manage_cs, (void *)cannon, 10000 / SCHEDULER_UNIT);
-    scheduler_add_periodical_event(ppc_manage, (void *)cannon, 50000 / SCHEDULER_UNIT);
+    scheduler_add_periodical_event(ppc_manage, (void *)cannon, 10000 / SCHEDULER_UNIT);
 
     cannon->drum_state = EMPTY;
 
@@ -39,7 +39,7 @@ void ppc_init(ppc_t *cannon){
     cannon->light_barrier_eject_mask = 0x0400;
     cannon->light_barrier_shoot_mask = 0x0800;
 
-    cannon->drum_encoder_res = 19970;
+    cannon->drum_encoder_res = 20000;
 }
 
 void ppc_manage(ppc_t *cannon){
@@ -152,7 +152,7 @@ void ppc_aspiration_on(ppc_t *cannon){
     cvra_servo_set((void*)SERVOS_BASE, 2, 14000); 
     uptime = uptime_get();
     while(uptime_get() < uptime + 500000);
-    IOWR(PIO_BASE, 0, 0x0080);
+    gpio_set(7, 1);
 }
 
 void ppc_aspiration_off(ppc_t *cannon){
@@ -160,6 +160,7 @@ void ppc_aspiration_off(ppc_t *cannon){
     cvra_servo_set((void*)SERVOS_BASE, 2, 10000);
     uptime = uptime_get();
     while(uptime_get() < uptime + 500000);
+    gpio_set(7, 0);
 }
 
 void ppc_aspiration_invert(ppc_t *cannon){
@@ -183,7 +184,7 @@ void ppc_start_cannon(void){
     int32_t uptime;
     cvra_servo_set((void*)SERVOS_BASE, 3, 15000);
     uptime = uptime_get();
-    while(uptime_get() < uptime + 1500000);
+    while(uptime_get() < uptime + 1000000);
 }
 
 void ppc_stop_cannon(void){
@@ -209,21 +210,28 @@ int32_t ppc_get_light_barrier_state(int32_t mask){
 
 
 uint8_t is_blocked(ppc_t *cannon){ 
-    return (pid_get_value_D(cannon->drum_pid) == 0 && 
-            cs_get_error(cannon->drum_cs) >= cannon->drum_encoder_res/6);
+    return (pid_get_value_D(&cannon->drum_pid) == 0 && 
+            cs_get_error(&cannon->drum_cs) >= cannon->drum_encoder_res/6);
 }
 
-
-void ppc_set_shooting_speed(void *base, int32_t value){
-    IOWR(base, 0, value);
-}
 
 void ppc_aspirater_down(void)
 {
-    cvra_servo_set((void*)SERVOS_BASE, 0, 21000); 
+    cvra_servo_set((void*)SERVOS_BASE, 0, 23000); 
 }
 
 void ppc_aspirater_up(void)
 {
-    cvra_servo_set((void*)SERVOS_BASE, 0, 11000); 
+    cvra_servo_set((void*)SERVOS_BASE, 0, 7000); 
+}
+
+void gpio_set(int channel, int value){
+    static int32_t output_value;
+
+    if(value) 
+        output_value |= (int32_t)(1<<channel);
+    else
+        output_value &= (int32_t)~(1<<channel); 
+
+    IOWR(PIO_BASE, 0, output_value);
 }
