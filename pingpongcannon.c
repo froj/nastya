@@ -8,6 +8,8 @@
 
 
 int32_t get_shooting_speed(ppc_t *cannon);
+uint8_t is_blocked(ppc_t *cannon);
+void deblock_drum(ppc_t *cannon);
 
 void ppc_init(ppc_t *cannon){
     memset(cannon, 0, sizeof(ppc_t));
@@ -44,12 +46,12 @@ void ppc_init(ppc_t *cannon){
 
 void ppc_manage(ppc_t *cannon){
     //TODO
-    if(is_blocked(cannon)){
-        deblock_drum(cannon);
-    }
-    else{
+//    if(is_blocked(cannon)){
+//        deblock_drum(cannon);
+//    }
+//    else{
         ppc_manage_shoot(cannon);
-    }
+//    }
 }
 
 void ppc_manage_shoot(ppc_t *cannon){

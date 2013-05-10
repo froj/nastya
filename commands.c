@@ -372,12 +372,14 @@ void cmd_load(void){
     cmd_suck();
     cs_set_consign(&robot.cannon.drum_cs, 3300);
     gpio_set(7, 1);
-    cvra_servo_set((void*)SERVOS_BASE, 2, 13000);
+    cvra_servo_set((void*)SERVOS_BASE, 2, 14000);
 }
 
 void cmd_start_shoot(void){
     cmd_blow(); 
-    cvra_servo_set((void*)SERVOS_BASE, 2, 12000);
+    ppc_aspirater_up();
+    cs_set_consign(&robot.cannon.drum_cs, 0);
+    cvra_servo_set((void*)SERVOS_BASE, 2, 14000);
     gpio_set(7, 0);
 }
 
