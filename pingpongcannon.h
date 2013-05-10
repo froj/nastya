@@ -21,7 +21,6 @@ typedef struct {
     struct holonomic_robot_position *pos;
 
     struct cs drum_cs;
-    struct cs cannon_cs;
     
     struct pid_filter drum_pid;
     struct pid_filter cannon_pid;

@@ -208,6 +208,12 @@ int32_t ppc_get_light_barrier_state(int32_t mask){
 }
 
 
+uint8_t is_blocked(ppc_t *cannon){ 
+    return (pid_get_value_D(cannon->drum_pid) == 0 && 
+            cs_get_error(cannon->drum_cs) >= cannon->drum_encoder_res/6);
+}
+
+
 void ppc_set_shooting_speed(void *base, int32_t value){
     IOWR(base, 0, value);
 }
