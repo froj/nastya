@@ -267,6 +267,13 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
             cs_enable(&robot.wheel2_cs);
         }
     }
+
+    if(!robot.beacon.nb_beacon){
+        cs_enable(&robot.wheel0_cs);
+        cs_enable(&robot.wheel1_cs);
+        cs_enable(&robot.wheel2_cs);
+    }
+
     /** Check the flag d'avoiding, appeler strat_avoiding*/
     //if (robot.beacon.nb_edges && !robot.avoiding)
     //{
