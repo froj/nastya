@@ -14,7 +14,7 @@ void deblock_drum(ppc_t *cannon);
 void ppc_init(ppc_t *cannon){
     memset(cannon, 0, sizeof(ppc_t));
 
-    cvra_servo_set((void*)SERVOS_BASE, 0, 20000);
+    cvra_servo_set((void*)SERVOS_BASE, 0, 7000);
     cvra_servo_set((void*)SERVOS_BASE, 2, 10000);
     cvra_servo_set((void*)SERVOS_BASE, 3, 10000);
 
@@ -234,12 +234,12 @@ void ppc_set_shooting_speed(void *base, int32_t value){
     IOWR(base, 0, value);
 }
 
-void ppc_aspirater_down(void)
+void ppc_aspirator_down(void)
 {
     cvra_servo_set((void*)SERVOS_BASE, 0, 23000); 
 }
 
-void ppc_aspirater_up(void)
+void ppc_aspirator_up(void)
 {
     cvra_servo_set((void*)SERVOS_BASE, 0, 7000); 
 }
