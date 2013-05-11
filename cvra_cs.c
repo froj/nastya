@@ -226,10 +226,12 @@ void cvra_cs_init(void) {
     holonomic_trajectory_set_ramps(&robot.traj, &robot.speed_r, &robot.angle_qr, &robot.omega_r);
     
     holonomic_trajectory_set_robot_params(&robot.traj, &robot.rs, &robot.pos);
-    holonomic_trajectory_set_windows(&robot.traj, 10, 0.05);
+    holonomic_trajectory_set_windows(&robot.traj, 20, 0.20);
     
     robot.avoiding = 0;
-    //cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ);
+#ifdef COMPILE_ON_ROBOT
+    cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ, 127, -5.8618, 109.43);
+#endif
     
     /* ajoute la regulation au multitache. ASSERV_FREQUENCY est dans cvra_cs.h */
     scheduler_add_periodical_event_priority(cvra_cs_manage, NULL, (1000000
@@ -252,7 +254,20 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     holonomic_position_manage(&robot.pos);
     
 #ifdef COMPILE_ON_ROBOT
-    ///** Check the flag d'avoiding, appeler strat_avoiding*/
+    int i;
+    for(i = 0; i < robot.beacon.nb_beacon; i++){
+        if(robot.beacon.beacon[i].distance < 50){
+            cs_disable(&robot.wheel0_cs);
+            cs_disable(&robot.wheel1_cs);
+            cs_disable(&robot.wheel2_cs);
+        }
+        else{
+            cs_enable(&robot.wheel0_cs);
+            cs_enable(&robot.wheel1_cs);
+            cs_enable(&robot.wheel2_cs);
+        }
+    }
+    /** Check the flag d'avoiding, appeler strat_avoiding*/
     //if (robot.beacon.nb_edges && !robot.avoiding)
     //{
     //    printf("ROBOT DETECTED\n");
@@ -262,9 +277,9 @@ void cvra_cs_manage(__attribute__((unused)) void * dummy) {
     //}
     //else if ((robot.beacon.nb_edges == 0) && robot.avoiding)
     //{
-        //printf("OUT OF SIGHT\n");
-        ////robot.avoiding = 0;
-        ////strat_restart_after_avoiding();
+    //  //printf("OUT OF SIGHT\n");
+    //  ////robot.avoiding = 0;
+    //  ////strat_restart_after_avoiding();
     //}
 #endif
         
