@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <uptime.h>
 #include <cvra_servo.h>
+#include <pingpongcannon.h>
 #include "adresses.h"
 #include "cvra_cs.h"
 #include "strat.h"
@@ -221,6 +222,13 @@ void cmd_start(int argc, char** argv) {
     {
         printf("Usage : start color \n Color ={blue, red}\n");
     }
+
+    ppc_aspirator_up();  
+
+    holonomic_position_set_x_s16(&robot.pos, 88.5);
+    holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
+    holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
+
     if(!strcmp(argv[1], "red"))
         strat_begin(RED);
     else if(!strcmp(argv[1], "blue"))
@@ -249,7 +257,7 @@ void cmd_print_currents() {
 
 void cmd_calibrate(void)
 {
-     holonomic_position_set_x_s16(&robot.pos, 88.5);
+    holonomic_position_set_x_s16(&robot.pos, 88.5);
     holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
     holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
     strat_do_calibration();
@@ -377,7 +385,7 @@ void cmd_load(void){
 
 void cmd_start_shoot(void){
     cmd_blow(); 
-    ppc_aspirater_up();
+    ppc_aspirator_up();
     cs_set_consign(&robot.cannon.drum_cs, 0);
     cvra_servo_set((void*)SERVOS_BASE, 2, 14000);
     gpio_set(7, 0);
@@ -387,51 +395,61 @@ void cmd_set_state(void){
     robot.cannon.drum_state = LOADED_SHOOT;
 }
 
+void cmd_beacon(void){
+    int i;
+    for(i = 0; i < robot.beacon.nb_beacon; i++){
+        printf("Direction: %f    Distance: %f\n", robot.beacon.beacon[i].direction,
+                                                  robot.beacon.beacon[i].distance); 
+    }
+
+}
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
-    COMMAND("test_argv",test_func),
-    COMMAND("start",cmd_start),
-    COMMAND("pid", cmd_pid), 
-    COMMAND("pwm", cmd_pwm),
-    COMMAND("encoders", cmd_encoders),
-    COMMAND("index", cmd_index),
-    COMMAND("pos", cmd_position),
-    COMMAND("help", cmd_help),
-    COMMAND("speed", cmd_speed),
-    COMMAND("cs_enable", cmd_cs_enable),
-    COMMAND("get_speed", cmd_get_speed),
-    COMMAND("delta_enc", cmd_delta_enc),
-    COMMAND("move", cmd_move),
-    COMMAND("macro_var", cmd_set_macro_var),
-    COMMAND("exit", cmd_exit),
-    COMMAND("circle", cmd_circle),
-    COMMAND("start", cmd_start),
-    COMMAND("do_gift", cmd_do_gift),
-    COMMAND("turn", cmd_turn),
-    COMMAND("servo", cmd_servo),
-    COMMAND("io", cmd_get_io),
-    COMMAND("io_set", cmd_set_io),
+    COMMAND("beacon", cmd_beacon),
+    COMMAND("blow", cmd_blow),
     COMMAND("calibrate",cmd_calibrate),
+    COMMAND("circle", cmd_circle),
+    COMMAND("cs_enable", cmd_cs_enable),
     COMMAND("current",cmd_print_currents),
-    COMMAND("odo_test", cmd_test_odometry),
-    COMMAND("index_setup", cmd_index_setup),
-    COMMAND("shoot", cmd_shoot),
-    COMMAND("eject", cmd_eject),
-    COMMAND("set_drum", cmd_set_drum),
-    COMMAND("reset_drum", cmd_reset_drum),
-    COMMAND("enable_drum", cmd_enable_drum),
-    COMMAND("disable_drum", cmd_disable_drum),
-    COMMAND("drum_pid", cmd_set_drum_pid),
+    COMMAND("delta_enc", cmd_delta_enc),
+    COMMAND("detect_eject", cmd_detect_eject_ball),
     COMMAND("detect_in", cmd_detect_incoming_ball),
     COMMAND("detect_shot", cmd_detect_shooting_ball),
-    COMMAND("detect_eject", cmd_detect_eject_ball),
-    COMMAND("blow", cmd_blow),
-    COMMAND("suck", cmd_suck),
-    COMMAND("reset", cmd_reset),
+    COMMAND("disable_drum", cmd_disable_drum),
+    COMMAND("do_gift", cmd_do_gift),
+    COMMAND("drum_pid", cmd_set_drum_pid),
+    COMMAND("eject", cmd_eject),
+    COMMAND("enable_drum", cmd_enable_drum),
+    COMMAND("encoders", cmd_encoders),
+    COMMAND("exit", cmd_exit),
+    COMMAND("get_speed", cmd_get_speed),
+    COMMAND("help", cmd_help),
+    COMMAND("index", cmd_index),
+    COMMAND("index_setup", cmd_index_setup),
+    COMMAND("io", cmd_get_io),
+    COMMAND("io_set", cmd_set_io),
     COMMAND("load", cmd_load),
+    COMMAND("macro_var", cmd_set_macro_var),
+    COMMAND("move", cmd_move),
+    COMMAND("odo_test", cmd_test_odometry),
+    COMMAND("pid", cmd_pid), 
+    COMMAND("pos", cmd_position),
+    COMMAND("pwm", cmd_pwm),
+    COMMAND("reset", cmd_reset),
+    COMMAND("reset_drum", cmd_reset_drum),
+    COMMAND("servo", cmd_servo),
+    COMMAND("set_drum", cmd_set_drum),
+    COMMAND("shoot", cmd_shoot),
+    COMMAND("speed", cmd_speed),
+    COMMAND("start", cmd_start),
+    COMMAND("start",cmd_start),
     COMMAND("start_shoot", cmd_start_shoot),
     COMMAND("state", cmd_set_state),
+    COMMAND("suck", cmd_suck),
+    COMMAND("test_argv",test_func),
+    COMMAND("turn", cmd_turn),
     COMMAND("none",NULL) /* must be last. */
 };
 
