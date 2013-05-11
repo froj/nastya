@@ -20,7 +20,7 @@ static void increment_timer(__attribute__((unused))void *data) {
 void strat_wait_90_seconds(void)
 {
     printf("Stoppping at end of 90 sec \n");
-    //while (strat.time < 90);
+    while (strat.time < 90);
     cs_disable(&robot.wheel0_cs);
     cs_disable(&robot.wheel1_cs);
     cs_disable(&robot.wheel2_cs);
@@ -70,9 +70,6 @@ void strat_start_position(void) {
 }
 
 void strat_begin(strat_color_t color) {
-#ifdef COMPILE_ON_ROBOT
-    cvra_beacon_init(&robot.beacon, AVOIDING_BASE, AVOIDING_IRQ, 127, -5.8618, 109.43);
-#endif
     /* Starts the game timer. */
     strat.time = 0;
     strat.state = 0;
@@ -81,15 +78,15 @@ void strat_begin(strat_color_t color) {
     
     strat_set_objects();
 
-    strat_do_calibration();
+    //strat_do_calibration();
 
     while((IORD(PIO_BASE, 0) & 0x1000) == 0);
     scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 500, COLOR_Y(1500));
-    while(!holonomic_end_of_traj(&robot.traj));
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 1000, COLOR_Y(1500));
+    //while(!holonomic_end_of_traj(&robot.traj));
+    printf("Da muthafuckin end\n");
 
-    strat_do_gift(strat.state);
-    strat_wait_90_seconds();
+    //strat_wait_90_seconds();
 }
 
 /** 
@@ -170,8 +167,8 @@ void strat_avoiding(void)
     rsh_set_speed(&robot.rs, 0);
     rsh_set_rotation_speed(&robot.rs, 0);
     cs_disable(&robot.wheel0_cs);
-cs_disable(&robot.wheel1_cs);
-        cs_disable(&robot.wheel2_cs);
+    cs_disable(&robot.wheel1_cs);
+    cs_disable(&robot.wheel2_cs);
     cvra_dc_set_pwm0(HEXMOTORCONTROLLER_BASE,0);
     cvra_dc_set_pwm1(HEXMOTORCONTROLLER_BASE,0);
     cvra_dc_set_pwm2(HEXMOTORCONTROLLER_BASE,0);
