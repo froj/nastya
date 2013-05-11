@@ -229,6 +229,9 @@ void cmd_start(int argc, char** argv) {
     holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
     holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
 
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 88.5, COLOR_Y(2000-300));
+    while(!holonomic_end_of_traj(&robot.traj));
+
     if(!strcmp(argv[1], "red"))
         strat_begin(RED);
     else if(!strcmp(argv[1], "blue"))

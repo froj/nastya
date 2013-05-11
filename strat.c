@@ -82,11 +82,10 @@ void strat_begin(strat_color_t color) {
 
     while((IORD(PIO_BASE, 0) & 0x1000) == 0);
     scheduler_add_periodical_event(increment_timer, NULL, 1000000/SCHEDULER_UNIT);
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 1000, COLOR_Y(1500));
-    //while(!holonomic_end_of_traj(&robot.traj));
-    printf("Da muthafuckin end\n");
+    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2000, COLOR_Y(1000));
+    while(!holonomic_end_of_traj(&robot.traj));
 
-    //strat_wait_90_seconds();
+    strat_wait_90_seconds();
 }
 
 /** 
