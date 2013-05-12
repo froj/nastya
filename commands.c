@@ -243,9 +243,6 @@ void cmd_start(int argc, char** argv) {
     printf("Match done. Hope you enjoyed it !\n");
 }
 
-void cmd_do_gift(int argc, char** argv){
-    strat_do_gift(atoi(argv[1]));
-}
 
 /** Wheel 0 -> ADC 4
  *  Wheel 1 -> ADC 3
@@ -421,7 +418,6 @@ command_t commands_list[] = {
     COMMAND("detect_in", cmd_detect_incoming_ball),
     COMMAND("detect_shot", cmd_detect_shooting_ball),
     COMMAND("disable_drum", cmd_disable_drum),
-    COMMAND("do_gift", cmd_do_gift),
     COMMAND("drum_pid", cmd_set_drum_pid),
     COMMAND("eject", cmd_eject),
     COMMAND("enable_drum", cmd_enable_drum),
