@@ -88,60 +88,6 @@ void strat_begin(strat_color_t color) {
     strat_wait_90_seconds();
 }
 
-/** 
- * @brief Do the gift
- */
-void strat_do_gift(int number) {
-    if (!strat.avoiding)
-    {
-        if (strat.sub_state == 0 )
-        {
-            holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                        strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-140));
-            while(!holonomic_end_of_traj(&robot.traj));
-            strat.sub_state++;
-        }
-        
-        if (strat.sub_state == 1)
-        {
-            holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(-90)));
-            while(!holonomic_end_of_traj(&robot.traj));
-        
-            strat.sub_state++;
-        }
-        
-        if (strat.sub_state == 2)
-        { 
-            if (strat.state < 3)
-            {
-            holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                         strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-140));
-            }
-            else{
-                        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj,
-                                                         strat.gifts[number].x + COLOR_C,
-                                                         COLOR_Y(2000-120));
-            }
-            
-            while(!holonomic_end_of_traj(&robot.traj));
-            
-            int32_t time = uptime_get();
-            while(time + 500000 > uptime_get());
-        }
-        strat.sub_state = 0;
-        strat.state++;
-        if (strat.state < 4 && strat.state > -1)
-        {
-            
-                strat_do_gift(strat.state);
-        }
-        else
-            strat_wait_90_seconds();
-    }
-    strat_do_gift(strat.state);
-}
 
 /** Pause for a number of millisec 
  *  Should be in another file ? */
@@ -177,11 +123,6 @@ void strat_avoiding(void)
 
 void strat_restart_after_avoiding(void)
 {
-    strat.avoiding = 0;
-    /** Si on etait en train de faire des cadeaux */
-    if (strat.state < 4)
-        strat_do_gift(strat.state);
-    else
         strat_wait_90_seconds();
 }
 
