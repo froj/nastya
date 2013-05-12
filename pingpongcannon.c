@@ -22,7 +22,7 @@ void ppc_init(ppc_t *cannon){
     pid_init(&cannon->drum_pid);
     pid_set_maximums(&cannon->drum_pid, 0, 2000, 200); 
     pid_set_gains(&cannon->drum_pid, -600, -125, -400);
-    pid_set_out_shift(&cannon->drum_pid, 10); //TODO
+    pid_set_out_shift(&cannon->drum_pid, 10);
     cs_set_correct_filter(&cannon->drum_cs, pid_do_filter, &cannon->drum_pid);
     cs_set_process_in(&cannon->drum_cs, cvra_dc_set_pwm4, (void*)HEXMOTORCONTROLLER_BASE);
     cs_set_process_out(&cannon->drum_cs, cvra_dc_get_encoder4, (void*)HEXMOTORCONTROLLER_BASE);
@@ -45,8 +45,8 @@ void ppc_init(ppc_t *cannon){
 }
 
 void ppc_manage(ppc_t *cannon){
-    //TODO
     if(is_blocked(cannon)){
+        printf("blocked\n");
         deblock_drum(cannon);
     }
     else{
@@ -179,7 +179,7 @@ void ppc_shoot(ppc_t *cannon){
     uptime = uptime_get();
     cs_set_consign(&cannon->drum_cs,
                     cannon->drum_encoder_val - cannon->drum_encoder_res / 3);
-    //while(uptime_get() < uptime + 1000000);
+    while(uptime_get() < uptime + 1000000);
 }
 
 void ppc_eject(ppc_t *cannon){
@@ -217,15 +217,30 @@ int32_t ppc_get_light_barrier_state(int32_t mask){
 
 
 uint8_t is_blocked(ppc_t *cannon){ 
-    return (pid_get_value_D(&cannon->drum_pid) == 0 && 
-            cs_get_error(&cannon->drum_cs) >= cannon->drum_encoder_res/6);
+    static uint8_t block_counter = 0;
+    
+   if(pid_get_value_D(&cannon->drum_pid) == 0 && 
+            abs(cs_get_error(&cannon->drum_cs)) >= cannon->drum_encoder_res/6)
+   {
+       block_counter += 1;
+   }
+
+   if(block_counter >= 3){
+       block_counter = 0;
+       return true;
+   }
+   else{
+       return false;
+   }
 }
 
 void deblock_drum(ppc_t *cannon){
+    int32_t uptime = uptime_get(); 
     int32_t old_consign = cs_get_consign(&cannon->drum_cs);
     cs_set_consign(&cannon->drum_cs,
-                cannon->drum_encoder_val + cs_get_error(&cannon->drum_cs));
-    cs_set_consign(&cannon->drum_cs,old_consign);
+                cannon->drum_encoder_val - cs_get_error(&cannon->drum_cs));
+    while(uptime + 250000 > uptime_get());
+    cs_set_consign(&cannon->drum_cs, old_consign);
     cannon->drum_state = UNDERWAY;
 }
 
