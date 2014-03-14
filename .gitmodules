@@ -1,0 +1,9 @@
+[submodule "modules"]
+	path = modules
+	url = git@github.com:cvra/modules.git
+[submodule "lwip_ucos2"]
+	path = lwip_ucos2
+	url = git@github.com:cvra/lwip_ucos2.git
+[submodule "nios_files"]
+	path = nios_files
+	url = git@github.com:cvra/nios_files.git
