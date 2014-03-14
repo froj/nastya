@@ -21,23 +21,23 @@ void cmd_reset(void) {
 
 /** Move to a point */
 void cmd_move(int argc, char **argv) {
-    if (argc == 3) {
-        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, atoi(argv[1]), atoi(argv[2]));
-        while(!holonomic_robot_in_xy_window(&robot.traj, 30));
-        }
-    else {
-         printf("Usage: move x_mm y_mm\n");
-     }
+//    if (argc == 3) {
+//        holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, atoi(argv[1]), atoi(argv[2]));
+//        while(!holonomic_robot_in_xy_window(&robot.traj, 30));
+//        }
+//    else {
+//         printf("Usage: move x_mm y_mm\n");
+//     }
 }
 
 void cmd_turn(int argc, char **argv) {
-    if (argc == 2) {
-        holonomic_trajectory_turning_cap(&robot.traj, atof(argv[1]));
-        //while(!holonomic_robot_in_xy_window(&robot.traj, 30));
-        }
-    else {
-         printf("Usage: turn angle [rad] \n");
-     }
+//    if (argc == 2) {
+//        holonomic_trajectory_turning_cap(&robot.traj, atof(argv[1]));
+//        //while(!holonomic_robot_in_xy_window(&robot.traj, 30));
+//        }
+//    else {
+//         printf("Usage: turn angle [rad] \n");
+//     }
 }
 
 
@@ -91,24 +91,24 @@ void cmd_pid(int argc, char **argv) {
     if(argc < 2) {
         /* Show current gains. */
         printf("Wheel 0 : \tKp=%d\tGi=%d\tGd=%d\n",
-                pid_get_gain_P(&robot.wheel0_pid), 
+                pid_get_gain_P(&robot.wheel0_pid),
                 pid_get_gain_I(&robot.wheel0_pid),
                 pid_get_gain_D(&robot.wheel0_pid));
 
         printf("Wheel 1 : \tKp=%d\tGi=%d\tGd=%d\n",
-                pid_get_gain_P(&robot.wheel1_pid), 
+                pid_get_gain_P(&robot.wheel1_pid),
                 pid_get_gain_I(&robot.wheel1_pid),
                 pid_get_gain_D(&robot.wheel1_pid));
 
         printf("Wheel 2 : \tKp=%d\tGi=%d\tGd=%d\n",
-                pid_get_gain_P(&robot.wheel2_pid), 
+                pid_get_gain_P(&robot.wheel2_pid),
                 pid_get_gain_I(&robot.wheel2_pid),
                 pid_get_gain_D(&robot.wheel2_pid));
 
     }
     else if(argc < 5) {
             printf("usage: %s pid_name P I D\n", argv[0]);
-    } 
+    }
     else {
         struct pid_filter *pid;
 
@@ -122,17 +122,17 @@ void cmd_pid(int argc, char **argv) {
 
         /** @todo We should be more cautious when handling user input. */
         /** @workaround : to set all the pid */
-        pid_set_gains(&robot.wheel0_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); 
+        pid_set_gains(&robot.wheel0_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
         pid_set_gains(&robot.wheel1_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
         pid_set_gains(&robot.wheel2_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-        //pid_set_gains(pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); 
+        //pid_set_gains(pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
     }
 }
 
 /** Set or get the position */
 void cmd_position(int argc, char **argv){
     if(argc == 1){
-        printf("x: %lf; y: %lf; a: %lf\n", holonomic_position_get_x_double(&robot.pos), 
+        printf("x: %lf; y: %lf; a: %lf\n", holonomic_position_get_x_double(&robot.pos),
                                           holonomic_position_get_y_double(&robot.pos),
                                           holonomic_position_get_a_rad_double(&robot.pos));
     }else{
@@ -178,11 +178,11 @@ void cmd_speed(int argc, char **argv) {
 }
 
 void cmd_circle(int argc, char **argv) {
-    if(argc < 3){
-        printf("Usage: circle center_x[mm] center_y[mm] section[rad]\n");
-    }else{
-        holonomic_trajectory_moving_circle(&robot.traj,(int32_t)atoi(argv[1]) ,(int32_t)atoi(argv[2]), (double)atof(argv[3]));
-        }
+//    if(argc < 3){
+//        printf("Usage: circle center_x[mm] center_y[mm] section[rad]\n");
+//    }else{
+//        holonomic_trajectory_moving_circle(&robot.traj,(int32_t)atoi(argv[1]) ,(int32_t)atoi(argv[2]), (double)atof(argv[3]));
+//        }
 }
 
 void cmd_get_speed(void){
@@ -232,7 +232,7 @@ void cmd_start(int argc, char** argv) {
 }
 
 void cmd_do_gift(int argc, char** argv){
-    strat_do_gift(atoi(argv[1]));
+//    strat_do_gift(atoi(argv[1]));
 }
 
 /** Wheel 0 -> ADC 4
@@ -248,14 +248,14 @@ void cmd_print_currents() {
 
 void cmd_calibrate(void)
 {
-     holonomic_position_set_x_s16(&robot.pos, 88.5);
-    holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
-    holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
-    strat_do_calibration();
+//     holonomic_position_set_x_s16(&robot.pos, 88.5);
+//    holonomic_position_set_y_s16(&robot.pos,COLOR_Y(2000 - 213));
+//    holonomic_position_set_a_s16(&robot.pos, COLOR_A(90));
+//    strat_do_calibration();
 }
 
 void cmd_servo(int argc, char** argv){
-    cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (uint32_t)atoi(argv[2]));
+//    cvra_servo_set((void*)SERVOS_BASE, (int)atoi(argv[1]), (uint32_t)atoi(argv[2]));
 }
 
 void cmd_get_io(int argc, char** argv){
@@ -272,11 +272,11 @@ void cmd_get_io(int argc, char** argv){
 
 #ifdef COMPILE_ON_ROBOT
 void cmd_beacon(void) {
-    printf("==Beacon==\n");
-    printf("period = %u\n", (unsigned int)robot.beacon.period);
-    printf("firstedge = %u\n", (unsigned int)robot.beacon.firstedge);
-    printf("lastindex = %u\n", (unsigned int)robot.beacon.lastindex);
-    printf("nbedge = %d\n", (int)robot.beacon.nb_edges);
+//    printf("==Beacon==\n");
+//    printf("period = %u\n", (unsigned int)robot.beacon.period);
+//    printf("firstedge = %u\n", (unsigned int)robot.beacon.firstedge);
+//    printf("lastindex = %u\n", (unsigned int)robot.beacon.lastindex);
+//    printf("nbedge = %d\n", (int)robot.beacon.nb_edges);
 
 /*    for(;;)
         printf("angle : %d\n",(int)(robot.beacon.firstedge - robot.beacon.lastindex)/10000);  */
@@ -285,31 +285,31 @@ void cmd_beacon(void) {
 #endif
 
 void cmd_test_odometry(void){
-    strat_start_position();
-    strat_long_arm_down();
-    strat_short_arm_down();
-
-    cmd_calibrate();
-
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 300, 1700);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
-    while(!holonomic_end_of_traj(&robot.traj));
-
-    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
-
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
-    while(!holonomic_end_of_traj(&robot.traj));
-    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
-    while(!holonomic_end_of_traj(&robot.traj));
+//    strat_start_position();
+//    strat_long_arm_down();
+//    strat_short_arm_down();
+//
+//    cmd_calibrate();
+//
+//    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 300, 1700);
+//    while(!holonomic_end_of_traj(&robot.traj));
+//    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+//    while(!holonomic_end_of_traj(&robot.traj));
+//
+//    while((IORD(PIO_BASE, 0) & 0x1000) == 0);
+//
+//    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
+//    while(!holonomic_end_of_traj(&robot.traj));
+//    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+//    while(!holonomic_end_of_traj(&robot.traj));
+//    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 2600, 1200);
+//    while(!holonomic_end_of_traj(&robot.traj));
+//    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(180)));
+//    while(!holonomic_end_of_traj(&robot.traj));
+//    holonomic_trajectory_moving_straight_goto_xy_abs(&robot.traj, 400, 1200);
+//    while(!holonomic_end_of_traj(&robot.traj));
+//    holonomic_trajectory_turning_cap(&robot.traj, COLOR_A(TO_RAD(0)));
+//    while(!holonomic_end_of_traj(&robot.traj));
 }
 
 void cmd_index_setup(void){
@@ -323,14 +323,14 @@ void cmd_index_setup(void){
                                 cvra_dc_get_index0(HEXMOTORCONTROLLER_BASE));
     }
 }
-    
+
 
 /** An array of all the commands. */
 command_t commands_list[] = {
     COMMAND("test_argv",test_func),
     COMMAND("reset", cmd_reset),
     COMMAND("start",cmd_start),
-    COMMAND("pid", cmd_pid), 
+    COMMAND("pid", cmd_pid),
     COMMAND("pwm", cmd_pwm),
     COMMAND("encoders", cmd_encoders),
     COMMAND("index", cmd_index),
