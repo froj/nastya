@@ -9,7 +9,8 @@
  */
 
 #include <aversive.h>
-#include <aversive/error.h>
+
+#include <error.h>
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -21,7 +22,10 @@
 /* nios2.h contient toutes les fonctions dont nous avons besoin pour dialoguer
  * avec le nios alt_irq_register, IORD, etc... */
 #ifdef COMPILE_ON_ROBOT
+#include <ucos_ii.h>
 #include <nios2.h>
+#else
+#error "add COMPILE_ON_ROBOT to defines"
 #endif
 
 #include "hardware.h"
@@ -30,9 +34,8 @@
 extern command_t commands_list[];
 
 #define   TASK_STACKSIZE          2048
-#define   INIT_TASK_PRIORITY        20
 #define   SHELL_TASK_PRIORITY       40
-#define   HEARTBEAT_TASK_PRIORITY   41
+#define   HEARTBEAT_TASK_PRIORITY   5
 
 OS_STK    shell_task_stk[TASK_STACKSIZE];
 OS_STK    heartbeat_task_stk[TASK_STACKSIZE];
@@ -92,7 +95,7 @@ int init(void)
     NOTICE(0, "Main control system init.");
     cvra_cs_init();
 
-    OSTaskCreateExt(shell_task,
+    int ret = OSTaskCreateExt(shell_task,
                     NULL,
                     &shell_task_stk[TASK_STACKSIZE-1],
                     SHELL_TASK_PRIORITY,
@@ -100,6 +103,7 @@ int init(void)
                     &shell_task_stk[0],
                     TASK_STACKSIZE,
                     NULL, NULL);
+    printf("create err = %d\n", ret);
 
     OSTaskCreateExt(heartbeat_task,
                     NULL,
@@ -113,8 +117,8 @@ int init(void)
 }
 
 
-int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) {
-
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
+{
     robot.verbosity_level = ERROR_SEVERITY_NOTICE;
 
     /* Setup UART speed, must be first. */
@@ -126,6 +130,11 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv) 
     error_register_error(mylog);
     error_register_warning(mylog);
     error_register_notice(mylog);
+
+    OSInit();
+
+    init();
+    NOTICE(0, "Starting OS");
 
     OSStart();
 

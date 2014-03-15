@@ -4,7 +4,6 @@
 #include <cvra_servo.h>
 #include "adresses.h"
 #include "cvra_cs.h"
-#include "strat.h"
 
 /** Prints all args, then exits. */
 void test_func(int argc, char **argv) {
@@ -220,15 +219,15 @@ void cmd_start(int argc, char** argv) {
     {
         printf("Usage : start color \n Color ={blue, red}\n");
     }
-    if(!strcmp(argv[1], "red"))
-        strat_begin(RED);
-    else if(!strcmp(argv[1], "blue"))
-        strat_begin(BLUE);
-    else {
-        printf("Color is blue or red\n");
-        return;}
+    // if(!strcmp(argv[1], "red"))
+    //     strat_begin(RED);
+    // else if(!strcmp(argv[1], "blue"))
+    //     strat_begin(BLUE);
+    // else {
+    //     printf("Color is blue or red\n");
+    //     return;}
 
-    printf("Match done. Hope you enjoyed it !\n");
+    // printf("Match done. Hope you enjoyed it !\n");
 }
 
 void cmd_do_gift(int argc, char** argv){

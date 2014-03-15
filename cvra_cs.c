@@ -33,6 +33,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <ucos_ii.h>
+
 #include "cvra_cs.h"
 #include "hardware.h"
 #include "cvra_param_robot.h"
@@ -46,6 +48,37 @@ OS_STK    odometry_task_stk[2048];
 #define   ODOMETRY_TASK_PRIORITY      22
 
 /** Limite PWM = + ou - 475 */
+
+
+void cvra_cs_manage_task(__attribute__((unused)) void * dummy) {
+
+    //NOTICE(ERROR_CS, __FUNCTION__);
+    //DEBUG(E_ROBOT_SYSTEM, "LOL");
+    /* Gestion de la position. */
+
+    while (42) {
+        rsh_update(&robot.rs);
+
+        cs_manage(&robot.wheel0_cs);
+        cs_manage(&robot.wheel1_cs);
+        cs_manage(&robot.wheel2_cs);
+
+        /* Wait 10 milliseconds (100 Hz) */
+        OSTimeDlyHMSM(0, 0, 0, 1000 / ASSERV_FREQUENCY);
+
+    }
+}
+
+void odometry_manage_task(__attribute__((unused)) void *dummy)
+{
+    while (42) {
+        holonomic_position_manage(&robot.pos);
+
+        /* Wait 20 milliseconds (50 Hz) */
+        OSTimeDlyHMSM(0, 0, 0, 20);
+    }
+}
+
 
 void cvra_cs_init(void) {
     /****************************************************************************/
@@ -251,32 +284,3 @@ void cvra_cs_init(void) {
                     NULL, NULL);
 }
 
-
-void cvra_cs_manage_task(__attribute__((unused)) void * dummy) {
-
-    //NOTICE(ERROR_CS, __FUNCTION__);
-    //DEBUG(E_ROBOT_SYSTEM, "LOL");
-    /* Gestion de la position. */
-
-    while (42) {
-        rsh_update(&robot.rs);
-
-        cs_manage(&robot.wheel0_cs);
-        cs_manage(&robot.wheel1_cs);
-        cs_manage(&robot.wheel2_cs);
-
-        /* Wait 10 milliseconds (100 Hz) */
-        OSTimeDlyHMSM(0, 0, 0, 1000 / ASSERV_FREQUENCY);
-
-    }
-}
-
-void odometry_manage_task(__attribute__((unused)) void *dummy)
-{
-    while (42) {
-        holonomic_position_manage(&robot.pos);
-
-        /* Wait 20 milliseconds (50 Hz) */
-        OSTimeDlyHMSM(0, 0, 0, 20);
-    }
-}

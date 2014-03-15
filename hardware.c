@@ -37,6 +37,8 @@
 #include <stdio.h>
 
 
+#define UART_FREQ PIO_FREQ
+
 void cvra_set_uart_speed(int32_t *uart_adress, int baudrate) {
 #ifdef COMPILE_ON_ROBOT
     int32_t divisor;
