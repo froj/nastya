@@ -31,14 +31,12 @@
 #include "hardware.h"
 #include "cvra_cs.h"
 
+#include "tasks.h"
+
 extern command_t commands_list[];
 
-#define   TASK_STACKSIZE          2048
-#define   SHELL_TASK_PRIORITY       40
-#define   HEARTBEAT_TASK_PRIORITY   5
-
-OS_STK    shell_task_stk[TASK_STACKSIZE];
-OS_STK    heartbeat_task_stk[TASK_STACKSIZE];
+OS_STK    shell_task_stk[SHELL_TASK_STACKSIZE];
+OS_STK    heartbeat_task_stk[HEARTBEAT_TASK_STACKSIZE];
 
 void shell_task(void *pdata);
 void heartbeat_task(void *pdata);
@@ -97,21 +95,21 @@ int init(void)
 
     int ret = OSTaskCreateExt(shell_task,
                     NULL,
-                    &shell_task_stk[TASK_STACKSIZE-1],
+                    &shell_task_stk[SHELL_TASK_STACKSIZE-1],
                     SHELL_TASK_PRIORITY,
                     SHELL_TASK_PRIORITY,
                     &shell_task_stk[0],
-                    TASK_STACKSIZE,
+                    SHELL_TASK_STACKSIZE,
                     NULL, NULL);
     printf("create err = %d\n", ret);
 
     OSTaskCreateExt(heartbeat_task,
                     NULL,
-                    &heartbeat_task_stk[TASK_STACKSIZE-1],
+                    &heartbeat_task_stk[ENCODER_TASK_STACKSIZE-1],
                     HEARTBEAT_TASK_PRIORITY,
                     HEARTBEAT_TASK_PRIORITY,
                     &heartbeat_task_stk[0],
-                    TASK_STACKSIZE,
+                    ENCODER_TASK_STACKSIZE,
                     NULL, NULL);
 
 }
