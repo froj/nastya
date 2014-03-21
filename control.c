@@ -1,6 +1,7 @@
 
 #include <ucos_ii.h>
 #include "control.h"
+#include "tasks.h"
 
 #include "pid.h"
 
@@ -40,9 +41,9 @@ void control_task(void *arg)
         float y_x, y_y, y_r;
         float u_x, u_y, u_r;
         float wheel_cmd[3];
-        enc[0] = ; // TODO
-        enc[0] = ;
-        enc[0] = ;
+        enc[0] = cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE); // TODO
+        enc[0] = cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE);
+        enc[0] = cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE);
         encdiff[0] = enc[0] - prev_enc[0];
         encdiff[1] = enc[1] - prev_enc[1];
         encdiff[2] = enc[2] - prev_enc[2];
@@ -51,11 +52,13 @@ void control_task(void *arg)
         u_y = pid_control(&pid_y, y_y - setpoint_speed_y);
         u_r = pid_control(&pid_r, y_r - setpoint_omega);
         holonomic_base_mixer_robot_to_wheels(u_x, u_y, u_r, wheel_cmd);
-        // output wheel_cmd TODO
+        cvra_dc_set_pwm0(HEXMOTORCONTROLLER_BASE, wheel_cmd[0]*DC_PWM_MAX_VALUE);
+        cvra_dc_set_pwm1(HEXMOTORCONTROLLER_BASE, wheel_cmd[1]*DC_PWM_MAX_VALUE);
+        cvra_dc_set_pwm2(HEXMOTORCONTROLLER_BASE, wheel_cmd[2]*DC_PWM_MAX_VALUE);
         prev_enc[0] = enc[0];
         prev_enc[1] = enc[1];
         prev_enc[2] = enc[2];
-        // TODO sleep
+        OSTimeDly(OS_TICKS_PER_SEC/CONTROL_FREQ);
     }
 }
 

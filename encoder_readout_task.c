@@ -1,6 +1,7 @@
 
 #include <ucos_ii.h>
 #include <uptime.h>
+#include "tasks.h"
 
 struct encoder_datapoint {
     int32_t encoders[3];
@@ -21,30 +22,32 @@ void encoder_readout_task(void *pdata)
     int i = 0;
     while (i < ENC_BUFFER_SIZE) {
         timestamp_t now = uptime_get();
-        enc_buffer[i].encoders[0] = 0;
-        enc_buffer[i].encoders[1] = 0; // TODO
-        enc_buffer[i].encoders[2] = 0;
+        enc_buffer[i].encoders[0] = cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE);
+        enc_buffer[i].encoders[1] = cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE); // TODO
+        enc_buffer[i].encoders[2] = cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE);
         enc_buffer[i].timestamp = now;
         i++;
         int32_t prev_period = now - last_iteration;
         last_iteration = now;
-        // DELAY (ENC_SAMPLE_PERIOD * 2 - prev_period) // TODO
+        int32_t delay = ENC_SAMPLE_PERIOD * 2 - prev_period;
+        if (delay > 0)
+            OSTimeDly((int64_t)OS_TICKS_PER_SEC*delay/1000000);
     }
 }
 
 void encoder_readout_start(void)
 {
-    
+
 }
 
 void encoder_readout_stop(void)
 {
-    
+
 }
 
 void encoder_readout_send(void)
 {
-    
+
 }
 
 void encoder_readout_init(void)

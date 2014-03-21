@@ -17,7 +17,9 @@ void drive_open_loop_dynamic_path(struct dynamic_waypoint *wp,
         timestamp_t end_time = start_time + wp[i].duration;
         timestamp_t now = uptime_get();
         start_time = end_time;
-        // delay (end_time - now)
+        int32_t delay = end_time - now;
+        if (delay > 0)
+            OSTimeDly((int64_t)OS_TICKS_PER_SEC*delay/1000000);
     }
 }
 
