@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include <stdbool.h>
 
 #include <ucos_ii.h>
 #include <uptime.h>
