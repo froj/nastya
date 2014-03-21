@@ -63,6 +63,7 @@ void encoder_readout_stop(void)
 
 void encoder_readout_send(void)
 {
+    printf("%d encoder values read\n", enc_buffer_index);
     int i;
     for (i = 0; i < enc_buffer_index - 1; i++) {
         // todo
