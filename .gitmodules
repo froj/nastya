@@ -1,6 +1,6 @@
 [submodule "modules"]
 	path = modules
-	url = git@github.com:cvra/modules.git
+url=git@github.com:stapelzeiger/modules.git
 [submodule "lwip_ucos2"]
 	path = lwip_ucos2
 	url = git@github.com:cvra/lwip_ucos2.git
