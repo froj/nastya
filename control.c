@@ -1,9 +1,12 @@
-
+#include <stdint.h>
+#include <stddef.h>
 #include <ucos_ii.h>
-#include "control.h"
+#include <robot_base_mixer/robot_base_mixer.h>
+#include <cvra_dc.h>
 #include "tasks.h"
+#include "_pid.h"
 
-#include "pid.h"
+#include "control.h"
 
 #define CONTROL_FREQ 500 // [Hz]
 
@@ -65,9 +68,9 @@ void control_task(void *arg)
 
 void control_init(void)
 {
-    speed_x = 0;
-    speed_y = 0;
-    speed_r = 0;
+    setpoint_speed_x = 0;
+    setpoint_speed_y = 0;
+    setpoint_omega = 0;
     pid_init(&pid_x, CONTROL_FREQ);
     pid_init(&pid_y, CONTROL_FREQ);
     pid_init(&pid_r, CONTROL_FREQ);

@@ -85,68 +85,68 @@ void cmd_index(int argc, char **argv) {
     printf("\n");
 }
 
-/** Setups PID. */
-void cmd_pid(int argc, char **argv) {
-    if(argc < 2) {
-        /* Show current gains. */
-        printf("Wheel 0 : \tKp=%d\tGi=%d\tGd=%d\n",
-                pid_get_gain_P(&robot.wheel0_pid),
-                pid_get_gain_I(&robot.wheel0_pid),
-                pid_get_gain_D(&robot.wheel0_pid));
+// /** Setups PID. */
+// void cmd_pid(int argc, char **argv) {
+//     if(argc < 2) {
+//         /* Show current gains. */
+//         printf("Wheel 0 : \tKp=%d\tGi=%d\tGd=%d\n",
+//                 pid_get_gain_P(&robot.wheel0_pid),
+//                 pid_get_gain_I(&robot.wheel0_pid),
+//                 pid_get_gain_D(&robot.wheel0_pid));
 
-        printf("Wheel 1 : \tKp=%d\tGi=%d\tGd=%d\n",
-                pid_get_gain_P(&robot.wheel1_pid),
-                pid_get_gain_I(&robot.wheel1_pid),
-                pid_get_gain_D(&robot.wheel1_pid));
+//         printf("Wheel 1 : \tKp=%d\tGi=%d\tGd=%d\n",
+//                 pid_get_gain_P(&robot.wheel1_pid),
+//                 pid_get_gain_I(&robot.wheel1_pid),
+//                 pid_get_gain_D(&robot.wheel1_pid));
 
-        printf("Wheel 2 : \tKp=%d\tGi=%d\tGd=%d\n",
-                pid_get_gain_P(&robot.wheel2_pid),
-                pid_get_gain_I(&robot.wheel2_pid),
-                pid_get_gain_D(&robot.wheel2_pid));
+//         printf("Wheel 2 : \tKp=%d\tGi=%d\tGd=%d\n",
+//                 pid_get_gain_P(&robot.wheel2_pid),
+//                 pid_get_gain_I(&robot.wheel2_pid),
+//                 pid_get_gain_D(&robot.wheel2_pid));
 
-    }
-    else if(argc < 5) {
-            printf("usage: %s pid_name P I D\n", argv[0]);
-    }
-    else {
-        struct pid_filter *pid;
+//     }
+//     else if(argc < 5) {
+//             printf("usage: %s pid_name P I D\n", argv[0]);
+//     }
+//     else {
+//         struct pid_filter *pid;
 
-        if(!strcmp(argv[1], "w0")) pid =  &robot.wheel0_pid;
-        else if(!strcmp(argv[1], "w1")) pid =  &robot.wheel1_pid;
-        else if(!strcmp(argv[1], "w2")) pid =  &robot.wheel2_pid;
-        else {
-            printf("Unknown PID name : %s\n", argv[1]);
-            return;
-        }
+//         if(!strcmp(argv[1], "w0")) pid =  &robot.wheel0_pid;
+//         else if(!strcmp(argv[1], "w1")) pid =  &robot.wheel1_pid;
+//         else if(!strcmp(argv[1], "w2")) pid =  &robot.wheel2_pid;
+//         else {
+//             printf("Unknown PID name : %s\n", argv[1]);
+//             return;
+//         }
 
-        /** @todo We should be more cautious when handling user input. */
-        /** @workaround : to set all the pid */
-        pid_set_gains(&robot.wheel0_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-        pid_set_gains(&robot.wheel1_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-        pid_set_gains(&robot.wheel2_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-        //pid_set_gains(pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
-    }
-}
+//         /** @todo We should be more cautious when handling user input. */
+//         /** @workaround : to set all the pid */
+//         pid_set_gains(&robot.wheel0_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
+//         pid_set_gains(&robot.wheel1_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
+//         pid_set_gains(&robot.wheel2_pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
+//         //pid_set_gains(pid, atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
+//     }
+// }
 
-/** Set or get the position */
-void cmd_position(int argc, char **argv){
-    if(argc == 1){
-        printf("x: %lf; y: %lf; a: %lf\n", holonomic_position_get_x_double(&robot.pos),
-                                          holonomic_position_get_y_double(&robot.pos),
-                                          holonomic_position_get_a_rad_double(&robot.pos));
-    }else{
-        holonomic_position_set_x_s16(&robot.pos, (int16_t)atoi(argv[1]));
-        holonomic_position_set_y_s16(&robot.pos, (int16_t)atoi(argv[2]));
-        holonomic_position_set_a_s16(&robot.pos, (int16_t)atoi(argv[3]));
-    }
-}
+// /** Set or get the position */
+// void cmd_position(int argc, char **argv){
+//     if(argc == 1){
+//         printf("x: %lf; y: %lf; a: %lf\n", holonomic_position_get_x_double(&robot.pos),
+//                                           holonomic_position_get_y_double(&robot.pos),
+//                                           holonomic_position_get_a_rad_double(&robot.pos));
+//     }else{
+//         holonomic_position_set_x_s16(&robot.pos, (int16_t)atoi(argv[1]));
+//         holonomic_position_set_y_s16(&robot.pos, (int16_t)atoi(argv[2]));
+//         holonomic_position_set_a_s16(&robot.pos, (int16_t)atoi(argv[3]));
+//     }
+// }
 
 /** Set the macro-variable (speed. direction, omega) via trajectory */
 void cmd_set_macro_var(int argc, char **argv) {
     if(argc < 3)
        printf("Usage: macro_var SPEED DIRECTION ROT_SPEED\n");
-   else
-      holonomic_trajectory_set_var(&robot.traj, (int32_t)atoi(argv[1]), (int32_t)atoi(argv[2]), (int32_t)atoi(argv[3]));
+//   else
+//      holonomic_trajectory_set_var(&robot.traj, (int32_t)atoi(argv[1]), (int32_t)atoi(argv[2]), (int32_t)atoi(argv[3]));
 }
 
 /** Lists all available commands. */
@@ -162,18 +162,18 @@ void cmd_help(void) {
 }
 
 void cmd_speed(int argc, char **argv) {
-    if(argc < 2){
-        printf("Translation Speed: %f\nDirection:         %f\nRotation Speed:    %f\n",
-                robot.rs.speed, robot.rs.direction, robot.rs.rotation_speed);
-    }else if(argc < 3){
-        printf("Usage: speed SPEED DIRECTION (DEG) ROT_SPEED\n");
-    }else{
-        rsh_set_speed(&robot.rs, (int32_t)atoi(argv[1]));
-        rsh_set_direction_int(&robot.rs, (int32_t)atoi(argv[2]));
-        if(argc > 3){
-            rsh_set_rotation_speed(&robot.rs, (int32_t)atoi(argv[3]));
-        }
-    }
+    // if(argc < 2){
+    //     printf("Translation Speed: %f\nDirection:         %f\nRotation Speed:    %f\n",
+    //             robot.rs.speed, robot.rs.direction, robot.rs.rotation_speed);
+    // }else if(argc < 3){
+    //     printf("Usage: speed SPEED DIRECTION (DEG) ROT_SPEED\n");
+    // }else{
+    //     rsh_set_speed(&robot.rs, (int32_t)atoi(argv[1]));
+    //     rsh_set_direction_int(&robot.rs, (int32_t)atoi(argv[2]));
+    //     if(argc > 3){
+    //         rsh_set_rotation_speed(&robot.rs, (int32_t)atoi(argv[3]));
+    //     }
+    // }
 }
 
 void cmd_circle(int argc, char **argv) {
@@ -185,27 +185,27 @@ void cmd_circle(int argc, char **argv) {
 }
 
 void cmd_get_speed(void){
-    printf("Translation Speed: %f\nDirection: %d\nRotations Speed: %lf\n",
-            holonomic_position_get_instant_translation_speed(&robot.pos),
-            (int)holonomic_position_get_theta_v_int(&robot.pos),
-            holonomic_position_get_instant_rotation_speed(&robot.pos));
+   // printf("Translation Speed: %f\nDirection: %d\nRotations Speed: %lf\n",
+            // holonomic_position_get_instant_translation_speed(&robot.pos),
+            // (int)holonomic_position_get_theta_v_int(&robot.pos),
+            // holonomic_position_get_instant_rotation_speed(&robot.pos));
 }
 
 void cmd_delta_enc(void){
-    printf("%d; %d; %d;\n", (int)robot.pos.delta_enc[0], (int)robot.pos.delta_enc[1], (int)robot.pos.delta_enc[2]);
+    // printf("%d; %d; %d;\n", (int)robot.pos.delta_enc[0], (int)robot.pos.delta_enc[1], (int)robot.pos.delta_enc[2]);
 }
 
 void cmd_cs_enable(int argc, char **argv) {
     (void)argv;
-    if(argc > 1){
-        cs_disable(&robot.wheel0_cs);
-        cs_disable(&robot.wheel1_cs);
-        cs_disable(&robot.wheel2_cs);
-    }else{
-        cs_enable(&robot.wheel0_cs);
-        cs_enable(&robot.wheel1_cs);
-        cs_enable(&robot.wheel2_cs);
-    }
+    // if(argc > 1){
+    //     cs_disable(&robot.wheel0_cs);
+    //     cs_disable(&robot.wheel1_cs);
+    //     cs_disable(&robot.wheel2_cs);
+    // }else{
+    //     cs_enable(&robot.wheel0_cs);
+    //     cs_enable(&robot.wheel1_cs);
+    //     cs_enable(&robot.wheel2_cs);
+    // }
 }
 
 void cmd_exit(void) {
@@ -270,7 +270,8 @@ void cmd_get_io(int argc, char** argv){
 //}
 
 #ifdef COMPILE_ON_ROBOT
-void cmd_beacon(void) {
+void cmd_beacon(void)
+{
 //    printf("==Beacon==\n");
 //    printf("period = %u\n", (unsigned int)robot.beacon.period);
 //    printf("firstedge = %u\n", (unsigned int)robot.beacon.firstedge);
@@ -283,7 +284,8 @@ void cmd_beacon(void) {
 }
 #endif
 
-void cmd_test_odometry(void){
+void cmd_test_odometry(void)
+{
 //    strat_start_position();
 //    strat_long_arm_down();
 //    strat_short_arm_down();
@@ -329,11 +331,11 @@ command_t commands_list[] = {
     COMMAND("test_argv",test_func),
     COMMAND("reset", cmd_reset),
     COMMAND("start",cmd_start),
-    COMMAND("pid", cmd_pid),
+//    COMMAND("pid", cmd_pid),
     COMMAND("pwm", cmd_pwm),
     COMMAND("encoders", cmd_encoders),
     COMMAND("index", cmd_index),
-    COMMAND("pos", cmd_position),
+//	    COMMAND("pos", cmd_position),
     COMMAND("help", cmd_help),
     COMMAND("speed", cmd_speed),
     COMMAND("cs_enable", cmd_cs_enable),

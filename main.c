@@ -91,7 +91,10 @@ int init(void)
 {
     NOTICE(0, "System boot !");
     NOTICE(0, "Main control system init.");
-    cvra_cs_init();
+//    cvra_cs_init();
+
+    control_init();
+    control_update_setpoint_vx(0.01);
 
     int ret = OSTaskCreateExt(shell_task,
                     NULL,
@@ -117,7 +120,6 @@ int init(void)
 
 int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 {
-    robot.verbosity_level = ERROR_SEVERITY_NOTICE;
 
     /* Setup UART speed, must be first. */
     cvra_set_uart_speed(COMBT1_BASE, 9600);
