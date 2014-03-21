@@ -11,11 +11,13 @@ void drive_open_loop_dynamic_path(struct dynamic_waypoint *wp,
     timestamp_t start_time = uptime_get();
     int i;
     for (i = 0; i < nb_waypoints; i++) {
-        // cs set consign from wp[i]
+        control_update_setpoint_vx(wp[i].vx);
+        control_update_setpoint_vy(wp[i].vy);
+        control_update_setpoint_omega(wp[i].omega);
         timestamp_t end_time = start_time + wp[i].duration;
         timestamp_t now = uptime_get();
-        // delay (end_time - now)
         start_time = end_time;
+        // delay (end_time - now)
     }
 }
 

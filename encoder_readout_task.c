@@ -22,24 +22,24 @@ void encoder_readout_task(void *pdata)
     while (i < ENC_BUFFER_SIZE) {
         timestamp_t now = uptime_get();
         enc_buffer[i].encoders[0] = 0;
-        enc_buffer[i].encoders[1] = 0;
+        enc_buffer[i].encoders[1] = 0; // TODO
         enc_buffer[i].encoders[2] = 0;
         enc_buffer[i].timestamp = now;
         i++;
         int32_t prev_period = now - last_iteration;
         last_iteration = now;
-        // DELAY (ENC_SAMPLE_PERIOD * 2 - prev_period)
+        // DELAY (ENC_SAMPLE_PERIOD * 2 - prev_period) // TODO
     }
 }
 
 void encoder_readout_start(void)
 {
-
+    
 }
 
 void encoder_readout_stop(void)
 {
-
+    
 }
 
 void encoder_readout_send(void)
@@ -51,10 +51,10 @@ void encoder_readout_init(void)
 {
     OSTaskCreateExt(encoder_readout_task,
                     NULL,
-                    &encoder_readout_stk[TASK_STACKSIZE-1],
-                    HEARTBEAT_TASK_PRIORITY,
-                    HEARTBEAT_TASK_PRIORITY,
+                    &encoder_readout_stk[ENCODER_TASK_STACKSIZE-1],
+                    ENCODER_TASK_PRIORITY,
+                    ENCODER_TASK_PRIORITY,
                     &encoder_readout_stk[0],
-                    TASK_STACKSIZE,
+                    ENCODER_TASK_STACKSIZE,
                     NULL, NULL);
 }
