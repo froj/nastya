@@ -10,3 +10,6 @@
 
 #define CONTROL_TASK_PRIORITY        4
 #define CONTROL_TASK_STACKSIZE    2048
+
+#define PLOT_TASK_PRIORITY          35
+#define PLOT_TASK_STACKSIZE       2048
