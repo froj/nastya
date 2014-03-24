@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdbool.h>
-
+#include <cvra_dc.h>
 #include <ucos_ii.h>
 #include <uptime.h>
 #include "tasks.h"
