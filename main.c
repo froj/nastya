@@ -12,6 +12,7 @@
 
 #include <error.h>
 
+#include <cvra_dc.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <uptime.h>
@@ -61,6 +62,11 @@ void mylog(struct error * e, ...)
 
 void shell_task(void *pdata)
 {
+    control_update_setpoint_vx(0.1);
+    OSTimeDlyHMSM(0, 0, 10, 0);
+    control_update_setpoint_vx(0);
+    OSTimeDlyHMSM(1, 0, 3, 0);
+    control_update_setpoint_vx(0);
     /* Inits the commandline interface. */
     commandline_init(commands_list);
 
@@ -68,6 +74,9 @@ void shell_task(void *pdata)
     for(;;) commandline_input_char(getchar());
 }
 
+
+extern float wheel_cmd[3];
+extern float y_x;
 
 void heartbeat_task(void *pdata)
 {
@@ -80,7 +89,9 @@ void heartbeat_task(void *pdata)
         /* toggles bit 0. */
         leds = leds ^ (1<<0);
         IOWR(LED_BASE, 0, leds);
-
+        printf("%d %d %d\n",  -cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE),  -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE),  -cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE));
+        //printf("%f %f %f\n", wheel_cmd[0], wheel_cmd[1], wheel_cmd[2]);
+        printf("%f\n", y_x);
         OS_EXIT_CRITICAL();
         OSTimeDlyHMSM(0, 0, 0, 500);
     }
@@ -94,8 +105,7 @@ int init(void)
 //    cvra_cs_init();
 
     control_init();
-    control_update_setpoint_vx(0.01);
-
+    
     int ret = OSTaskCreateExt(shell_task,
                     NULL,
                     &shell_task_stk[SHELL_TASK_STACKSIZE-1],
