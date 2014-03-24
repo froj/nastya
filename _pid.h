@@ -1,7 +1,7 @@
 #ifndef PID_H
 #define PID_H
 
-typedef struct pid {
+struct pid {
 	// configuration
 	float kp;
 	float ki;
@@ -11,7 +11,7 @@ typedef struct pid {
 	// state
 	float error_integral;
 	float prev_error;
-} pid_t;
+};
 
 
 void pid_init(struct pid *pid, float freq);
