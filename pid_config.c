@@ -79,6 +79,7 @@ void pid_conf_shell_listen(void)
     while (1) {
         int connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
         // printf("%d %d\n", connfd, errno);
+        printf("pid config shell connect\n");
         pid_conf_shell(connfd);
         getc(stdin);
     }

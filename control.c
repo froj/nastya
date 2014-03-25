@@ -104,9 +104,9 @@ void control_init(void)
     pid_r.ki = 0;
     pid_r.kd = 0;
 
-    plot_add_variable("0:", &pid_error_speed_x, PLOT_FLOAT)
-    plot_add_variable("1:", &pid_error_speed_y, PLOT_FLOAT)
-    plot_add_variable("2:", &pid_error_omega, PLOT_FLOAT)
+    plot_add_variable("0:", &pid_error_speed_x, PLOT_FLOAT);
+    plot_add_variable("1:", &pid_error_speed_y, PLOT_FLOAT);
+    plot_add_variable("2:", &pid_error_omega, PLOT_FLOAT);
 
     OSTaskCreateExt(control_task,
                     NULL,

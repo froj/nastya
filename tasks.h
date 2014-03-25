@@ -1,7 +1,7 @@
 #define INIT_TASK_PRIORITY           1
 #define INIT_TASK_STACKSIZE       2048
 
-#define HEARTBEAT_TASK_PRIORITY     42
+#define HEARTBEAT_TASK_PRIORITY     0//42
 #define HEARTBEAT_TASK_STACKSIZE  2048
 
 #define SHELL_TASK_PRIORITY         40
@@ -13,5 +13,5 @@
 #define CONTROL_TASK_PRIORITY        4
 #define CONTROL_TASK_STACKSIZE    2048
 
-#define PLOT_TASK_PRIORITY          35
+#define PLOT_TASK_PRIORITY          21
 #define PLOT_TASK_STACKSIZE       2048

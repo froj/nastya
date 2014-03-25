@@ -50,6 +50,8 @@ extern command_t commands_list[];
 OS_STK    shell_task_stk[SHELL_TASK_STACKSIZE];
 OS_STK    heartbeat_task_stk[HEARTBEAT_TASK_STACKSIZE];
 OS_STK    init_task_stk[INIT_TASK_STACKSIZE];
+OS_STK    plot_stk[PLOT_TASK_STACKSIZE];
+
 
 void shell_task(void *pdata);
 void heartbeat_task(void *pdata);
@@ -177,6 +179,7 @@ extern float y_x;
 
 void heartbeat_task(void *pdata)
 {
+    printf("starting heartbeat task\n");
     OS_CPU_SR cpu_sr;
     int leds;
     while(1) {
@@ -188,7 +191,7 @@ void heartbeat_task(void *pdata)
         IOWR(LED_BASE, 0, leds);
         //printf("%d %d %d\n",  -cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE),  -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE),  -cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE));
         //printf("%f %f %f\n", wheel_cmd[0], wheel_cmd[1], wheel_cmd[2]);
-        printf("%f\n", y_x);
+        //printf("%f\n", y_x);
         OS_EXIT_CRITICAL();
         OSTimeDlyHMSM(0, 0, 0, 500);
     }
@@ -211,7 +214,7 @@ void init_task(void *pdata)
                     SHELL_TASK_STACKSIZE,
                     NULL, NULL);
 
-    OSTaskCreateExt(heartbeat_task,
+    ret = OSTaskCreateExt(heartbeat_task,
                     NULL,
                     &heartbeat_task_stk[HEARTBEAT_TASK_STACKSIZE-1],
                     HEARTBEAT_TASK_PRIORITY,
@@ -219,6 +222,14 @@ void init_task(void *pdata)
                     &heartbeat_task_stk[0],
                     HEARTBEAT_TASK_STACKSIZE,
                     NULL, NULL);
+
+    ip_stack_init();
+
+    /* Lists every network interface and shows its IP. */
+    printf("Listing network interfaces...\n");
+    list_netifs();
+
+    plot_init();
 
     OSTaskCreateExt(plot_task,
                     NULL,
@@ -229,14 +240,6 @@ void init_task(void *pdata)
                     PLOT_TASK_STACKSIZE,
                     NULL, NULL);
 
-    ip_stack_init();
-
-    plot_init();
-
-    /* Lists every network interface and shows its IP. */
-    printf("Listing network interfaces...\n");
-    list_netifs();
-
     /* Creates a simple demo app. */
 //    ping_init();
 
@@ -244,7 +247,7 @@ void init_task(void *pdata)
     // getchar();
     // sntp_init();
 
-    pid_conf_shell_listen();
+    //pid_conf_shell_listen();
 
     /* We delete the init task before returning. */
     OSTaskDel(INIT_TASK_PRIORITY);
