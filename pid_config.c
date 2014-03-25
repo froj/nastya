@@ -11,7 +11,7 @@ void pid_conf_shell(int socket)
     static char rcv_buf[128];
     // printf("new connection\n");
     int n;
-    pid_t *pid = &pid_x;
+    _pid_t *pid = &pid_x;
     while ((n = read(socket, rcv_buf, sizeof(rcv_buf)-1)) > 0) {
         rcv_buf[n] = '\0';
         static char cmd[80];

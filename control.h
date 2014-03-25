@@ -3,9 +3,9 @@
 
 #include "_pid.h"
 
-extern pid_t pid_x;
-extern pid_t pid_y;
-extern pid_t pid_r;
+extern _pid_t pid_x;
+extern _pid_t pid_y;
+extern _pid_t pid_r;
 
 void control_update_setpoint_vx(float x);
 void control_update_setpoint_vy(float y);

@@ -14,9 +14,9 @@
 
 OS_STK control_task_stk[CONTROL_TASK_STACKSIZE];
 
-pid_t pid_x;
-pid_t pid_y;
-pid_t pid_r;
+_pid_t pid_x;
+_pid_t pid_y;
+_pid_t pid_r;
 static volatile float setpoint_speed_x;
 static volatile float setpoint_speed_y;
 static volatile float setpoint_omega;
