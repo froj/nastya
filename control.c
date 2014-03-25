@@ -10,6 +10,8 @@
 
 #include "control.h"
 
+#include "plot_task.h"
+
 #define CONTROL_FREQ 80 // [Hz]
 
 OS_STK control_task_stk[CONTROL_TASK_STACKSIZE];
@@ -20,6 +22,9 @@ _pid_t pid_r;
 static volatile float setpoint_speed_x;
 static volatile float setpoint_speed_y;
 static volatile float setpoint_omega;
+static float pid_error_speed_x = 0;
+static float pid_error_speed_y = 0;
+static float pid_error_omega = 0;
 
 
 float wheel_cmd[3];
@@ -40,14 +45,14 @@ void control_update_setpoint_omega(float r)
 }
 
 
-        float y_x, y_y, y_r;
+float y_x, y_y, y_r;
 
 
 void control_task(void *arg)
 {
     float prev_enc[3] = {
         -cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE),
-        -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE), 
+        -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE),
         -cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE)};
     while (42) {
         float enc[3];
@@ -62,6 +67,9 @@ void control_task(void *arg)
         encdiff[1] = (enc[1] - prev_enc[1])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
         encdiff[2] = (enc[2] - prev_enc[2])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
         holonomic_base_mixer_wheels_to_robot(encdiff, &y_x, &y_y, &y_r);
+        pid_error_speed_x = y_x - setpoint_speed_x;
+        pid_error_speed_y = y_y - setpoint_speed_y;
+        pid_error_omega = y_r - setpoint_omega;
         u_x = pid_control(&pid_x, y_x - setpoint_speed_x);
         u_y = pid_control(&pid_y, y_y - setpoint_speed_y);
         u_r = pid_control(&pid_r, y_r - setpoint_omega);
@@ -95,6 +103,11 @@ void control_init(void)
     pid_r.kp = 0.01;
     pid_r.ki = 0;
     pid_r.kd = 0;
+
+    plot_add_variable("0:", &pid_error_speed_x, PLOT_FLOAT)
+    plot_add_variable("1:", &pid_error_speed_y, PLOT_FLOAT)
+    plot_add_variable("2:", &pid_error_omega, PLOT_FLOAT)
+
     OSTaskCreateExt(control_task,
                     NULL,
                     &control_task_stk[CONTROL_TASK_STACKSIZE-1],

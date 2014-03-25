@@ -41,6 +41,8 @@
 #include "hardware.h"
 #include "cvra_cs.h"
 
+#include "plot_task.h"
+
 #include "tasks.h"
 
 extern command_t commands_list[];
@@ -199,7 +201,7 @@ void init_task(void *pdata)
     NOTICE(0, "System boot !");
 
     control_init();
-    
+
     int ret = OSTaskCreateExt(shell_task,
                     NULL,
                     &shell_task_stk[SHELL_TASK_STACKSIZE-1],
@@ -211,14 +213,25 @@ void init_task(void *pdata)
 
     OSTaskCreateExt(heartbeat_task,
                     NULL,
-                    &heartbeat_task_stk[ENCODER_TASK_STACKSIZE-1],
+                    &heartbeat_task_stk[HEARTBEAT_TASK_STACKSIZE-1],
                     HEARTBEAT_TASK_PRIORITY,
                     HEARTBEAT_TASK_PRIORITY,
                     &heartbeat_task_stk[0],
-                    ENCODER_TASK_STACKSIZE,
+                    HEARTBEAT_TASK_STACKSIZE,
+                    NULL, NULL);
+
+    OSTaskCreateExt(plot_task,
+                    NULL,
+                    &plot_stk[PLOT_TASK_STACKSIZE-1],
+                    PLOT_TASK_PRIORITY,
+                    PLOT_TASK_PRIORITY,
+                    &plot_stk[0],
+                    PLOT_TASK_STACKSIZE,
                     NULL, NULL);
 
     ip_stack_init();
+
+    plot_init();
 
     /* Lists every network interface and shows its IP. */
     printf("Listing network interfaces...\n");

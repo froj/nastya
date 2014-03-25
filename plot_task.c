@@ -45,40 +45,40 @@ void plot_task(void)
     to_plot = plots;
     while (to_plot != NULL) {
         switch(to_plot->type) {
-            case INT8 :
+            case PLOT_INT8 :
                 pos += sprintf( pos, "%s %d\n", to_plot->description,
                                 *(int8_t*)to_plot->variable);
                 break;
-            case INT16 :
+            case PLOT_INT16 :
                 pos += sprintf( pos, "%s %d\n", to_plot->description,
                                 *(int16_t*)to_plot->variable);
                 break;
-            case INT32 :
+            case PLOT_INT32 :
                 pos += sprintf( pos, "%s %d\n", to_plot->description,
                                 *(int32_t*)to_plot->variable);
                 break;
-            case UINT8 :
+            case PLOT_UINT8 :
                 pos += sprintf( pos, "%s %d\n", to_plot->description,
                                 *(uint8_t*)to_plot->variable);
                 break;
-            case UINT16 :
+            case PLOT_UINT16 :
                 pos += sprintf( pos, "%s %d\n", to_plot->description,
                                 *(uint16_t*)to_plot->variable);
                 break;
-            case UINT32 :
+            case PLOT_UINT32 :
                 pos += sprintf( pos, "%s %d\n", to_plot->description,
                                 *(uint32_t*)to_plot->variable);
                 break;
-            case FLOAT :
+            case PLOT_FLOAT :
                 pos += sprintf( pos, "%s %f\n", to_plot->description,
                                 *(float*)to_plot->variable);
                 break;
-            case DOUBLE :
+            case PLOT_DOUBLE :
                 pos += sprintf( pos, "%s %lf\n", to_plot->description,
                                 *(double*)to_plot->variable);
                 break;
         }
-        pos--;  // fuck that null terminator
+        //pos--;  // fuck that null terminator
         if (pos - plot_string > 1000) break;    // prevent segfaults
 
         to_plot = to_plot->next;
@@ -111,7 +111,7 @@ void plot_add_variable(char description[8], void* variable, enum plot_types type
     }
 
     plot->next = malloc(sizeof(struct plot_data));
-    memcpy(plots->description, description, 8);
+    memcpy(plot->next->description, description, 8);
     plot->next->variable = variable;
     plot->next->type = type;
     plot->next->next = NULL;

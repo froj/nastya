@@ -1,12 +1,12 @@
 enum plot_types {
-    INT8,
-    INT16,
-    INT32,
-    UINT8,
-    UINT16,
-    UINT32,
-    FLOAT,
-    DOUBLE
+    PLOT_INT8,
+    PLOT_INT16,
+    PLOT_INT32,
+    PLOT_UINT8,
+    PLOT_UINT16,
+    PLOT_UINT32,
+    PLOT_FLOAT,
+    PLOT_DOUBLE
 };
 
 
