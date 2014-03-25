@@ -1,18 +1,17 @@
-#include <netinet/in.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
+#include <lwip/inet.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
+#include "control.h"
 
 void pid_conf_shell(int socket)
 {
     static char rcv_buf[128];
     // printf("new connection\n");
     int n;
-    struct pid_t *pid = &pid_x;
+    pid_t *pid = &pid_x;
     while ((n = read(socket, rcv_buf, sizeof(rcv_buf)-1)) > 0) {
         rcv_buf[n] = '\0';
         static char cmd[80];
@@ -35,23 +34,23 @@ void pid_conf_shell(int socket)
         } else if (strcmp(cmd, "p") == 0) {
             float x;
             if (sscanf(rcv_buf, "%*s%f", &x) == 1)
-                pid->p = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intboud %f\n", pid->p, pid->i, pid->d, pid->integration_bound);
+                pid->kp = x;
+            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
         } else if (strcmp(cmd, "i") == 0) {
             float x;
             if (sscanf(rcv_buf, "%*s%f", &x) == 1)
-                pid->i = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intboud %f\n", pid->p, pid->i, pid->d, pid->integration_bound);
+                pid->ki = x;
+            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
         } else if (strcmp(cmd, "d") == 0) {
             float x;
             if (sscanf(rcv_buf, "%*s%f", &x) == 1)
-                pid->d = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intboud %f\n", pid->p, pid->i, pid->d, pid->integration_bound);
+                pid->kd = x;
+            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
         } else if (strcmp(cmd, "b") == 0) {
             float x;
             if (sscanf(rcv_buf, "%*s%f", &x) == 1)
                 pid->integration_bound = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intboud %f\n", pid->p, pid->i, pid->d, pid->integration_bound);
+            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
         } else {
             snprintf(w_buf, sizeof(w_buf)-1, "unknown command: %s\n", rcv_buf);
         }
@@ -61,7 +60,7 @@ void pid_conf_shell(int socket)
     close(socket);
 }
 
-int main(void)
+void pid_conf_shell_listen(void)
 {
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in serv_addr;
