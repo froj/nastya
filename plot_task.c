@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ucos_ii.h>
-#include <sys/socket.h>
+#include <lwip/udp.h>
 #include <errno.h>
 #include "tasks.h"
 #include "plot_task.h"
@@ -17,6 +17,7 @@ struct plot_data{
 
 static struct plot_data *plots = NULL;
 static int sock = 0;
+struct udp_pcb *pcb;
 
 
 void plot_task(void)
@@ -28,16 +29,16 @@ void plot_task(void)
     static struct sockaddr_in* client_addr = NULL;
 
     printf("plot task\n");
-    if (client_addr == NULL) {
-        //printf("clieent_addr == NULL\n");
-        char recv_data[1024];
-        socklen_t addr_len;
-        addr_len = sizeof(struct sockaddr);
-        client_addr = malloc(sizeof(struct sockaddr_in));
-        int ret = recvfrom(   sock, recv_data, 1024, 0,
-                    (struct sockaddr *)&client_addr, &addr_len);
-        //printf("udp received (%d, errno = %d, sock = %d)\n", ret, errno, sock);
-    }
+//    if (client_addr == NULL) {
+//        //printf("clieent_addr == NULL\n");
+//        char recv_data[1024];
+//        socklen_t addr_len;
+//        addr_len = sizeof(struct sockaddr);
+//        client_addr = malloc(sizeof(struct sockaddr_in));
+//        int ret = recvfrom(   sock, recv_data, 1024, 0,
+//                    (struct sockaddr *)&client_addr, &addr_len);
+//        //printf("udp received (%d, errno = %d, sock = %d)\n", ret, errno, sock);
+//    }
 
     struct plot_data *to_plot;
     while (23) {
@@ -84,12 +85,19 @@ void plot_task(void)
             to_plot = to_plot->next;
         }
 
-        printf("before sendto %s\n", plot_string);
+        //TODO
+        struct pbuf *p;
+        p = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
+        p->payload = plot_string;
 
-        int ret = sendto( sock, plot_string, strlen(plot_string), 0,
-                (struct sockaddr *)&client_addr, sizeof(struct sockaddr));
+        udp_send(pcb, p->payload);
 
-        printf("sendto ret %d, errno = %d\n", ret, errno);
+        //printf("before sendto %s\n", plot_string);
+
+        //int ret = sendto( sock, plot_string, strlen(plot_string), 0,
+        //        (struct sockaddr *)&client_addr, sizeof(struct sockaddr));
+
+        //printf("sendto ret %d, errno = %d\n", ret, errno);
         OSTimeDly((int64_t)OS_TICKS_PER_SEC/50);
         printf("after sendto delay\n");
     }
@@ -124,31 +132,47 @@ void plot_add_variable(char description[8], void* variable, enum plot_types type
 
 void plot_init(void)
 {
-    int addr_len, bytes_read;
-    struct sockaddr_in server_addr , client_addr;
+//    int addr_len, bytes_read;
+//    struct sockaddr_in server_addr , client_addr;
+
+    ip_addr_t ipaddr;
+
+    /* initliaze IP addresses to be used */
+    IP4_ADDR(&ipaddr,  192, 168,   3, 222);
+
+    /* start the UDP server */
+    //------------------------
+    err_t err;
+    unsigned port = 4000;
+    unsigned pc_port = 5000;
+
+    /* create new UDP PCB structure */
+    pcb = udp_new();
+    err = udp_bind(pcb, IP_ADDR_ANY, port);
+    err = udp_connect(pcb, &pc_ipaddr, pc_port);
 
 
-    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        printf("plot_init() sock fail, errno = %d\n", errno);
-        // error
-    }
+    //if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+    //    printf("plot_init() sock fail, errno = %d\n", errno);
+    //    // error
+    //}
 
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(5000);
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    memset(&(server_addr.sin_zero), 0, 8);
+    //server_addr.sin_family = AF_INET;
+    //server_addr.sin_port = htons(5000);
+    //server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    //memset(&(server_addr.sin_zero), 0, 8);
 
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(5000);
-    inet_aton("192.168.3.222", &client_addr.sin_addr);
-    memset(&(client_addr.sin_zero), 0, 8);
+    //client_addr.sin_family = AF_INET;
+    //client_addr.sin_port = htons(5000);
+    //inet_aton("192.168.3.222", &client_addr.sin_addr);
+    //memset(&(client_addr.sin_zero), 0, 8);
 
-    if (bind(sock,(struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
-        // error
-    }
+    //if (bind(sock,(struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
+    //    // error
+    //}
 
-    char *msg = "hello"
-    sendto( sock, msg, strlen(msg), 0,
-                (struct sockaddr *)&client_addr, sizeof(struct sockaddr));
-    printf("udp sent\n");
+    //char *msg = "hello"
+    //sendto( sock, msg, strlen(msg), 0,
+    //            (struct sockaddr *)&client_addr, sizeof(struct sockaddr));
+    //printf("udp sent\n");
 }
