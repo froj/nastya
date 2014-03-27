@@ -136,7 +136,7 @@ void plot_init(void)
     ip_addr_t ipaddr;
 
     /* initliaze IP addresses to be used */
-    IP4_ADDR(&ipaddr,  192, 168,   0, 111);
+    IP4_ADDR(&ipaddr,  192, 168,   2, 201);
 
     /* start the UDP server */
     //------------------------

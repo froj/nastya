@@ -36,10 +36,12 @@
 
 //#include "sntp.h"
 
+#include <control.h>
+
 #include <netif/slipif.h>
 
 #include "hardware.h"
-#include "cvra_cs.h"
+//#include "cvra_cs.h"
 
 #include "plot_task.h"
 
@@ -51,6 +53,7 @@ OS_STK    shell_task_stk[SHELL_TASK_STACKSIZE];
 OS_STK    heartbeat_task_stk[HEARTBEAT_TASK_STACKSIZE];
 OS_STK    init_task_stk[INIT_TASK_STACKSIZE];
 OS_STK    plot_stk[PLOT_TASK_STACKSIZE];
+OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
 
 void shell_task(void *pdata);
@@ -161,16 +164,37 @@ void mylog(struct error * e, ...)
 
 void shell_task(void *pdata)
 {
-    control_update_setpoint_vx(0.01);
-    OSTimeDlyHMSM(1, 0, 10, 0);
-    control_update_setpoint_vx(0);
-    OSTimeDlyHMSM(1, 0, 3, 0);
-    control_update_setpoint_vx(0);
     /* Inits the commandline interface. */
     commandline_init(commands_list);
 
     /* Runs the commandline system. */
     for(;;) commandline_input_char(getchar());
+}
+
+void drive_task(void *pdata)
+{
+    printf("drive task\n");
+    while (0) {
+        control_update_setpoint_vx(0.1);
+        OSTimeDlyHMSM(0, 0, 10, 0);
+        control_update_setpoint_vx(-0.1);
+        OSTimeDlyHMSM(0, 0, 10, 0); 
+    }
+    while (1) {
+        control_update_setpoint_vx(0.8);
+        OSTimeDlyHMSM(0, 0, 4, 0);
+        control_update_setpoint_vy(0.8);
+        OSTimeDlyHMSM(0, 0, 4, 0);
+        control_update_setpoint_vx(-0.8);
+        OSTimeDlyHMSM(0, 0, 4, 0);
+        control_update_setpoint_vy(-0.8);
+        OSTimeDlyHMSM(0, 0, 4, 0); 
+    }
+    
+    control_update_setpoint_vx(0.1);
+    OSTimeDlyHMSM(1, 0, 10, 0);
+    control_update_setpoint_vx(0);
+    OSTimeDlyHMSM(1, 0, 3, 0);
 }
 
 
@@ -205,16 +229,25 @@ void init_task(void *pdata)
 
     control_init();
 
-    int ret = OSTaskCreateExt(shell_task,
+    // OSTaskCreateExt(shell_task,
+    //                 NULL,
+    //                 &shell_task_stk[SHELL_TASK_STACKSIZE-1],
+    //                 SHELL_TASK_PRIORITY,
+    //                 SHELL_TASK_PRIORITY,
+    //                 &shell_task_stk[0],
+    //                 SHELL_TASK_STACKSIZE,
+    //                 NULL, NULL);
+
+    OSTaskCreateExt(drive_task,
                     NULL,
-                    &shell_task_stk[SHELL_TASK_STACKSIZE-1],
-                    SHELL_TASK_PRIORITY,
-                    SHELL_TASK_PRIORITY,
-                    &shell_task_stk[0],
-                    SHELL_TASK_STACKSIZE,
+                    &drive_task_stk[DRIVE_TASK_STACKSIZE-1],
+                    DRIVE_TASK_PRIORITY,
+                    DRIVE_TASK_PRIORITY,
+                    &drive_task_stk[0],
+                    DRIVE_TASK_STACKSIZE,
                     NULL, NULL);
 
-    ret = OSTaskCreateExt(heartbeat_task,
+    OSTaskCreateExt(heartbeat_task,
                     NULL,
                     &heartbeat_task_stk[HEARTBEAT_TASK_STACKSIZE-1],
                     HEARTBEAT_TASK_PRIORITY,

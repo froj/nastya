@@ -31,7 +31,9 @@ float wheel_cmd[3];
 
 void control_update_setpoint_vx(float x)
 {
+    printf("%f\n", setpoint_speed_x);
     setpoint_speed_x = x;
+    printf("%f\n", setpoint_speed_x);
 }
 
 void control_update_setpoint_vy(float y)
@@ -46,7 +48,7 @@ void control_update_setpoint_omega(float r)
 
 
 float y_x, y_y, y_r;
-
+float u_x, u_y, u_r;
 
 void control_task(void *arg)
 {
@@ -58,7 +60,7 @@ void control_task(void *arg)
         float enc[3];
         float encdiff[3];
 //        float y_x, y_y, y_r;
-        float u_x, u_y, u_r;
+//        float u_x, u_y, u_r;
         //float wheel_cmd[3];
         enc[0] = -cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE);
         enc[1] = -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE);
@@ -67,7 +69,6 @@ void control_task(void *arg)
         encdiff[1] = (enc[1] - prev_enc[1])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
         encdiff[2] = (enc[2] - prev_enc[2])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
         holonomic_base_mixer_wheels_to_robot(encdiff, &y_x, &y_y, &y_r);
-        setpoint_speed_x = 0.5;
         pid_error_speed_x = y_x - setpoint_speed_x;
         pid_error_speed_y = y_y - setpoint_speed_y;
         pid_error_omega = y_r - setpoint_omega;
@@ -95,19 +96,27 @@ void control_init(void)
     pid_init(&pid_x, CONTROL_FREQ);
     pid_init(&pid_y, CONTROL_FREQ);
     pid_init(&pid_r, CONTROL_FREQ);
-    pid_x.kp = 0.07;
-    pid_x.ki = 0.01;
-    pid_x.kd = 0;
-    pid_y.kp = 0.01;
-    pid_y.ki = 0;
-    pid_y.kd = 0;
-    pid_r.kp = 0.01;
-    pid_r.ki = 0;
-    pid_r.kd = 0;
+    pid_x.kp = 0.04;
+    pid_x.ki = 0.15;
+    pid_x.kd = 0.0;
+    pid_x.integration_bound = 0.04;
+    pid_y.kp = 0.04;
+    pid_y.ki = 0.15;
+    pid_y.kd = 0.0;
+    pid_y.integration_bound = 0.04;
+    pid_r.kp = 0.04;
+    pid_r.ki = 0.15;
+    pid_r.kd = 0.0;
+    pid_r.integration_bound = 0.04;
+
 
     plot_add_variable("0:", &pid_error_speed_x, PLOT_FLOAT);
     plot_add_variable("1:", &pid_error_speed_y, PLOT_FLOAT);
     plot_add_variable("2:", &pid_error_omega, PLOT_FLOAT);
+    plot_add_variable("3:", &u_x, PLOT_FLOAT);
+    //plot_add_variable("4:", &u_y, PLOT_FLOAT);
+    //plot_add_variable("5:", &u_r, PLOT_FLOAT);
+    plot_add_variable("4:", &wheel_cmd[1], PLOT_FLOAT);
 
     OSTaskCreateExt(control_task,
                     NULL,
