@@ -161,8 +161,8 @@ void mylog(struct error * e, ...)
 
 void shell_task(void *pdata)
 {
-    control_update_setpoint_vx(0.1);
-    OSTimeDlyHMSM(0, 0, 10, 0);
+    control_update_setpoint_vx(0.01);
+    OSTimeDlyHMSM(1, 0, 10, 0);
     control_update_setpoint_vx(0);
     OSTimeDlyHMSM(1, 0, 3, 0);
     control_update_setpoint_vx(0);
@@ -247,7 +247,7 @@ void init_task(void *pdata)
     // getchar();
     // sntp_init();
 
-    //pid_conf_shell_listen();
+    pid_conf_shell_listen();
 
     /* We delete the init task before returning. */
     OSTaskDel(INIT_TASK_PRIORITY);

@@ -85,12 +85,11 @@ void plot_task(void)
             to_plot = to_plot->next;
         }
 
-        //TODO
         struct pbuf *p;
-        p = pbuf_alloc(PBUF_TRANSPORT, 1024, PBUF_RAM);
+        p = pbuf_alloc(PBUF_TRANSPORT, strlen(plot_string), PBUF_REF);
         p->payload = plot_string;
 
-        udp_send(pcb, p->payload);
+        udp_send(pcb, p);
 
         //printf("before sendto %s\n", plot_string);
 
@@ -99,7 +98,6 @@ void plot_task(void)
 
         //printf("sendto ret %d, errno = %d\n", ret, errno);
         OSTimeDly((int64_t)OS_TICKS_PER_SEC/50);
-        printf("after sendto delay\n");
     }
 }
 
@@ -138,7 +136,7 @@ void plot_init(void)
     ip_addr_t ipaddr;
 
     /* initliaze IP addresses to be used */
-    IP4_ADDR(&ipaddr,  192, 168,   3, 222);
+    IP4_ADDR(&ipaddr,  192, 168,   0, 111);
 
     /* start the UDP server */
     //------------------------
@@ -149,7 +147,7 @@ void plot_init(void)
     /* create new UDP PCB structure */
     pcb = udp_new();
     err = udp_bind(pcb, IP_ADDR_ANY, port);
-    err = udp_connect(pcb, &pc_ipaddr, pc_port);
+    err = udp_connect(pcb, &ipaddr, pc_port);
 
 
     //if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {

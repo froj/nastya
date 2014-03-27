@@ -12,7 +12,7 @@
 
 #include "plot_task.h"
 
-#define CONTROL_FREQ 80 // [Hz]
+#define CONTROL_FREQ 100 // [Hz]
 
 OS_STK control_task_stk[CONTROL_TASK_STACKSIZE];
 
@@ -67,6 +67,7 @@ void control_task(void *arg)
         encdiff[1] = (enc[1] - prev_enc[1])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
         encdiff[2] = (enc[2] - prev_enc[2])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
         holonomic_base_mixer_wheels_to_robot(encdiff, &y_x, &y_y, &y_r);
+        setpoint_speed_x = 0.5;
         pid_error_speed_x = y_x - setpoint_speed_x;
         pid_error_speed_y = y_y - setpoint_speed_y;
         pid_error_omega = y_r - setpoint_omega;
