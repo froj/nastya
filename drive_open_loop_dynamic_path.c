@@ -1,6 +1,7 @@
 
 #include <stdint.h>
 #include <uptime.h>
+#include "control.h"
 #include <ucos_ii.h>
 
 #include "drive_open_loop_dynamic_path.h"

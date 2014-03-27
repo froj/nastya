@@ -31,9 +31,9 @@ float wheel_cmd[3];
 
 void control_update_setpoint_vx(float x)
 {
-    printf("%f\n", setpoint_speed_x);
+    //printf("%f\n", setpoint_speed_x);
     setpoint_speed_x = x;
-    printf("%f\n", setpoint_speed_x);
+    //printf("%f\n", setpoint_speed_x);
 }
 
 void control_update_setpoint_vy(float y)
