@@ -186,6 +186,9 @@ void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         int timest;
         sscanf(p->payload, "%c %f %f %f %d", &cmd, &vx, &vy, &omega, &timest);
         printf("pkt %c\n", cmd);
+        if (cmd == 'R') {
+            nb_wp = 0;
+        }
         if (cmd == 'D') {
             // data
             printf("timest %d\n", timest);
@@ -213,6 +216,7 @@ void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
             sys_sem_signal(&dyn_path_exec);
         }
     } else {
+        printf("pkt too long\n");
         sys_sem_signal(&dyn_path_exec);
     }
 FAIL:
