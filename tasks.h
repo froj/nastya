@@ -7,7 +7,7 @@
 #define SHELL_TASK_PRIORITY         20
 #define SHELL_TASK_STACKSIZE      2048
 
-#define ENCODER_TASK_PRIORITY        6
+#define ENCODER_TASK_PRIORITY        2
 #define ENCODER_TASK_STACKSIZE    2048
 
 #define CONTROL_TASK_PRIORITY        4

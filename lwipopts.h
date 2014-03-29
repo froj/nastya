@@ -29,6 +29,10 @@
 #define LWIP_DNS 0
 #define LWIP_HAVE_LOOPIF 1
 #define LWIP_NETIF_LOOPBACK 1
+//#define IP_OPTIONS_ALLOWED  1
+
+//#define TCP_MSS                         256
+//#define TCP_SND_BUF                     (TCP_MSS<<1)
 
 
 #ifdef __unix__

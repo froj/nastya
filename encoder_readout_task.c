@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <cvra_dc.h>
 #include <ucos_ii.h>
+#include <lwip/api.h>
 #include <uptime.h>
 #include "tasks.h"
 
@@ -11,7 +12,7 @@ struct encoder_datapoint {
 };
 
 
-#define ENC_SAMPLE_PERIOD 1000 // [us]
+#define ENC_SAMPLE_PERIOD 10000 // [us]
 
 #define ENC_BUFFER_SIZE 100000
 static struct encoder_datapoint enc_buffer[ENC_BUFFER_SIZE];
@@ -30,6 +31,7 @@ void encoder_readout_task(void *pdata)
         OSMutexPend(enc_buffer_mutex, 0, &err);
         timestamp_t now = uptime_get();
         if (enc_buffer_index < ENC_BUFFER_SIZE && enc_buffer_en) {
+            //printf("enc %d\n", enc_buffer_index);
             enc_buffer[enc_buffer_index].encoders[0] = cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE);
             enc_buffer[enc_buffer_index].encoders[1] = cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE);
             enc_buffer[enc_buffer_index].encoders[2] = cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE);
@@ -63,17 +65,44 @@ void encoder_readout_stop(void)
     OSMutexPost(enc_buffer_mutex);
 }
 
+
+struct netconn *listen_conn;
+
 void encoder_readout_send(void)
 {
     printf("%d encoder values read\n", enc_buffer_index);
-    int i;
-    for (i = 0; i < enc_buffer_index - 1; i++) {
-        // todo
+
+    err_t err;
+    struct netconn *newconn;
+    err = netconn_accept(listen_conn, &newconn);
+    if (err != ERR_OK) 
+    {
+        printf("encoder readout connection error\n");
+        return;
     }
+    int i;
+    printf("< encoder readout\n");
+    char sendbuf[100];
+    for (i = 0; i < enc_buffer_index - 1; i++) {
+        sprintf(sendbuf, "%d: %d %d %d\n", enc_buffer[i].timestamp, enc_buffer[i].encoders[0], enc_buffer[i].encoders[1], enc_buffer[i].encoders[2]);
+        netconn_write(newconn, sendbuf, strlen(sendbuf), NETCONN_COPY);
+        printf("%s\n", sendbuf);
+        OSTimeDly(OS_TICKS_PER_SEC);
+    }
+    sprintf(sendbuf, "end\n");
+    netconn_write(newconn, sendbuf, strlen(sendbuf), NETCONN_COPY);
+    printf("encoder readout >\n");
+    netconn_close(newconn);
+    netconn_delete(newconn);
+
 }
 
 void encoder_readout_init(void)
 {
+    listen_conn = netconn_new(NETCONN_TCP);
+    netconn_bind(listen_conn, NULL, 2000);
+
+    netconn_listen(listen_conn);
     OSTaskCreateExt(encoder_readout_task,
                     NULL,
                     &encoder_readout_stk[ENCODER_TASK_STACKSIZE-1],

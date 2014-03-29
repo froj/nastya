@@ -36,8 +36,9 @@
 
 //#include "sntp.h"
 
-#include <control.h>
+#include "control.h"
 #include "drive_open_loop_dynamic_path.h"
+#include "encoder_readout_task.h"
 
 #include <netif/slipif.h>
 
@@ -185,17 +186,17 @@ void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         float vx, vy, omega;
         int timest;
         sscanf(p->payload, "%c %f %f %f %d", &cmd, &vx, &vy, &omega, &timest);
-        printf("pkt %c\n", cmd);
+        //printf("pkt %c\n", cmd);
         if (cmd == 'R') {
             nb_wp = 0;
         }
         if (cmd == 'D') {
             // data
-            printf("timest %d\n", timest);
+            //printf("timest %d\n", timest);
             static int prev_timest;
             if (nb_wp > 0) {
                 int dur = timest - prev_timest;
-                printf("dur %d\n", dur);
+                //printf("dur %d\n", dur);
                 if (dur > 0) {
                     wp[nb_wp - 1].duration = dur;
                 } else { // current packet too old
@@ -209,7 +210,7 @@ void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
             wp[nb_wp].omega = omega;
             wp[nb_wp].duration = 0;
             nb_wp++;
-            printf("%d pkts\n", nb_wp);
+            //printf("%d pkts\n", nb_wp);
         }
         if (cmd == 'X') {
             // execute
@@ -238,12 +239,17 @@ void udp_get_dynamic_path(void)
         udp_recv(pcb, NULL, NULL);
         int i;
         for (i=0; i < nb_wp; i++) {
-            printf("%f %f %f %d\n", wp[i].vx, wp[i].vy, wp[i].omega, wp[i].duration);
+            //printf("%f %f %f %d\n", wp[i].vx, wp[i].vy, wp[i].omega, wp[i].duration);
         }
+        printf("path received\n");
+        encoder_readout_start();
         drive_open_loop_dynamic_path(wp, nb_wp);
+        encoder_readout_stop();
         control_update_setpoint_vx(0);
         control_update_setpoint_vy(0);
         control_update_setpoint_omega(0);
+        printf("connect to send enc values\n");
+        encoder_readout_send();
     }
     udp_remove(pcb);
 }
@@ -254,6 +260,7 @@ void udp_get_dynamic_path(void)
 void drive_task(void *pdata)
 {
     printf("drive task\n");
+    encoder_readout_init();
     udp_get_dynamic_path();
     while (0) {
         control_update_setpoint_vx(0.1);
@@ -261,7 +268,7 @@ void drive_task(void *pdata)
         control_update_setpoint_vx(-0.1);
         OSTimeDlyHMSM(0, 0, 10, 0); 
     }
-    while (1) {
+    while (0) {
         control_update_setpoint_vx(0.8);
         OSTimeDlyHMSM(0, 0, 4, 0);
         control_update_setpoint_vy(0.8);
@@ -272,7 +279,7 @@ void drive_task(void *pdata)
         OSTimeDlyHMSM(0, 0, 4, 0); 
     }
     
-    control_update_setpoint_vx(0.1);
+    control_update_setpoint_vx(0);
     OSTimeDlyHMSM(1, 0, 10, 0);
     control_update_setpoint_vx(0);
     OSTimeDlyHMSM(1, 0, 3, 0);
@@ -319,6 +326,12 @@ void init_task(void *pdata)
     //                 SHELL_TASK_STACKSIZE,
     //                 NULL, NULL);
 
+    ip_stack_init();
+
+    /* Lists every network interface and shows its IP. */
+    printf("Listing network interfaces...\n");
+    list_netifs();
+
     OSTaskCreateExt(drive_task,
                     NULL,
                     &drive_task_stk[DRIVE_TASK_STACKSIZE-1],
@@ -337,22 +350,16 @@ void init_task(void *pdata)
                     HEARTBEAT_TASK_STACKSIZE,
                     NULL, NULL);
 
-    ip_stack_init();
+    //plot_init();
 
-    /* Lists every network interface and shows its IP. */
-    printf("Listing network interfaces...\n");
-    list_netifs();
-
-    plot_init();
-
-    OSTaskCreateExt(plot_task,
-                    NULL,
-                    &plot_stk[PLOT_TASK_STACKSIZE-1],
-                    PLOT_TASK_PRIORITY,
-                    PLOT_TASK_PRIORITY,
-                    &plot_stk[0],
-                    PLOT_TASK_STACKSIZE,
-                    NULL, NULL);
+    // OSTaskCreateExt(plot_task,
+    //                 NULL,
+    //                 &plot_stk[PLOT_TASK_STACKSIZE-1],
+    //                 PLOT_TASK_PRIORITY,
+    //                 PLOT_TASK_PRIORITY,
+    //                 &plot_stk[0],
+    //                 PLOT_TASK_STACKSIZE,
+    //                 NULL, NULL);
 
     /* Creates a simple demo app. */
 //    ping_init();
