@@ -24,6 +24,7 @@ OS_STK encoder_readout_stk[ENCODER_TASK_STACKSIZE];
 
 void encoder_readout_task(void *pdata)
 {
+    printf("encoder readout task started\n");
     timestamp_t last_iteration = uptime_get();
     enc_buffer_index = 0;
     while (1) {
@@ -32,9 +33,9 @@ void encoder_readout_task(void *pdata)
         timestamp_t now = uptime_get();
         if (enc_buffer_index < ENC_BUFFER_SIZE && enc_buffer_en) {
             //printf("enc %d\n", enc_buffer_index);
-            enc_buffer[enc_buffer_index].encoders[0] = cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE);
-            enc_buffer[enc_buffer_index].encoders[1] = cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE);
-            enc_buffer[enc_buffer_index].encoders[2] = cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE);
+            enc_buffer[enc_buffer_index].encoders[0] = hw_get_wheel_0_encoder();
+            enc_buffer[enc_buffer_index].encoders[1] = hw_get_wheel_1_encoder();
+            enc_buffer[enc_buffer_index].encoders[2] = hw_get_wheel_2_encoder();
             enc_buffer[enc_buffer_index].timestamp = now;
             enc_buffer_index++;
         }

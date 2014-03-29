@@ -8,6 +8,8 @@
 #include "tasks.h"
 #include "plot_task.h"
 
+OS_STK    plot_stk[PLOT_TASK_STACKSIZE];
+
 struct plot_data{
     char description[8];
     void* variable;
@@ -173,4 +175,14 @@ void plot_init(void)
     //sendto( sock, msg, strlen(msg), 0,
     //            (struct sockaddr *)&client_addr, sizeof(struct sockaddr));
     //printf("udp sent\n");
+
+    OSTaskCreateExt(plot_task,
+                    NULL,
+                    &plot_stk[PLOT_TASK_STACKSIZE-1],
+                    PLOT_TASK_PRIORITY,
+                    PLOT_TASK_PRIORITY,
+                    &plot_stk[0],
+                    PLOT_TASK_STACKSIZE,
+                    NULL, NULL);
+
 }

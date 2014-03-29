@@ -3,8 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-
+#include "tasks.h"
 #include "control.h"
+
+#include "pid_config.h"
+
+OS_STK pid_conf_task_stk[PID_CONF_TASK_STACKSIZE];
+static int listen_port;
 
 void pid_conf_shell(int socket)
 {
@@ -68,7 +73,7 @@ void pid_conf_shell_listen(void)
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(1337);
+    serv_addr.sin_port = htons(listen_port);
 
     int yes = 1;
     setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
@@ -84,3 +89,24 @@ void pid_conf_shell_listen(void)
         getc(stdin);
     }
 }
+
+
+void pid_conf_task(void *arg)
+{
+    printf("pid config shell started (port %d)\n", listen_port);
+    pid_conf_shell_listen();
+}
+
+void start_pid_conf_shell(int port)
+{
+    listen_port = port;
+    OSTaskCreateExt(pid_conf_task,
+                    NULL,
+                    &pid_conf_task_stk[PID_CONF_TASK_STACKSIZE-1],
+                    PID_CONF_TASK_PRIORITY,
+                    PID_CONF_TASK_PRIORITY,
+                    &pid_conf_task_stk[0],
+                    PID_CONF_TASK_STACKSIZE,
+                    NULL, NULL);
+}
+

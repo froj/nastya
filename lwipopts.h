@@ -48,13 +48,8 @@
 //#define LWIP_DEBUG 1
 #define  MEM_SIZE 10000
 
-/* See README.md for priority list. */
-#define TCPIP_THREAD_PRIO 30
-#define SLIPIF_THREAD_PRIO 31
-#define SNTP_THREAD_PRIO 34
-
 /* Should never be used. */
-#define DEFAULT_THREAD_PRIO 29
+#define DEFAULT_THREAD_PRIO 255
 
 
 #endif /* LWIPOPTS_H_ */

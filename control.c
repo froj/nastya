@@ -3,9 +3,8 @@
 #include <math.h>
 #include <ucos_ii.h>
 #include <robot_base_mixer/robot_base_mixer.h>
-#include <cvra_dc.h>
 #include "tasks.h"
-#include "cvra_param_robot.h"
+#include "hardware.h"
 #include "_pid.h"
 
 #include "control.h"
@@ -53,21 +52,28 @@ float u_x, u_y, u_r;
 void control_task(void *arg)
 {
     float prev_enc[3] = {
-        -cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE),
-        -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE),
-        -cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE)};
+        hw_get_wheel_0_encoder(),
+        hw_get_wheel_1_encoder(),
+        hw_get_wheel_2_encoder()
+    };
     while (42) {
         float enc[3];
         float encdiff[3];
 //        float y_x, y_y, y_r;
 //        float u_x, u_y, u_r;
         //float wheel_cmd[3];
-        enc[0] = -cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE);
-        enc[1] = -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE);
-        enc[2] = -cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE);
-        encdiff[0] = (enc[0] - prev_enc[0])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
-        encdiff[1] = (enc[1] - prev_enc[1])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
-        encdiff[2] = (enc[2] - prev_enc[2])/ROBOT_ENCODER_RESOLUTION*2*M_PI*CONTROL_FREQ;
+        enc[0] = hw_get_wheel_0_encoder();
+        enc[1] = hw_get_wheel_1_encoder();
+        enc[2] = hw_get_wheel_2_encoder();
+        encdiff[0] = (float)(enc[0] - prev_enc[0])
+                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION
+                            * 2*M_PI * CONTROL_FREQ;
+        encdiff[1] = (float)(enc[1] - prev_enc[1])
+                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION
+                            * 2*M_PI * CONTROL_FREQ;
+        encdiff[2] = (float)(enc[2] - prev_enc[2])
+                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION
+                            * 2*M_PI * CONTROL_FREQ;
         holonomic_base_mixer_wheels_to_robot(encdiff, &y_x, &y_y, &y_r);
         pid_error_speed_x = y_x - setpoint_speed_x;
         pid_error_speed_y = y_y - setpoint_speed_y;
@@ -76,13 +82,12 @@ void control_task(void *arg)
         u_y = pid_control(&pid_y, y_y - setpoint_speed_y);
         u_r = pid_control(&pid_r, y_r - setpoint_omega);
         holonomic_base_mixer_robot_to_wheels(u_x, u_y, u_r, wheel_cmd);
-        cvra_dc_set_pwm0(HEXMOTORCONTROLLER_BASE, wheel_cmd[0]*DC_PWM_MAX_VALUE);
-        cvra_dc_set_pwm1(HEXMOTORCONTROLLER_BASE, -wheel_cmd[1]*DC_PWM_MAX_VALUE);
-        cvra_dc_set_pwm2(HEXMOTORCONTROLLER_BASE, -wheel_cmd[2]*DC_PWM_MAX_VALUE);
+        hw_set_wheel_0_motor_pwm(wheel_cmd[0]*HW_WHEEL_MOTOR_MAX_PWM);
+        hw_set_wheel_1_motor_pwm(wheel_cmd[1]*HW_WHEEL_MOTOR_MAX_PWM);
+        hw_set_wheel_2_motor_pwm(wheel_cmd[2]*HW_WHEEL_MOTOR_MAX_PWM);
         prev_enc[0] = enc[0];
         prev_enc[1] = enc[1];
         prev_enc[2] = enc[2];
-        //OSTimeDlyHMSM(0, 0, 0, 1000/CONTROL_FREQ);
         OSTimeDly(OS_TICKS_PER_SEC/CONTROL_FREQ);
     }
 }
