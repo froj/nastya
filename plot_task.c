@@ -18,7 +18,6 @@ struct plot_data{
 };
 
 static struct plot_data *plots = NULL;
-static int sock = 0;
 struct udp_pcb *pcb;
 
 

@@ -19,32 +19,32 @@ void hw_set_uart_speed(int32_t *uart_adress, int baudrate) {
 
 void hw_set_wheel_0_motor_pwm(uint32_t pwm)
 {
-    cvra_dc_set_pwm0(HEXMOTORCONTROLLER_BASE, pwm);
+    cvra_dc_set_pwm0((void*)HEXMOTORCONTROLLER_BASE, pwm);
 }
 
 void hw_set_wheel_1_motor_pwm(uint32_t pwm)
 {
-    cvra_dc_set_pwm1(HEXMOTORCONTROLLER_BASE, -pwm);
+    cvra_dc_set_pwm1((void*)HEXMOTORCONTROLLER_BASE, -pwm);
 }
 
 void hw_set_wheel_2_motor_pwm(uint32_t pwm)
 {
-    cvra_dc_set_pwm2(HEXMOTORCONTROLLER_BASE, -pwm);
+    cvra_dc_set_pwm2((void*)HEXMOTORCONTROLLER_BASE, -pwm);
 }
 
 
 uint32_t hw_get_wheel_0_encoder(void)
 {
-    return -cvra_dc_get_encoder0(HEXMOTORCONTROLLER_BASE);
+    return -cvra_dc_get_encoder0((void*)HEXMOTORCONTROLLER_BASE);
 }
 
 uint32_t hw_get_wheel_1_encoder(void)
 {
-    return -cvra_dc_get_encoder1(HEXMOTORCONTROLLER_BASE);
+    return -cvra_dc_get_encoder1((void*)HEXMOTORCONTROLLER_BASE);
 }
 
 uint32_t hw_get_wheel_2_encoder(void)
 {
-    return -cvra_dc_get_encoder2(HEXMOTORCONTROLLER_BASE);
+    return -cvra_dc_get_encoder2((void*)HEXMOTORCONTROLLER_BASE);
 }
 

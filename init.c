@@ -11,6 +11,8 @@
 
 #include "plot_task.h"
 
+#include "drive.h"
+
 #include "encoder_readout_task.h"
 
 #include "tasks.h"
@@ -116,7 +118,7 @@ void init_task(void *pdata)
 
     plot_init();
 
-    start_pid_conf_shell(1337);
+    // start_pid_conf_shell(1337);
 
     start_drive_task();
 
@@ -133,6 +135,6 @@ void create_init_task(void)
                     INIT_TASK_PRIORITY,
                     &init_task_stk[0],
                     INIT_TASK_STACKSIZE,
-                    NULL, NULL);
+                    NULL, 0);
 }
 

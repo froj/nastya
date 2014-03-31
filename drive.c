@@ -15,7 +15,7 @@ OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 struct dynamic_waypoint wp[MAX_NB_WP];
 int nb_wp;
 
-sys_sem_t dyn_path_exec;
+OS_EVENT *dyn_path_exec;
 void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     ip_addr_t *addr, u16_t port)
 {
@@ -52,11 +52,11 @@ void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         }
         if (cmd == 'X') {
             // execute
-            sys_sem_signal(&dyn_path_exec);
+            OSSemPost(&dyn_path_exec);
         }
     } else {
         printf("pkt too long\n");
-        sys_sem_signal(&dyn_path_exec);
+        OSSemPost(&dyn_path_exec);
     }
 FAIL:
     pbuf_free(p);
@@ -69,11 +69,12 @@ void udp_get_dynamic_path(void)
     struct udp_pcb *pcb;
     pcb = udp_new();
     err = udp_bind(pcb, IP_ADDR_ANY, port);
-    sys_sem_new(&dyn_path_exec, 0);
+    dyn_path_exec = OSSemCreate(0);
     while (1) {
         nb_wp = 0;
         udp_recv(pcb, udp_get_dynamic_path_rcv_cb, NULL);
-        sys_sem_wait(&dyn_path_exec);
+        INT8U ucErr;
+        OSSemPend(dyn_path_exec, 0, &ucErr);
         udp_recv(pcb, NULL, NULL);
         int i;
         for (i=0; i < nb_wp; i++) {

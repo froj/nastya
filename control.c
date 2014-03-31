@@ -3,6 +3,8 @@
 #include <math.h>
 #include <ucos_ii.h>
 #include <robot_base_mixer/robot_base_mixer.h>
+#include "uptime/uptime.h"
+#include "cvra_param_robot.h"
 #include "tasks.h"
 #include "hardware.h"
 
@@ -91,7 +93,7 @@ void control_task(void *arg)
 
 static void holonomic_base_cs_output(void *arg, int32_t out)
 {
-    (int32_t*)arg = out;
+    *(int32_t*)arg = out;
 }
 
 static int32_t holonomic_base_cs_vx_input(void *arg)
@@ -99,12 +101,12 @@ static int32_t holonomic_base_cs_vx_input(void *arg)
     return nastya_cs.vx * VX_CS_SCALE;
 }
 
-static int32_t holonomic_base_cs_vx_input(void *arg)
+static int32_t holonomic_base_cs_vy_input(void *arg)
 {
     return nastya_cs.vy * VY_CS_SCALE;
 }
 
-static int32_t holonomic_base_cs_vx_input(void *arg)
+static int32_t holonomic_base_cs_omega_input(void *arg)
 {
     return nastya_cs.omega * OMEGA_CS_SCALE;
 }

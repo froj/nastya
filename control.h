@@ -2,6 +2,7 @@
 #define CONTROL_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <control_system_manager/control_system_manager.h>
 #include <pid/pid.h>
 
