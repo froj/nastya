@@ -71,6 +71,7 @@ void udp_get_dynamic_path(void)
     err = udp_bind(pcb, IP_ADDR_ANY, port);
     dyn_path_exec = OSSemCreate(0);
     while (1) {
+        printf("drive task: waiting for path\n");
         nb_wp = 0;
         udp_recv(pcb, udp_get_dynamic_path_rcv_cb, NULL);
         INT8U ucErr;

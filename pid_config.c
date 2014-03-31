@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include "tasks.h"
+#include <ucos_ii.h>
 #include "control.h"
 
 #include "pid_config.h"
@@ -16,49 +17,64 @@ void pid_conf_shell(int socket)
     static char rcv_buf[128];
     // printf("new connection\n");
     int n;
-    _pid_t *pid = &pid_x;
+    struct pid_filter *pid = &nastya_cs.vx_pid;
+    char param = 'p';
+    char *pid_name = "pid x";
     while ((n = read(socket, rcv_buf, sizeof(rcv_buf)-1)) > 0) {
         rcv_buf[n] = '\0';
         static char cmd[80];
         sscanf(rcv_buf, "%79s", cmd);
         char w_buf[1024];
+        int kp = pid_get_gain_P(pid);
+        int ki = pid_get_gain_I(pid);
+        int kd = pid_get_gain_D(pid);
+        int max_in = pid_get_max_in(pid);
+        int max_i = pid_get_max_I(pid);
+        int max_out =pid_get_max_out(pid);
         if (strcmp(cmd, "pid") == 0) {
             sscanf(rcv_buf, "%*s%79s", cmd);
             if (strcmp(cmd, "x") == 0) {
-                pid = &pid_x;
+                pid = &nastya_cs.vx_pid;
+                pid_name = "pid x";
                 snprintf(w_buf, sizeof(w_buf)-1, "pid: x\n");
             } else if (strcmp(cmd, "y") == 0) {
-                pid = &pid_y;
+                pid = &nastya_cs.vy_pid;
+                pid_name = "pid y";
                 snprintf(w_buf, sizeof(w_buf)-1, "pid: y\n");
             } else if (strcmp(cmd, "r") == 0) {
-                pid = &pid_r;
+                pid = &nastya_cs.omega_pid;
+                pid_name = "pid omega";
                 snprintf(w_buf, sizeof(w_buf)-1, "pid: r\n");
             } else {
                 snprintf(w_buf, sizeof(w_buf)-1, "invalid pid [x,y,r]\n");
             }
         } else if (strcmp(cmd, "p") == 0) {
-            float x;
-            if (sscanf(rcv_buf, "%*s%f", &x) == 1)
-                pid->kp = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
+            int x;
+            if (sscanf(rcv_buf, "%*s%d", &x) == 1)
+                kp = x;
+            snprintf(w_buf, sizeof(w_buf)-1, "%s: kp %d ki %d kd %d int_bound %d\n", pid_name, kp, ki, kd, max_i);
         } else if (strcmp(cmd, "i") == 0) {
-            float x;
-            if (sscanf(rcv_buf, "%*s%f", &x) == 1)
-                pid->ki = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
+            int x;
+            if (sscanf(rcv_buf, "%*s%d", &x) == 1)
+                ki = x;
+            snprintf(w_buf, sizeof(w_buf)-1, "%s: kp %d ki %d kd %d int_bound %d\n", pid_name, kp, ki, kd, max_i);
         } else if (strcmp(cmd, "d") == 0) {
-            float x;
-            if (sscanf(rcv_buf, "%*s%f", &x) == 1)
-                pid->kd = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
+            int x;
+            if (sscanf(rcv_buf, "%*s%d", &x) == 1)
+                kd = x;
+            snprintf(w_buf, sizeof(w_buf)-1, "%s: kp %d ki %d kd %d int_bound %d\n", pid_name, kp, ki, kd, max_i);
         } else if (strcmp(cmd, "b") == 0) {
-            float x;
-            if (sscanf(rcv_buf, "%*s%f", &x) == 1)
-                pid->integration_bound = x;
-            snprintf(w_buf, sizeof(w_buf)-1, "p %f i %f d %f intbound %f\n", pid->kp, pid->ki, pid->kd, pid->integration_bound);
+            int x;
+            if (sscanf(rcv_buf, "%*s%d", &x) == 1)
+                max_i = x;
+            snprintf(w_buf, sizeof(w_buf)-1, "%s: kp %d ki %d kd %d int_bound %d\n", pid_name, kp, ki, kd, max_i);
+        } else if (strcmp(cmd, "+") == 0) {
+        } else if (strcmp(cmd, "-") == 0) {
         } else {
             snprintf(w_buf, sizeof(w_buf)-1, "unknown command: %s\n", rcv_buf);
         }
+        pid_set_maximums(pid, max_in, max_i, max_out);
+        pid_set_gains(pid, kp, ki, kd);
         write(socket, w_buf, strlen(w_buf));
         write(socket, rcv_buf, n);
     }

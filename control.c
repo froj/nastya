@@ -116,18 +116,18 @@ void holonomic_base_speed_cs_init(void)
 {
     // velocity in x
     pid_init(&nastya_cs.vx_pid);
-    pid_set_gains(&nastya_cs.vx_pid, 0, 0, 0); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vx_pid, 0, 5000, 30000); // in , integral, out
+    pid_set_gains(&nastya_cs.vx_pid, 1, 0, 0); // KP, KI, KD
+    pid_set_maximums(&nastya_cs.vx_pid, 0, 5000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.vx_pid, 10);
     // velocity in y
     pid_init(&nastya_cs.vy_pid);
-    pid_set_gains(&nastya_cs.vy_pid, 0, 0, 0); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vy_pid, 0, 5000, 30000); // in , integral, out
+    pid_set_gains(&nastya_cs.vy_pid, 1, 0, 0); // KP, KI, KD
+    pid_set_maximums(&nastya_cs.vy_pid, 0, 5000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.vy_pid, 10);
     // angular velocity omega
     pid_init(&nastya_cs.omega_pid);
     pid_set_gains(&nastya_cs.omega_pid, 0, 0, 0); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.omega_pid, 0, 5000, 30000); // in , integral, out
+    pid_set_maximums(&nastya_cs.omega_pid, 0, 5000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.omega_pid, 10);
 
     cs_init(&nastya_cs.vx_cs);

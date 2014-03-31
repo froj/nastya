@@ -8,7 +8,7 @@
 #ifndef LWIPOPTS_H_
 #define LWIPOPTS_H_
 
-
+#include "tasks.h"
 
 /* Network Time protocol config. */
 #define SNTP_SERVER_ADDRESS  "77.245.18.26" /* pool.ntp.org */
