@@ -55,11 +55,11 @@ void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         }
         if (cmd == 'X') {
             // execute
-            OSSemPost(&dyn_path_exec);
+            OSSemPost(dyn_path_exec);
         }
     } else {
         printf("pkt too long\n");
-        OSSemPost(&dyn_path_exec);
+        OSSemPost(dyn_path_exec);
     }
 FAIL:
     pbuf_free(p);
