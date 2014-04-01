@@ -67,43 +67,24 @@ void encoder_readout_stop(void)
 }
 
 
-struct netconn *listen_conn;
-
-void encoder_readout_send(void)
+void encoder_readout_send(struct netconn *conn)
 {
     printf("%d encoder values read\n", enc_buffer_index);
-
-    err_t err;
-    struct netconn *newconn;
-    err = netconn_accept(listen_conn, &newconn);
-    if (err != ERR_OK) 
-    {
-        printf("encoder readout connection error\n");
-        return;
-    }
     int i;
     printf("< encoder readout\n");
     char sendbuf[100];
     for (i = 0; i < enc_buffer_index - 1; i++) {
         sprintf(sendbuf, "%d: %d %d %d\n", enc_buffer[i].timestamp, enc_buffer[i].encoders[0], enc_buffer[i].encoders[1], enc_buffer[i].encoders[2]);
-        netconn_write(newconn, sendbuf, strlen(sendbuf), NETCONN_COPY);
-        printf("%s\n", sendbuf);
-        OSTimeDly(OS_TICKS_PER_SEC);
+        netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
+        // printf("%s\n", sendbuf);
     }
     sprintf(sendbuf, "end\n");
-    netconn_write(newconn, sendbuf, strlen(sendbuf), NETCONN_COPY);
+    netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
     printf("encoder readout >\n");
-    netconn_close(newconn);
-    netconn_delete(newconn);
-
 }
 
 void encoder_readout_init(void)
 {
-    listen_conn = netconn_new(NETCONN_TCP);
-    netconn_bind(listen_conn, NULL, 2000);
-
-    netconn_listen(listen_conn);
     OSTaskCreateExt(encoder_readout_task,
                     NULL,
                     &encoder_readout_stk[ENCODER_TASK_STACKSIZE-1],

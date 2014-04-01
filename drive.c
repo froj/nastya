@@ -6,6 +6,9 @@
 #include <ucos_ii.h>
 #include "tasks.h"
 #include "drive_open_loop_dynamic_path.h"
+#include "imu_readout_task.h"
+#include "encoder_readout_task.h"
+#include "control.h"
 
 #include "drive.h"
 
@@ -70,6 +73,11 @@ void udp_get_dynamic_path(void)
     pcb = udp_new();
     err = udp_bind(pcb, IP_ADDR_ANY, port);
     dyn_path_exec = OSSemCreate(0);
+
+    struct netconn *listen_conn = netconn_new(NETCONN_TCP);
+    netconn_bind(listen_conn, NULL, 2000);
+    netconn_listen(listen_conn);
+
     while (1) {
         printf("drive task: waiting for path\n");
         nb_wp = 0;
@@ -83,13 +91,25 @@ void udp_get_dynamic_path(void)
         }
         printf("path received\n");
         encoder_readout_start();
+        imu_readout_start();
         drive_open_loop_dynamic_path(wp, nb_wp);
-        encoder_readout_stop();
         control_update_setpoint_vx(0);
         control_update_setpoint_vy(0);
         control_update_setpoint_omega(0);
-        printf("connect to send enc values\n");
-        encoder_readout_send();
+        encoder_readout_stop();
+        imu_readout_stop();
+        printf("connect to send imu & enc values\n");
+        err_t err;
+        struct netconn *conn;
+        err = netconn_accept(listen_conn, &conn);
+        if (err != ERR_OK) {
+            printf("connection error\n");
+        } else {
+            encoder_readout_send(conn);
+            imu_readout_send(conn);
+            netconn_close(conn);
+        }
+        netconn_delete(conn);
     }
     udp_remove(pcb);
 }
@@ -102,6 +122,8 @@ void drive_task(void *pdata)
 
     // start encoder task
     encoder_readout_init();
+    // start imu task
+    imu_readout_init();
 
     udp_get_dynamic_path();
 
@@ -138,6 +160,6 @@ void start_drive_task(void)
                     DRIVE_TASK_PRIORITY,
                     &drive_task_stk[0],
                     DRIVE_TASK_STACKSIZE,
-                    NULL, NULL);
+                    NULL, 0);
 }
 

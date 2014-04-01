@@ -18,6 +18,9 @@
 #define ENCODER_TASK_PRIORITY        2
 #define ENCODER_TASK_STACKSIZE    2048
 
+#define IMU_TASK_PRIORITY            3
+#define IMU_TASK_STACKSIZE        2048
+
 #define CONTROL_TASK_PRIORITY        4
 #define CONTROL_TASK_STACKSIZE    2048
 
