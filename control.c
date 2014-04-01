@@ -15,9 +15,34 @@
 
 #define CONTROL_FREQ 100 // [Hz]
 
-#define VX_CS_SCALE     1024
-#define VY_CS_SCALE     1024
-#define OMEGA_CS_SCALE  1024
+// PID speed control integer range calculations:
+// max input speed 8 m/s, resp 8 rad/s
+// with scaling 1024 (VX_IN_SCALE, VY_IN_SCALE, OMEGA_IN_SCALE)
+// 8 * 1024 = 8192
+// maximal error is 2 * 8 * 1024 = 16384
+// with maximal KP = 1024, KI = 120, KD = 1024, MAX_I <= 1024
+// max command = 16384 * 1024 + 16384 * 120 * 1024 + 16384 * 2 * 1024
+// = 2063597568 < 2^31 = 2147483648
+
+#define VX_IN_SCALE     1024
+#define VY_IN_SCALE     1024
+#define OMEGA_IN_SCALE  1024
+
+#define VX_MAX_INPUT    8192
+#define VY_MAX_INPUT    8192
+#define OMEGA_MAX_INPUT 8192
+
+// The output is scaled to allow KP, KI & KD values close to
+// maxima (as calculated above) for optimal resolution.
+// (The scaling is done after the conversion to floating point numbers and not
+//  with the pid-builtin bitshift. This is to avoid losing resolution
+//  because the transform from robot coordinates to wheels introduces
+//  another scaling factor before the command is output to PWM motor control)
+#define VX_OUT_SCALE    4096
+#define VY_OUT_SCALE    4096
+#define OMEGA_OUT_SCALE 4096
+
+
 
 OS_STK control_task_stk[CONTROL_TASK_STACKSIZE];
 
@@ -27,23 +52,23 @@ struct holonomic_base_speed_cs nastya_cs;
 
 void control_update_setpoint_vx(float vx)
 {
-    cs_set_consign(&nastya_cs.vx_cs, VX_CS_SCALE * vx);
+    cs_set_consign(&nastya_cs.vx_cs, VX_IN_SCALE * vx);
 }
 
 void control_update_setpoint_vy(float vy)
 {
-    cs_set_consign(&nastya_cs.vy_cs, VY_CS_SCALE * vy);
+    cs_set_consign(&nastya_cs.vy_cs, VY_IN_SCALE * vy);
 }
 
 void control_update_setpoint_omega(float omega)
 {
-    cs_set_consign(&nastya_cs.omega_cs, OMEGA_CS_SCALE * omega);
+    cs_set_consign(&nastya_cs.omega_cs, OMEGA_IN_SCALE * omega);
 }
 
 
 void control_task(void *arg)
 {
-    float prev_enc[3] = {
+    int32_t prev_enc[3] = {
         hw_get_wheel_0_encoder(),
         hw_get_wheel_1_encoder(),
         hw_get_wheel_2_encoder()
@@ -51,37 +76,36 @@ void control_task(void *arg)
     timestamp_t prev_timest = uptime_get();
     while (42) {
         OSTimeDly(OS_TICKS_PER_SEC / CONTROL_FREQ);
-        float enc[3];
-        float encdiff[3];
-        float wheel_cmd[3];
+        int32_t enc[3];
+        float wheel_ang_vel[3]; // [rad/s]
+        float wheel_cmd[3];     // motor PWM (arbitrary unit)
         timestamp_t now = uptime_get();
         enc[0] = hw_get_wheel_0_encoder();
         enc[1] = hw_get_wheel_1_encoder();
         enc[2] = hw_get_wheel_2_encoder();
-        int32_t delta_t = now - prev_timest;
+        float delta_t = (float)(now - prev_timest) / 1000000; // [s]
         prev_timest = now;
-        encdiff[0] = (float)(enc[0] - prev_enc[0])
-                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION
-                            * 2*M_PI / delta_t * 1000000;
-        encdiff[1] = (float)(enc[1] - prev_enc[1])
-                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION
-                            * 2*M_PI / delta_t * 1000000;
-        encdiff[2] = (float)(enc[2] - prev_enc[2])
-                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION
-                            * 2*M_PI / delta_t * 1000000;
+        wheel_ang_vel[0] = (float)(enc[0] - prev_enc[0]) / delta_t
+                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION * 2*M_PI;
+        wheel_ang_vel[1] = (float)(enc[1] - prev_enc[1]) / delta_t
+                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION * 2*M_PI;
+        wheel_ang_vel[2] = (float)(enc[2] - prev_enc[2]) / delta_t
+                            / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION * 2*M_PI;
         prev_enc[0] = enc[0];
         prev_enc[1] = enc[1];
         prev_enc[2] = enc[2];
 
-        holonomic_base_mixer_wheels_to_robot(encdiff, &nastya_cs.vx,
+        holonomic_base_mixer_wheels_to_robot(wheel_ang_vel, &nastya_cs.vx,
                                              &nastya_cs.vy, &nastya_cs.omega);
 
         cs_manage(&nastya_cs.vx_cs);
         cs_manage(&nastya_cs.vy_cs);
         cs_manage(&nastya_cs.omega_cs);
+        float cmd_x = (float)nastya_cs.out_x / VX_OUT_SCALE;
+        float cmd_y = (float)nastya_cs.out_y / VY_OUT_SCALE;
+        float cmd_rot = (float)nastya_cs.out_rotation / OMEGA_OUT_SCALE;
 
-        holonomic_base_mixer_robot_to_wheels(nastya_cs.out_x, nastya_cs.out_y,
-                                             nastya_cs.out_rotation, wheel_cmd);
+        holonomic_base_mixer_robot_to_wheels(cmd_x, cmd_y, cmd_rot, wheel_cmd);
 
         hw_set_wheel_0_motor_pwm(wheel_cmd[0]);
         hw_set_wheel_1_motor_pwm(wheel_cmd[1]);
@@ -90,7 +114,7 @@ void control_task(void *arg)
 }
 
 
-
+// the following static functions are for control system input & output
 static void holonomic_base_cs_output(void *arg, int32_t out)
 {
     *(int32_t*)arg = out;
@@ -98,17 +122,17 @@ static void holonomic_base_cs_output(void *arg, int32_t out)
 
 static int32_t holonomic_base_cs_vx_input(void *arg)
 {
-    return nastya_cs.vx * VX_CS_SCALE;
+    return nastya_cs.vx * VX_IN_SCALE;
 }
 
 static int32_t holonomic_base_cs_vy_input(void *arg)
 {
-    return nastya_cs.vy * VY_CS_SCALE;
+    return nastya_cs.vy * VY_IN_SCALE;
 }
 
 static int32_t holonomic_base_cs_omega_input(void *arg)
 {
-    return nastya_cs.omega * OMEGA_CS_SCALE;
+    return nastya_cs.omega * OMEGA_IN_SCALE;
 }
 
 
@@ -117,18 +141,21 @@ void holonomic_base_speed_cs_init(void)
     // velocity in x
     pid_init(&nastya_cs.vx_pid);
     pid_set_gains(&nastya_cs.vx_pid, 1, 0, 0); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vx_pid, 0, 5000, 0); // in , integral, out
-    pid_set_out_shift(&nastya_cs.vx_pid, 10);
+    pid_set_maximums(&nastya_cs.vx_pid, VX_MAX_INPUT, 1024, 0); // in , integral, out
+    pid_set_out_shift(&nastya_cs.vx_pid, 0);
+    pid_set_derivate_filter(&nastya_cs.vx_pid, 3);
     // velocity in y
     pid_init(&nastya_cs.vy_pid);
     pid_set_gains(&nastya_cs.vy_pid, 1, 0, 0); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vy_pid, 0, 5000, 0); // in , integral, out
-    pid_set_out_shift(&nastya_cs.vy_pid, 10);
+    pid_set_maximums(&nastya_cs.vy_pid, VY_MAX_INPUT, 1024, 0); // in , integral, out
+    pid_set_out_shift(&nastya_cs.vy_pid, 0);
+    pid_set_derivate_filter(&nastya_cs.vy_pid, 3);
     // angular velocity omega
     pid_init(&nastya_cs.omega_pid);
     pid_set_gains(&nastya_cs.omega_pid, 0, 0, 0); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.omega_pid, 0, 5000, 0); // in , integral, out
-    pid_set_out_shift(&nastya_cs.omega_pid, 10);
+    pid_set_maximums(&nastya_cs.omega_pid, OMEGA_MAX_INPUT, 1024, 0); // in , integral, out
+    pid_set_out_shift(&nastya_cs.omega_pid, 0);
+    pid_set_derivate_filter(&nastya_cs.omega_pid, 3);
 
     cs_init(&nastya_cs.vx_cs);
     cs_init(&nastya_cs.vy_cs);
@@ -154,13 +181,6 @@ void holonomic_base_speed_cs_init(void)
 void control_init(void)
 {
     holonomic_base_speed_cs_init();
-    // plot_add_variable("0:", &pid_error_speed_x, PLOT_FLOAT);
-    // plot_add_variable("1:", &pid_error_speed_y, PLOT_FLOAT);
-    // plot_add_variable("2:", &pid_error_omega, PLOT_FLOAT);
-    // plot_add_variable("3:", &u_x, PLOT_FLOAT);
-    // //plot_add_variable("4:", &u_y, PLOT_FLOAT);
-    // //plot_add_variable("5:", &u_r, PLOT_FLOAT);
-    // plot_add_variable("4:", &wheel_cmd[1], PLOT_FLOAT);
 
     OSTaskCreateExt(control_task,
                     NULL,
@@ -169,5 +189,5 @@ void control_init(void)
                     CONTROL_TASK_PRIORITY,
                     &control_task_stk[0],
                     CONTROL_TASK_STACKSIZE,
-                    NULL, NULL);
+                    NULL, 0);
 }
