@@ -91,13 +91,13 @@ void udp_get_dynamic_path(void)
         }
         printf("path received\n");
         encoder_readout_start();
-        imu_readout_start();
+        // imu_readout_start();
         drive_open_loop_dynamic_path(wp, nb_wp);
         control_update_setpoint_vx(0);
         control_update_setpoint_vy(0);
         control_update_setpoint_omega(0);
         encoder_readout_stop();
-        imu_readout_stop();
+        // imu_readout_stop();
         printf("connect to send imu & enc values\n");
         err_t err;
         struct netconn *conn;
@@ -106,7 +106,7 @@ void udp_get_dynamic_path(void)
             printf("connection error\n");
         } else {
             encoder_readout_send(conn);
-            imu_readout_send(conn);
+            // imu_readout_send(conn);
             netconn_close(conn);
         }
         netconn_delete(conn);
@@ -123,7 +123,7 @@ void drive_task(void *pdata)
     // start encoder task
     encoder_readout_init();
     // start imu task
-    imu_readout_init();
+    // imu_readout_init();
 
     udp_get_dynamic_path();
 

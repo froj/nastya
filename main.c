@@ -86,7 +86,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 
     /* Setup UART speed, must be first. */
     hw_set_uart_speed(COMBT2_BASE, 57600);
-    hw_set_uart_speed(COMBT1_BASE, 57600);
+    hw_set_uart_speed(COMBT1_BASE, 115200);
     hw_set_uart_speed(COMPC_BASE, 57600);
     hw_set_uart_speed(COMBEACON_BASE, 57600);
 

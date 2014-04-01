@@ -36,8 +36,8 @@ static void callback_fn(uint8_t *pkg, int len)
         imu_buffer_index++;
     }
     OSMutexPost(imu_buffer_mutex);
-    printf("acc: %f %f %f gyro: %f %f %f\n", imu->acc_x, imu->acc_y, imu->acc_z, 
-        imu->gyro_x, imu->gyro_y, imu->gyro_z);
+    // printf("acc: %f %f %f gyro: %f %f %f\n", imu->acc_x, imu->acc_y, imu->acc_z, 
+    //     imu->gyro_x, imu->gyro_y, imu->gyro_z);
 
 }
 
@@ -49,8 +49,12 @@ void imu_readout_task(void *pdata)
     serial_datagram_rcv_buffer_init(&rcv_buf, pkt_buffer, sizeof(pkt_buffer), callback_fn);
     while (1) {
         static char inbuf[16];
-        int nb_bytes = fread(inbuf, sizeof(char), sizeof(inbuf), imu_serial);
-        serial_datagram_rcv(&rcv_buf, inbuf, nb_bytes);
+        // int nb_bytes = fread(inbuf, sizeof(char), sizeof(inbuf), imu_serial);
+        int c = getc(imu_serial);
+        OSTimeDly(OS_TICKS_PER_SEC/10);
+        // printf("imu bytes read %d\n", nb_bytes);
+        // serial_datagram_rcv(&rcv_buf, inbuf, nb_bytes);
+        serial_datagram_rcv(&rcv_buf, &c, 1);
     }
 }
 
