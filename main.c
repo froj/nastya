@@ -96,7 +96,6 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
     error_register_warning(mylog);
     error_register_notice(mylog);
 
-    OSInit();
     create_init_task();
     create_heartbeat_task();
     OSStart(); // never returns
