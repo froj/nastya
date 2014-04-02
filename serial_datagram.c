@@ -102,10 +102,10 @@ void serial_datagram_rcv(serial_datagram_rcv_buffer_t *buf, uint8_t *data, int l
                     if (c_crc == r_crc) {
                         buf->callback_fn(buf->buffer, buf->writep - 4);
                     } else {
-                        printf("serial_datagram_rcv: crc error %x %x\n", c_crc, r_crc);
+                        // printf("serial_datagram_rcv: crc error %x %x\n", c_crc, r_crc);
                     }
                 } else {
-                    printf("serial_datagram_rcv: frame error\n");
+                    // printf("serial_datagram_rcv: frame error\n");
                 }
                 buf->writep = 0;
                 buf->esc = false;
