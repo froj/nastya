@@ -36,7 +36,7 @@ static void callback_fn(uint8_t *pkg, int len)
         imu_buffer_index++;
     }
     OSMutexPost(imu_buffer_mutex);
-    // printf("acc: %f %f %f gyro: %f %f %f\n", imu->acc_x, imu->acc_y, imu->acc_z, 
+    // printf("%d  acc: %f %f %f gyro: %f %f %f\n", imu_buffer_index, imu->acc_x, imu->acc_y, imu->acc_z, 
     //     imu->gyro_x, imu->gyro_y, imu->gyro_z);
 
 }
@@ -49,12 +49,11 @@ void imu_readout_task(void *pdata)
     serial_datagram_rcv_buffer_init(&rcv_buf, pkt_buffer, sizeof(pkt_buffer), callback_fn);
     while (1) {
         static char inbuf[16];
-        // int nb_bytes = fread(inbuf, sizeof(char), sizeof(inbuf), imu_serial);
-        int c = getc(imu_serial);
-        OSTimeDly(OS_TICKS_PER_SEC/10);
+        int nb_bytes = fread(inbuf, sizeof(char), sizeof(inbuf), imu_serial);
+        serial_datagram_rcv(&rcv_buf, inbuf, nb_bytes);
         // printf("imu bytes read %d\n", nb_bytes);
-        // serial_datagram_rcv(&rcv_buf, inbuf, nb_bytes);
-        serial_datagram_rcv(&rcv_buf, &c, 1);
+        // int c = getc(imu_serial);
+        // serial_datagram_rcv(&rcv_buf, &c, 1);
     }
 }
 
@@ -82,17 +81,19 @@ void imu_readout_send(struct netconn *conn)
     printf("%d imu values read\n", imu_buffer_index);
     int i;
     printf("< imu readout\n");
-    char sendbuf[100];
+    static char sendbuf[300];
+    sprintf(sendbuf, "timestamp, accx, accy, accz, gyrox, gyroy, gyroz", imu_buffer_index);
+    netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
     for (i = 0; i < imu_buffer_index - 1; i++) {
-        sprintf(sendbuf, "%d: acc: %f %f %f gyro: %f %f %f\n",
+        snprintf(sendbuf, sizeof(sendbuf), "%d, %f, %f, %f, %f, %f, %f\n",
             imu_buffer[i].timestamp,
             imu_buffer[i].imu.acc_x, imu_buffer[i].imu.acc_y, imu_buffer[i].imu.acc_z,
             imu_buffer[i].imu.gyro_x, imu_buffer[i].imu.gyro_y, imu_buffer[i].imu.gyro_z);
         netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
         // printf("%s\n", sendbuf);
     }
-    sprintf(sendbuf, "end\n");
-    netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
+    // sprintf(sendbuf, "imu end\n");
+    // netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
     printf("imu readout >\n");
 }
 

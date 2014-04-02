@@ -72,14 +72,16 @@ void encoder_readout_send(struct netconn *conn)
     printf("%d encoder values read\n", enc_buffer_index);
     int i;
     printf("< encoder readout\n");
-    char sendbuf[100];
+    static char sendbuf[300];
+    sprintf(sendbuf, "timestamp, encoder0, encoder1, encoder2\n");
+    netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
     for (i = 0; i < enc_buffer_index - 1; i++) {
-        sprintf(sendbuf, "%d: %d %d %d\n", enc_buffer[i].timestamp, enc_buffer[i].encoders[0], enc_buffer[i].encoders[1], enc_buffer[i].encoders[2]);
+        snprintf(sendbuf, sizeof(sendbuf), "%d, %d, %d, %d\n", enc_buffer[i].timestamp, enc_buffer[i].encoders[0], enc_buffer[i].encoders[1], enc_buffer[i].encoders[2]);
         netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
         // printf("%s\n", sendbuf);
     }
-    sprintf(sendbuf, "end\n");
-    netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
+    // sprintf(sendbuf, "enc end\n");
+    // netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
     printf("encoder readout >\n");
 }
 
