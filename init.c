@@ -71,9 +71,9 @@ void ip_stack_init(void) {
     IP4_ADDR(&ipaddr, 10,0,0,2);
     IP4_ADDR(&netmask, 255,255,255,0);
 #else
-    IP4_ADDR(&gw, 192,168,0,1);
-    IP4_ADDR(&ipaddr, 192,168,4,9);
-    IP4_ADDR(&netmask, 255,255,255,0);
+    IP4_ADDR(&gw, 10,0,0,1);
+    IP4_ADDR(&ipaddr, 10,0,0,20);
+    IP4_ADDR(&netmask, 255,255,255,255);
 #endif
 
     /* Creates the "Init done" semaphore. */
