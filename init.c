@@ -118,7 +118,7 @@ void init_task(void *pdata)
 
     // plot_init();
 
-    // start_pid_conf_shell(1337);
+    start_pid_conf_shell(1337);
 
     start_drive_task();
 
