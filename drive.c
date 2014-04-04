@@ -92,10 +92,12 @@ void udp_get_dynamic_path(void)
         printf("path received\n");
         encoder_readout_start();
         imu_readout_start();
+        OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_open_loop_dynamic_path(wp, nb_wp);
         control_update_setpoint_vx(0);
         control_update_setpoint_vy(0);
         control_update_setpoint_omega(0);
+        OSTimeDly(OS_TICKS_PER_SEC * 3);
         encoder_readout_stop();
         imu_readout_stop();
         printf("connect to send imu & enc values\n");
