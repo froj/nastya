@@ -25,6 +25,7 @@ void pid_conf_shell(int socket)
         static char cmd[80];
         sscanf(rcv_buf, "%79s", cmd);
         char w_buf[1024];
+        snprintf(w_buf, sizeof(w_buf)-1, "%s\n", pid_name);
         int kp = pid_get_gain_P(pid);
         int ki = pid_get_gain_I(pid);
         int kd = pid_get_gain_D(pid);
@@ -36,15 +37,15 @@ void pid_conf_shell(int socket)
             if (strcmp(cmd, "x") == 0) {
                 pid = &nastya_cs.vx_pid;
                 pid_name = "pid x";
-                snprintf(w_buf, sizeof(w_buf)-1, "pid: x\n");
+                continue;
             } else if (strcmp(cmd, "y") == 0) {
                 pid = &nastya_cs.vy_pid;
                 pid_name = "pid y";
-                snprintf(w_buf, sizeof(w_buf)-1, "pid: y\n");
+                continue;
             } else if (strcmp(cmd, "r") == 0) {
                 pid = &nastya_cs.omega_pid;
                 pid_name = "pid omega";
-                snprintf(w_buf, sizeof(w_buf)-1, "pid: r\n");
+                continue;
             } else {
                 snprintf(w_buf, sizeof(w_buf)-1, "invalid pid [x,y,r]\n");
             }

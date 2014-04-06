@@ -82,8 +82,8 @@ void imu_readout_send(struct netconn *conn)
     int i;
     printf("< imu readout\n");
     static char sendbuf[300];
-    sprintf(sendbuf, "timestamp, accx, accy, accz, gyrox, gyroy, gyroz", imu_buffer_index);
-    netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
+    // sprintf(sendbuf, "timestamp, accx, accy, accz, gyrox, gyroy, gyroz", imu_buffer_index);
+    // netconn_write(conn, sendbuf, strlen(sendbuf), NETCONN_COPY);
     for (i = 0; i < imu_buffer_index - 1; i++) {
         snprintf(sendbuf, sizeof(sendbuf), "%d, %f, %f, %f, %f, %f, %f\n",
             imu_buffer[i].timestamp,

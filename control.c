@@ -16,21 +16,21 @@
 #define CONTROL_FREQ 100 // [Hz]
 
 // PID speed control integer range calculations:
-// max input speed 8 m/s, resp 8 rad/s
-// with scaling 1024 (VX_IN_SCALE, VY_IN_SCALE, OMEGA_IN_SCALE)
-// 8 * 1024 = 8192
+// max input speed 4 m/s, resp 4 rad/s
+// with scaling 2048 (VX_IN_SCALE, VY_IN_SCALE, OMEGA_IN_SCALE)
+// 4 * 2048 = 8192
 // maximal error is 2 * 8 * 1024 = 16384
-// with maximal KP = 1024, KI = 120, KD = 1024, MAX_I <= 1024
-// max command = 16384 * 1024 + 16384 * 120 * 1024 + 16384 * 2 * 1024
-// = 2063597568 < 2^31 = 2147483648
+// with maximal KP = 1024, KI = 40, KD = 1024, MAX_I <= 3000
+// max command = 16384 * 1024 + 16384 * 40 * 3000 + 16384 * 2 * 1024
+// = 2016411648 < 2^31 = 2147483648
 
-#define VX_IN_SCALE     1024
-#define VY_IN_SCALE     1024
-#define OMEGA_IN_SCALE  1024
+#define VX_IN_SCALE     2048
+#define VY_IN_SCALE     2048
+#define OMEGA_IN_SCALE  2048
 
-#define VX_MAX_INPUT    8192
-#define VY_MAX_INPUT    8192
-#define OMEGA_MAX_INPUT 8192
+#define VX_MAX_ERR_INPUT    4096
+#define VY_MAX_ERR_INPUT    4096
+#define OMEGA_MAX_ERR_INPUT 4096
 
 // The output is scaled to allow KP, KI & KD values close to
 // maxima (as calculated above) for optimal resolution.
@@ -140,22 +140,22 @@ void holonomic_base_speed_cs_init(void)
 {
     // velocity in x
     pid_init(&nastya_cs.vx_pid);
-    pid_set_gains(&nastya_cs.vx_pid, 20, 4, 1); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vx_pid, VX_MAX_INPUT, 5000, 0); // in , integral, out
+    pid_set_gains(&nastya_cs.vx_pid, 20, 30, 4); // KP, KI, KD
+    pid_set_maximums(&nastya_cs.vx_pid, VX_MAX_ERR_INPUT, 3000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.vx_pid, 0);
-    pid_set_derivate_filter(&nastya_cs.vx_pid, 3);
+    pid_set_derivate_filter(&nastya_cs.vx_pid, 15);
     // velocity in y
     pid_init(&nastya_cs.vy_pid);
-    pid_set_gains(&nastya_cs.vy_pid, 20, 4, 1); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vy_pid, VY_MAX_INPUT, 5000, 0); // in , integral, out
+    pid_set_gains(&nastya_cs.vy_pid, 20, 30, 4); // KP, KI, KD
+    pid_set_maximums(&nastya_cs.vy_pid, VY_MAX_ERR_INPUT, 3000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.vy_pid, 0);
-    pid_set_derivate_filter(&nastya_cs.vy_pid, 3);
+    pid_set_derivate_filter(&nastya_cs.vy_pid, 15);
     // angular velocity omega
     pid_init(&nastya_cs.omega_pid);
-    pid_set_gains(&nastya_cs.omega_pid, 15, 2, 1); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.omega_pid, OMEGA_MAX_INPUT, 5000, 0); // in , integral, out
+    pid_set_gains(&nastya_cs.omega_pid, 30, 30, 10); // KP, KI, KD
+    pid_set_maximums(&nastya_cs.omega_pid, OMEGA_MAX_ERR_INPUT, 3000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.omega_pid, 0);
-    pid_set_derivate_filter(&nastya_cs.omega_pid, 3);
+    pid_set_derivate_filter(&nastya_cs.omega_pid, 15);
 
     cs_init(&nastya_cs.vx_cs);
     cs_init(&nastya_cs.vy_cs);
@@ -181,6 +181,18 @@ void holonomic_base_speed_cs_init(void)
 void control_init(void)
 {
     holonomic_base_speed_cs_init();
+
+
+    plot_add_variable("0:", &nastya_cs.vx_cs.error_value, PLOT_INT32);
+    plot_add_variable("1:", &nastya_cs.vy_cs.error_value, PLOT_INT32);
+    plot_add_variable("2:", &nastya_cs.omega_cs.error_value, PLOT_INT32);
+    plot_add_variable("3:", &nastya_cs.out_x, PLOT_INT32);
+    plot_add_variable("4:", &nastya_cs.out_y, PLOT_INT32);
+    plot_add_variable("5:", &nastya_cs.out_rotation, PLOT_INT32);
+    plot_add_variable("6:", &nastya_cs.vx, PLOT_FLOAT);
+    plot_add_variable("7:", &nastya_cs.vy, PLOT_FLOAT);
+    plot_add_variable("8:", &nastya_cs.omega, PLOT_FLOAT);
+
 
     OSTaskCreateExt(control_task,
                     NULL,

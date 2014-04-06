@@ -15,8 +15,9 @@
 OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
 #define MAX_NB_WP 1024
-struct dynamic_waypoint wp[MAX_NB_WP];
-int nb_wp;
+static struct dynamic_waypoint wp[MAX_NB_WP];
+static int nb_wp;
+static int output;
 
 OS_EVENT *dyn_path_exec;
 void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
@@ -57,6 +58,9 @@ void udp_get_dynamic_path_rcv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
             // execute
             OSSemPost(dyn_path_exec);
         }
+        if (cmd == '*') {
+            output = 1;
+        }
     } else {
         printf("pkt too long\n");
         OSSemPost(dyn_path_exec);
@@ -81,6 +85,7 @@ void udp_get_dynamic_path(void)
     while (1) {
         printf("drive task: waiting for path\n");
         nb_wp = 0;
+        output = 0;
         udp_recv(pcb, udp_get_dynamic_path_rcv_cb, NULL);
         INT8U ucErr;
         OSSemPend(dyn_path_exec, 0, &ucErr);
@@ -92,33 +97,39 @@ void udp_get_dynamic_path(void)
         printf("path received\n");
         encoder_readout_start();
         imu_readout_start();
-        OSTimeDly(OS_TICKS_PER_SEC * 3);
+        if (output) {
+            OSTimeDly(OS_TICKS_PER_SEC * 3);
+        }
         drive_open_loop_dynamic_path(wp, nb_wp);
         control_update_setpoint_vx(0);
         control_update_setpoint_vy(0);
         control_update_setpoint_omega(0);
-        OSTimeDly(OS_TICKS_PER_SEC * 3);
+        if (output) {
+            OSTimeDly(OS_TICKS_PER_SEC * 3);
+        }
         encoder_readout_stop();
         imu_readout_stop();
-        printf("connect to send imu & enc values\n");
-        err_t err;
-        struct netconn *conn;
-        err = netconn_accept(listen_conn, &conn);
-        if (err != ERR_OK) {
-            printf("connection error\n");
-        } else {
-            encoder_readout_send(conn);
-            netconn_close(conn);
+        if (output) {
+            printf("connect to send imu & enc values\n");
+            err_t err;
+            struct netconn *conn;
+            err = netconn_accept(listen_conn, &conn);
+            if (err != ERR_OK) {
+                printf("connection error\n");
+            } else {
+                encoder_readout_send(conn);
+                netconn_close(conn);
+            }
+            netconn_delete(conn);
+            err = netconn_accept(listen_conn, &conn);
+            if (err != ERR_OK) {
+                printf("connection error\n");
+            } else {
+                imu_readout_send(conn);
+                netconn_close(conn);
+            }
+            netconn_delete(conn);
         }
-        netconn_delete(conn);
-        err = netconn_accept(listen_conn, &conn);
-        if (err != ERR_OK) {
-            printf("connection error\n");
-        } else {
-            imu_readout_send(conn);
-            netconn_close(conn);
-        }
-        netconn_delete(conn);
     }
     udp_remove(pcb);
 }

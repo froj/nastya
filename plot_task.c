@@ -8,6 +8,9 @@
 #include "tasks.h"
 #include "plot_task.h"
 
+
+#define PLOT_FREQ 20 // [Hz]
+
 OS_STK    plot_stk[PLOT_TASK_STACKSIZE];
 
 struct plot_data{
@@ -98,7 +101,7 @@ void plot_task(void)
         //        (struct sockaddr *)&client_addr, sizeof(struct sockaddr));
 
         //printf("sendto ret %d, errno = %d\n", ret, errno);
-        OSTimeDly((int64_t)OS_TICKS_PER_SEC/50);
+        OSTimeDly((int64_t)OS_TICKS_PER_SEC/PLOT_FREQ);
     }
 }
 
@@ -137,7 +140,7 @@ void plot_init(void)
     ip_addr_t ipaddr;
 
     /* initliaze IP addresses to be used */
-    IP4_ADDR(&ipaddr,  192, 168,   2, 201);
+    IP4_ADDR(&ipaddr,  192, 168,   1, 201);
 
     /* start the UDP server */
     //------------------------
