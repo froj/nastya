@@ -94,5 +94,5 @@ void encoder_readout_init(void)
                     ENCODER_TASK_PRIORITY,
                     &encoder_readout_stk[0],
                     ENCODER_TASK_STACKSIZE,
-                    NULL, NULL);
+                    NULL, 0);
 }
