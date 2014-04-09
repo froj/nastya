@@ -2,6 +2,7 @@
 #define HARDWARE_H
 
 #include <stdint.h>
+#include "cvra_param_robot.h"
 
 /** Sets the baudrate of a given UART
  *

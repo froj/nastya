@@ -17,7 +17,7 @@ void match_task(void *arg)
 
     match_start = uptime_get();
     printf("match started [%d]\n", match_start);
-
+    OSTaskDel(MATCH_TASK_PRIORITY);
 }
 
 

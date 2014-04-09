@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <robot_base_mixer/robot_base_mixer.h>
+#include <math.h>
 #include <ucos_ii.h>
 #include <uptime.h>
-#include <hardware.h>
+#include "hardware.h"
 
 #include "tasks.h"
 
