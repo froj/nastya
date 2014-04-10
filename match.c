@@ -1,13 +1,123 @@
 #include <stdio.h>
+#include <math.h>
 #include <ucos_ii.h>
+#include <control_system_manager/control_system_manager.h>
+#include <pid/pid.h>
 #include "tasks.h"
 #include <uptime.h>
 
 #include "match.h"
 
+
+#define X_MAX_ERR_INPUT 0.1 * 1024
+#define Y_MAX_ERR_INPUT 0.1 * 1024
+#define THETA_MAX_ERR_INPUT 0.1 *1024
+
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 
 timestamp_t match_start;
+
+
+static float limit_sym(float val, float max)
+{
+    if (val > max)
+        return max;
+    if (val < -max)
+        return max;
+    return val;
+}
+
+
+static void cs_out(void *arg, int32_t out)
+{
+    *(int32_t*)arg = out;
+}
+
+static int32_t cs_in(void *arg)
+{
+    return *(int32_t*)arg;
+}
+
+static int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
+{
+    static struct cs pos_x_cs;
+    static struct cs pos_y_cs;
+    static struct cs theta_cs;
+    static struct pid_filter pos_x_pid;
+    static struct pid_filter pos_y_pid;
+    static struct pid_filter theta_pid;
+    static int pids_initialized = 0;
+    static int32_t out_x;
+    static int32_t out_y;
+    static int32_t out_rotation;
+    static int32_t in_x;
+    static int32_t in_y;
+    static int32_t in_rotation;
+    if (!pids_initialized) {
+        pid_init(&pos_x_pid);
+        pid_set_gains(&pos_x_pid, 20, 0, 6); // KP, KI, KD
+        pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 100, 0); // in , integral, out
+        pid_set_out_shift(&pos_x_pid, 0);
+        pid_set_derivate_filter(&pos_x_pid, 15);
+        pid_init(&pos_y_pid);
+        pid_set_gains(&pos_y_pid, 20, 0, 6); // KP, KI, KD
+        pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 100, 0); // in , integral, out
+        pid_set_out_shift(&pos_y_pid, 0);
+        pid_set_derivate_filter(&pos_y_pid, 15);
+        pid_init(&theta_pid);
+        pid_set_gains(&theta_pid, 30, 0, 10); // KP, KI, KD
+        pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 100, 0); // in , integral, out
+        pid_set_out_shift(&theta_pid, 0);
+        pid_set_derivate_filter(&theta_pid, 15);
+        cs_init(&pos_x_cs);
+        cs_init(&pos_y_cs);
+        cs_init(&theta_cs);
+        cs_set_correct_filter(&pos_x_cs, pid_do_filter, &pos_x_pid);
+        cs_set_correct_filter(&pos_y_cs, pid_do_filter, &pos_y_pid);
+        cs_set_correct_filter(&theta_cs, pid_do_filter, &theta_pid);
+        cs_set_process_in(&pos_x_cs, cs_out, &out_x);
+        cs_set_process_in(&pos_y_cs, cs_out, &out_y);
+        cs_set_process_in(&theta_cs, cs_out, &out_rotation);
+        cs_set_process_out(&pos_x_cs, cs_in, &in_x);
+        cs_set_process_out(&pos_y_cs, cs_in, &in_y);
+        cs_set_process_out(&theta_cs, cs_in, &in_rotation);
+        cs_set_consign(&pos_x_cs, 0);
+        cs_set_consign(&pos_y_cs, 0);
+        cs_set_consign(&theta_cs, 0);
+        pids_initialized = 1;
+    }
+    while (1) {
+        float pos_x, pos_y, heading;
+        get_position(&pos_x, &pos_y);
+        heading = get_heading();
+        float set_heading = atan2(lookat_y - pos_y, lookat_x - pos_x);
+        float heading_err = set_heading - heading;
+        float x_err = dest_x - pos_x;
+        float y_err = dest_y - pos_y;
+        if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.01)
+            return;
+        in_x = x_err * 1024;
+        in_y = y_err * 1024;
+        in_rotation = heading_err * 1024;
+        cs_manage(&pos_x_cs);
+        cs_manage(&pos_y_cs);
+        cs_manage(&theta_cs);
+        float current_speed_x, current_speed_y;
+        get_velocity(current_speed_x, current_speed_y);
+        float current_omega = get_omega();
+        float set_speed_x = 0 + limit_sym(out_x / 1024, 0.05);
+        float set_speed_y = 0 + limit_sym(out_y / 1024, 0.05);
+        float set_omega = 0 + limit_sym(out_rotation / 1024, 0.01);
+        float cos_heading = cos(heading);
+        float sin_heading = sin(heading);
+        float set_speed_x_robot = cos_heading * set_speed_x + sin_heading * set_speed_y;
+        float set_speed_y_robot = sin_heading * set_speed_x - cos_heading * set_speed_y;
+        control_update_setpoint_vx(set_speed_x_robot);
+        control_update_setpoint_vy(set_speed_y_robot);
+        control_update_setpoint_omega(set_omega);
+        OSTimeDly(OS_TICKS_PER_SEC / 20);
+    }
+}
 
 
 void match_task(void *arg)
@@ -16,7 +126,12 @@ void match_task(void *arg)
     while (0) OSTimeDly(OS_TICKS_PER_SEC/100);
 
     match_start = uptime_get();
-    printf("match started [%d]\n", match_start);
+    printf("match started [%d]\n", (int)match_start);
+
+    goto_position(0.5, 0, 1, 0);
+    control_update_setpoint_vx(0);
+    control_update_setpoint_vy(0);
+    control_update_setpoint_omega(0);
     OSTaskDel(MATCH_TASK_PRIORITY);
 }
 
