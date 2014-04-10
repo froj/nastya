@@ -141,7 +141,8 @@ void match_task(void *arg)
         float px, py, theta;
         get_position(&px, &py);
         theta = get_heading();
-        printf("%10f %10f %10f\n", px, py, theta);
+        printf("pos: %10f %10f %10f\n", px, py, theta);
+        printf("end: %10f %10f %10f\n", hw_get_wheel_0_encoder(), hw_get_wheel_1_encoder(), hw_get_wheel_2_encoder());
         OSTimeDly(OS_TICKS_PER_SEC/1);
     }
     OSTaskDel(MATCH_TASK_PRIORITY);
