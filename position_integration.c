@@ -78,10 +78,10 @@ void position_integration_task(void *pdata)
         float sin_theta = sin(theta);
         float cos_theta = cos(theta);
         pos_x += dx * cos_theta - dy * sin_theta;
-        pos_y += dy * sin_theta + dy * cos_theta;
+        pos_y += dx * sin_theta + dy * cos_theta;
         theta += dtheta;
         vel_x = (dx * cos_theta - dy * sin_theta) / delta_t;
-        vel_y = (dy * sin_theta + dy * cos_theta) / delta_t;
+        vel_y = (dx * sin_theta + dy * cos_theta) / delta_t;
         omega = dtheta / delta_t;
         last_iteration = now;
     }
