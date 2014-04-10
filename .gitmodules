@@ -10,3 +10,6 @@
 [submodule "socket_handler"]
 	path = socket_handler
 	url = git@github.com:froj/cvra-socket-handler-c.git
+[submodule "lua"]
+	path = lua
+	url = git@github.com:cvra/lua.git
