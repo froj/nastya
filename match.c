@@ -5,6 +5,8 @@
 #include <pid/pid.h>
 #include "tasks.h"
 #include <uptime.h>
+#include "control.h"
+#include "position_integration.h"
 
 #include "match.h"
 
@@ -56,17 +58,17 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
     if (!pids_initialized) {
         pid_init(&pos_x_pid);
         pid_set_gains(&pos_x_pid, 20, 0, 6); // KP, KI, KD
-        pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 100, 0); // in , integral, out
+        pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 10, 0); // in , integral, out
         pid_set_out_shift(&pos_x_pid, 0);
         pid_set_derivate_filter(&pos_x_pid, 15);
         pid_init(&pos_y_pid);
         pid_set_gains(&pos_y_pid, 20, 0, 6); // KP, KI, KD
-        pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 100, 0); // in , integral, out
+        pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 10, 0); // in , integral, out
         pid_set_out_shift(&pos_y_pid, 0);
         pid_set_derivate_filter(&pos_y_pid, 15);
         pid_init(&theta_pid);
         pid_set_gains(&theta_pid, 30, 0, 10); // KP, KI, KD
-        pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 100, 0); // in , integral, out
+        pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 10, 0); // in , integral, out
         pid_set_out_shift(&theta_pid, 0);
         pid_set_derivate_filter(&theta_pid, 15);
         cs_init(&pos_x_cs);
@@ -95,7 +97,7 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         float x_err = dest_x - pos_x;
         float y_err = dest_y - pos_y;
         if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.02)
-            return;
+            return 0;
         in_x = x_err * 1024;
         in_y = y_err * 1024;
         in_rotation = heading_err * 1024;
@@ -105,9 +107,9 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         float current_speed_x, current_speed_y;
         get_velocity(&current_speed_x, &current_speed_y);
         float current_omega = get_omega();
-        float set_speed_x = limit_sym(current_speed_x + limit_sym(out_x / 1024, 0.02), 0.2);
-        float set_speed_y = limit_sym(current_speed_y + limit_sym(out_y / 1024, 0.02), 0.2);
-        float set_omega = limit_sym(current_omega + limit_sym(out_rotation / 1024, 0.01), 0.15);
+        float set_speed_x = 0;//limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.002), 0.05);
+        float set_speed_y = 0;//limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.002), 0.05);
+        float set_omega = limit_sym(0 + limit_sym((float)out_rotation / 1024, 0.001), 0.02);
         float cos_heading = cos(heading);
         float sin_heading = sin(heading);
         float set_speed_x_robot = cos_heading * set_speed_x + sin_heading * set_speed_y;
@@ -128,10 +130,20 @@ void match_task(void *arg)
     match_start = uptime_get();
     printf("match started [%d]\n", (int)match_start);
 
-    goto_position(0.5, 0, 1, 0);
+    // goto_position(0.5, 0, 1, 0);
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
     control_update_setpoint_omega(0);
+    nastya_cs.vx_control_enable = false;
+    nastya_cs.vy_control_enable = false;
+    nastya_cs.omega_control_enable = false;
+    while (1) {
+        float px, py, theta;
+        get_position(&px, &py);
+        theta = get_heading();
+        printf("%10f %10f %10f\n", px, py, theta);
+        OSTimeDly(OS_TICKS_PER_SEC/1);
+    }
     OSTaskDel(MATCH_TASK_PRIORITY);
 }
 
