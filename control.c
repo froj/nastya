@@ -98,9 +98,15 @@ void control_task(void *arg)
         holonomic_base_mixer_wheels_to_robot(wheel_ang_vel, &nastya_cs.vx,
                                              &nastya_cs.vy, &nastya_cs.omega);
 
-        cs_manage(&nastya_cs.vx_cs);
-        cs_manage(&nastya_cs.vy_cs);
-        cs_manage(&nastya_cs.omega_cs);
+        nastya_cs.out_x = 0;
+        nastya_cs.out_y = 0;
+        nastya_cs.out_rotation = 0;
+        if (nastya_cs.vx_control_enable)
+            cs_manage(&nastya_cs.vx_cs);
+        if (nastya_cs.vy_control_enable)
+            cs_manage(&nastya_cs.vy_cs);
+        if (nastya_cs.omega_control_enable)
+            cs_manage(&nastya_cs.omega_cs);
         float cmd_x = (float)nastya_cs.out_x / VX_OUT_SCALE;
         float cmd_y = (float)nastya_cs.out_y / VY_OUT_SCALE;
         float cmd_rot = (float)nastya_cs.out_rotation / OMEGA_OUT_SCALE;
