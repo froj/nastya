@@ -7,6 +7,7 @@
 #include <uptime.h>
 #include "control.h"
 #include "position_integration.h"
+#include "hardware.h"
 
 #include "match.h"
 
@@ -142,7 +143,7 @@ void match_task(void *arg)
         get_position(&px, &py);
         theta = get_heading();
         printf("pos: %10f %10f %10f\n", px, py, theta);
-        printf("end: %10f %10f %10f\n", hw_get_wheel_0_encoder(), hw_get_wheel_1_encoder(), hw_get_wheel_2_encoder());
+        printf("end: %10d %10d %10d\n", hw_get_wheel_0_encoder(), hw_get_wheel_1_encoder(), hw_get_wheel_2_encoder());
         OSTimeDly(OS_TICKS_PER_SEC/1);
     }
     OSTaskDel(MATCH_TASK_PRIORITY);
