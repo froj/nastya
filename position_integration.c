@@ -11,16 +11,16 @@
 #include "position_integration.h"
 
 
-#define POSITON_INTEGRATION_FREQ 100 // [Hz]
+#define POSITON_INTEGRATION_FREQ 1000 // [Hz]
 
 OS_STK position_integration_stk[POSITION_INTEGRATION_TASK_STACKSIZE];
 
-static float pos_x;
-static float pos_y;
-static float theta;
-static float vel_x;
-static float vel_y;
-static float omega;
+static double pos_x;
+static double pos_y;
+static double theta;
+static double vel_x;
+static double vel_y;
+static double omega;
 
 void get_position(float *x, float *y)
 {

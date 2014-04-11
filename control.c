@@ -101,12 +101,21 @@ void control_task(void *arg)
         nastya_cs.out_x = 0;
         nastya_cs.out_y = 0;
         nastya_cs.out_rotation = 0;
-        if (nastya_cs.vx_control_enable)
+        if (nastya_cs.vx_control_enable) {
             cs_manage(&nastya_cs.vx_cs);
-        if (nastya_cs.vy_control_enable)
+        } else {
+            pid_reset(&nastya_cs.vx_pid);
+        }
+        if (nastya_cs.vy_control_enable) {
             cs_manage(&nastya_cs.vy_cs);
-        if (nastya_cs.omega_control_enable)
+        } else {
+            pid_reset(&nastya_cs.vy_pid);
+        }
+        if (nastya_cs.omega_control_enable) {
             cs_manage(&nastya_cs.omega_cs);
+        } else {
+            pid_reset(&nastya_cs.omega_pid);
+        }
         float cmd_x = (float)nastya_cs.out_x / VX_OUT_SCALE;
         float cmd_y = (float)nastya_cs.out_y / VY_OUT_SCALE;
         float cmd_rot = (float)nastya_cs.out_rotation / OMEGA_OUT_SCALE;
