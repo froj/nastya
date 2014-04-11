@@ -12,14 +12,18 @@
 #include "match.h"
 
 
+#define MATCH_DURATION 90*1000000 // [us]
+
 #define X_MAX_ERR_INPUT 0.1 * 1024
 #define Y_MAX_ERR_INPUT 0.1 * 1024
 #define THETA_MAX_ERR_INPUT 0.1 *1024
 
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
+OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
 
 timestamp_t match_start;
 
+bool disable_postion_control;
 
 static float limit_sym(float val, float max)
 {
@@ -90,6 +94,9 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         pids_initialized = 1;
     }
     while (1) {
+        OSTimeDly(OS_TICKS_PER_SEC / 20);
+        if (disable_postion_control)
+            continue;
         float pos_x, pos_y, heading;
         get_position(&pos_x, &pos_y);
         heading = get_heading();
@@ -118,18 +125,100 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         control_update_setpoint_vx(set_speed_x_robot);
         control_update_setpoint_vy(set_speed_y_robot);
         control_update_setpoint_omega(set_omega);
-        OSTimeDly(OS_TICKS_PER_SEC / 20);
     }
+}
+
+
+#define EMERGENCY_STOP_ACCELERATION_XY    5.0 // [m/s^2]
+#define EMERGENCY_STOP_ACCELERATION_ALPHA 5.0 // [rad/s^2]
+#define EMERGENCY_STOP_UPDATE_FREQ        100 // [Hz]
+
+#define EMERGENCY_STOP_DELTA_OMEGA EMERGENCY_STOP_ACCELERATION_ALPHA / EMERGENCY_STOP_UPDATE_FREQ
+#define EMERGENCY_STOP_DELTA_VXY EMERGENCY_STOP_ACCELERATION_XY / EMERGENCY_STOP_UPDATE_FREQ
+
+void emergency_stop_task(void *arg)
+{
+    int stop_timeout = 0;
+    while (1) {
+        if (emergency_stop() || uptime_get() - match_start > MATCH_DURATION) {
+            stop_timeout = EMERGENCY_STOP_UPDATE_FREQ / 10; // reset stop timer
+        }
+        if (stop_timeout > 0) {
+            stop_timeout--;
+            disable_postion_control = true;
+            // ramp speed to 0
+            float vx, vy, omega;
+            get_velocity(&vx, &vy);
+            omega = get_omega();
+            if (fabs(omega) > EMERGENCY_STOP_DELTA_OMEGA) {
+                omega = 0;
+            } else if (omega > 0) {
+                omega -= EMERGENCY_STOP_DELTA_OMEGA;
+            } else if (omega < 0) {
+                omega += EMERGENCY_STOP_DELTA_OMEGA;
+            }
+            if (fabs(vx) > EMERGENCY_STOP_DELTA_VXY) {
+                vx = 0;
+            } else if (vx > 0) {
+                vx -= EMERGENCY_STOP_DELTA_VXY;
+            } else if (vx < 0) {
+                vx += EMERGENCY_STOP_DELTA_VXY;
+            }
+            if (fabs(vy) > EMERGENCY_STOP_DELTA_VXY) {
+                vy = 0;
+            } else if (vy > 0) {
+                vy -= EMERGENCY_STOP_DELTA_VXY;
+            } else if (vy < 0) {
+                vy += EMERGENCY_STOP_DELTA_VXY;
+            }
+            control_update_setpoint_vx(vx);
+            control_update_setpoint_vy(vy);
+            control_update_setpoint_omega(omega);
+        } else {
+            disable_postion_control = false;
+        }
+        OSTimeDly(OS_TICKS_PER_SEC/EMERGENCY_STOP_UPDATE_FREQ);
+    }
+}
+
+
+
+static void calibrate_position(void)
+{
+    nastya_cs.omega_control_enable = false;
+    control_update_setpoint_vx(-0.005);
+    OSTimeDly(OS_TICKS_PER_SEC * 4);
+    control_update_setpoint_vx(0);
+    OSTimeDly(OS_TICKS_PER_SEC / 10);
+    position_reset();
+    control_update_setpoint_vx(0.005);
+    OSTimeDly(OS_TICKS_PER_SEC * 4);
+    control_update_setpoint_vx(0);
+    nastya_cs.omega_control_enable = true;
 }
 
 
 void match_task(void *arg)
 {
+    OSTimeDly(OS_TICKS_PER_SEC / 2);
+
+    calibrate_position();
+
     // wait for start signal
     while (0) OSTimeDly(OS_TICKS_PER_SEC/100);
 
     match_start = uptime_get();
     printf("match started [%d]\n", (int)match_start);
+
+
+    OSTaskCreateExt(emergency_stop_task,
+                    NULL,
+                    &emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE-1],
+                    EMERGENCY_STOP_TASK_PRIORITY,
+                    EMERGENCY_STOP_TASK_PRIORITY,
+                    &emergency_stop_task_stk[0],
+                    EMERGENCY_STOP_TASK_STACKSIZE,
+                    NULL, 0);
 
     // goto_position(0.5, 0, 1, 0);
     control_update_setpoint_vx(0);

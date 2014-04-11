@@ -36,6 +36,9 @@
 #define MATCH_TASK_PRIORITY                        10
 #define MATCH_TASK_STACKSIZE                     2048
 
+#define MATCH_TASK_PRIORITY                         9
+#define MATCH_TASK_STACKSIZE                     2048
+
 // IP stack
 #define TCPIP_THREAD_PRIO                          30
 #define SLIPIF_THREAD_PRIO                         31
