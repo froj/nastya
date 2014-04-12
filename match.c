@@ -279,8 +279,12 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    goto_position(0.2, 0.6, 100, 0);
+    goto_position(0.2, 0.6, 10, 0);
     goto_position(1.35, 0.6, 3, 1);
+    float ang = 0.5235987756;
+    goto_position(1.35, 0.015, 1.35 + 10*cos(ang), 0.015 + 10*sin(ang));
+    goto_position(1.35, 0.0, 1.35 + 10*cos(ang), 0.0 + 10*sin(ang));
+    goto_position(1.35, 0.1, 1.35 + 10*cos(ang), 0.1 + 10*sin(ang));
 
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
