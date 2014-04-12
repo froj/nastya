@@ -3,6 +3,7 @@
 #include <ucos_ii.h>
 #include <control_system_manager/control_system_manager.h>
 #include <pid/pid.h>
+#include <cvra_beacon.h>
 #include "tasks.h"
 #include <uptime.h>
 #include "control.h"
@@ -22,8 +23,10 @@ OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
 
 timestamp_t match_start;
+static cvra_beacon_t beacon;
 
 bool disable_postion_control;
+
 
 static float limit_sym(float val, float max)
 {
@@ -145,6 +148,15 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
 
 static bool emergency_stop(void)
 {
+    int i;
+
+    for (i = 0; i < beacon.nb_beacon; i++) {
+        // TODO also take heading into account
+        if (beacon.beacon[i].distance < 50) {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -242,6 +254,8 @@ void match_task(void *arg)
     position_control_init();
     // calibrate_position();
 
+    cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 1000, 1., 1.);
+
     // wait for start signal
     while (0) OSTimeDly(OS_TICKS_PER_SEC/100);
 
@@ -267,7 +281,7 @@ void match_task(void *arg)
     nastya_cs.vx_control_enable = false;
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
-    while (1) {
+    while (42) {
         float px, py, theta;
         get_position(&px, &py);
         theta = get_heading();
