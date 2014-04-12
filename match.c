@@ -16,6 +16,8 @@
 
 #define MATCH_DURATION 90*1000000 // [us]
 
+#define TABLE_LENGTH 3.0 // m
+
 #define X_MAX_ERR_INPUT 0.1 * 1024
 #define Y_MAX_ERR_INPUT 0.1 * 1024
 #define THETA_MAX_ERR_INPUT 0.1 *1024
@@ -254,8 +256,32 @@ static bool wait_for_start(void)
 }
 
 
+
+
+
 void match_task(void *arg)
 {
+    static float ang1 = 0.5235987756;
+    static float waypoints[][4] = {
+        (0.2, 0.6, 10, 0},
+        (1.35, 0.6, 3, 1},
+        (1.35, 0.015, 1.35 + 10*cos(ang1), 0.015 + 10*sin(ang1)},
+        (1.35, 0.0, 1.35 + 10*cos(ang1), 0.0 + 10*sin(ang1)},
+        (1.35, 0.1, 1.35 + 10*cos(ang1), 0.1 + 10*sin(ang1)}
+    }
+    int nbwaypoints = sizeof(waypoints) / sizeof(waypoints[0]);
+
+    bool team_red;
+    team_red = false;
+
+    if (team_red) {
+        int i;
+        for (i = 0; i < nbwaypoints; i++) {
+            waypoints[i][0] = TABLE_LENGTH - waypoints[i][0];
+            waypoints[i][2] = TABLE_LENGTH - waypoints[i][2];
+        }
+    }
+
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
     cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
@@ -266,7 +292,14 @@ void match_task(void *arg)
     OSTimeDly(OS_TICKS_PER_SEC);
     // wait for start signal
     while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
-    position_reset_to(0.102, 0.120, 0);
+
+
+    if (team_red) {
+        position_reset_to(TABLE_LENGTH - 0.102, 0.120, M_PI);
+    } else {
+        position_reset_to(0.102, 0.120, 0);
+    }
+
     match_start = uptime_get();
     printf("much started [%d]\nwow\n", (int)match_start);
 
@@ -279,12 +312,13 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    goto_position(0.2, 0.6, 10, 0);
-    goto_position(1.35, 0.6, 3, 1);
-    float ang = 0.5235987756;
-    goto_position(1.35, 0.015, 1.35 + 10*cos(ang), 0.015 + 10*sin(ang));
-    goto_position(1.35, 0.0, 1.35 + 10*cos(ang), 0.0 + 10*sin(ang));
-    goto_position(1.35, 0.1, 1.35 + 10*cos(ang), 0.1 + 10*sin(ang));
+    int i;
+    for (i = 0; i < nbwaypoints; i++) {
+        goto_position(waypoints[i][0],
+                      waypoints[i][1],
+                      waypoints[i][2],
+                      waypoints[i][3]);
+    }
 
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
