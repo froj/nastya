@@ -107,9 +107,9 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         get_position(&pos_x, &pos_y);
         heading = get_heading();
         float set_heading = atan2(lookat_y - pos_y, lookat_x - pos_x);
-        float heading_err = set_heading - heading;
-        float x_err = dest_x - pos_x;
-        float y_err = dest_y - pos_y;
+        float heading_err = heading - set_heading;
+        float x_err = pos_x - dest_x;
+        float y_err = pos_y - dest_y;
         if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.02)
             return 0;
         in_x = x_err * 1024;
@@ -121,14 +121,14 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         float current_speed_x, current_speed_y;
         get_velocity(&current_speed_x, &current_speed_y);
         float current_omega = get_omega();
-        float set_speed_x = limit_sym(0 + limit_sym((float)out_x / 1024, 0.02), 0.1);
-        float set_speed_y = limit_sym(0 + limit_sym((float)out_y / 1024, 0.02), 0.1);
-        float set_omega = limit_sym(0 + limit_sym((float)out_rotation / 1024, 0.01), 0.05);
+        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.02), 0.1);
+        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.02), 0.1);
+        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 1024, 0.01), 0.05);
         float cos_heading = cos(heading);
         float sin_heading = sin(heading);
         float set_speed_x_robot = cos_heading * set_speed_x + sin_heading * set_speed_y;
         float set_speed_y_robot = -sin_heading * set_speed_x + cos_heading * set_speed_y;
-        printf("theta: %d xerr %d yerr %d\n", heading, x_err, y_err);
+        printf("theta: %f xerr %f yerr %f\n", heading, x_err, y_err);
         control_update_setpoint_vx(set_speed_x_robot);
         control_update_setpoint_vy(set_speed_y_robot);
         control_update_setpoint_omega(set_omega);
