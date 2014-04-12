@@ -118,6 +118,8 @@ void init_task(void *pdata)
 
     // plot_init();
 
+    luaconsole_init();
+
     start_position_integration();
 
     start_pid_conf_shell(1337);
