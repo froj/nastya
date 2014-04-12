@@ -262,11 +262,13 @@ void match_task(void *arg)
     position_control_init();
     // calibrate_position();
 
+    while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    OSTimeDly(OS_TICKS_PER_SEC);
     // wait for start signal
     while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
-
+    position_reset_to(0.102, 0.120, 0);
     match_start = uptime_get();
-    printf("match started [%d]\n", (int)match_start);
+    printf("much started [%d]\nwow\n", (int)match_start);
 
     OSTaskCreateExt(emergency_stop_task,
                     NULL,
@@ -277,8 +279,8 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    goto_position(0.5, 0, 0.25, 0.5);
-    goto_position(0, 0, 0.25, 0.5);
+    goto_position(0.2, 0.6, 100, 0);
+    goto_position(1.35, 0.6, 3, 1);
 
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
