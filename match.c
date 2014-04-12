@@ -231,8 +231,8 @@ static void calibrate_position(void)
     OSTimeDly(OS_TICKS_PER_SEC * 5);
     control_update_setpoint_omega(0);
 
-    float x, y;
-    get_position(&x, &y);
+    float x, y, unused;
+    get_position(&y, &unused);
 
     control_update_setpoint_vx(-0.02);
     OSTimeDly(OS_TICKS_PER_SEC * 4);
@@ -242,8 +242,9 @@ static void calibrate_position(void)
     control_update_setpoint_vx(0.03);
     OSTimeDly(OS_TICKS_PER_SEC * 4);
     control_update_setpoint_vx(0);
-
-    position_reset_to(0, x, 0);
+    
+    get_position(&x, &unused);
+    position_reset_to(x, y, 0);
 }
 
 
