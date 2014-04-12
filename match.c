@@ -266,7 +266,11 @@ void match_task(void *arg)
     OSTimeDly(OS_TICKS_PER_SEC);
     // wait for start signal
     while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
-    position_reset_to(0.102, 0.120, 0);
+    if (team_red)
+        position_reset_to(2.898, 0.120, 3.14159);
+    else
+        position_reset_to(0.102, 0.120, 0);
+
     match_start = uptime_get();
     printf("much started [%d]\nwow\n", (int)match_start);
 
@@ -279,12 +283,24 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    goto_position(0.2, 0.6, 10, 0);
-    goto_position(1.35, 0.6, 3, 1);
-    float ang = 0.5235987756;
-    goto_position(1.35, 0.015, 1.35 + 10*cos(ang), 0.015 + 10*sin(ang));
-    goto_position(1.35, 0.0, 1.35 + 10*cos(ang), 0.0 + 10*sin(ang));
-    goto_position(1.35, 0.1, 1.35 + 10*cos(ang), 0.1 + 10*sin(ang));
+    bool team_red = true;
+
+    if (team_red) {
+        goto_position(2.8, 0.6, 10, 0);
+        goto_position(1.65, 0.6, 3, 1);
+        float ang = 0.5235987756;
+        goto_position(1.35, 0.015, 1.65 + 10*cos(ang), 0.015 + 10*sin(ang));
+        goto_position(1.35, 0.0, 1.65 + 10*cos(ang), 0.0 + 10*sin(ang));
+        goto_position(1.35, 0.1, 1.65 + 10*cos(ang), 0.1 + 10*sin(ang));
+    }
+    else {
+        goto_position(0.2, 0.6, 10, 0);
+        goto_position(1.35, 0.6, 3, 1);
+        float ang = 0.5235987756;
+        goto_position(1.35, 0.015, 1.35 + 10*cos(ang), 0.015 + 10*sin(ang));
+        goto_position(1.35, 0.0, 1.35 + 10*cos(ang), 0.0 + 10*sin(ang));
+        goto_position(1.35, 0.1, 1.35 + 10*cos(ang), 0.1 + 10*sin(ang));
+    }
 
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
