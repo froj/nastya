@@ -262,6 +262,8 @@ void match_task(void *arg)
     position_control_init();
     // calibrate_position();
 
+    bool team_red = true;
+
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
     OSTimeDly(OS_TICKS_PER_SEC);
     // wait for start signal
@@ -286,15 +288,18 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    bool team_red = true;
+    while(42) {
+        OSTimeDly(OS_TICKS_PER_SEC);
+    }
 
     if (team_red) {
         goto_position(2.8, 0.6, 10, 0);
         goto_position(1.65, 0.6, 3, 1);
         float ang = 0.5235987756;
-        goto_position(1.35, 0.015, 1.65 + 10*cos(ang), 0.015 + 10*sin(ang));
-        goto_position(1.35, 0.0, 1.65 + 10*cos(ang), 0.0 + 10*sin(ang));
-        goto_position(1.35, 0.1, 1.65 + 10*cos(ang), 0.1 + 10*sin(ang));
+        goto_position(1.65, 0.015, 1.65 + 10*cos(ang), 0.015 + 10*sin(ang));
+        goto_position(1.65, 0.0, 1.65 + 10*cos(ang), 0.0 + 10*sin(ang));
+        goto_position(1.65, 0.1, 1.65 + 10*cos(ang), 0.1 + 10*sin(ang));
+        goto_position(1.5,  0.6, 0, 0);
     }
     else {
         goto_position(0.2, 0.6, 10, 0);
@@ -303,6 +308,7 @@ void match_task(void *arg)
         goto_position(1.35, 0.015, 1.35 + 10*cos(ang), 0.015 + 10*sin(ang));
         goto_position(1.35, 0.0, 1.35 + 10*cos(ang), 0.0 + 10*sin(ang));
         goto_position(1.35, 0.1, 1.35 + 10*cos(ang), 0.1 + 10*sin(ang));
+        goto_position(1.5,  0.6, 0, 0);
     }
 
     control_update_setpoint_vx(0);
