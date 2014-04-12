@@ -274,6 +274,9 @@ void match_task(void *arg)
     match_start = uptime_get();
     printf("much started [%d]\nwow\n", (int)match_start);
 
+    OSTimeDly(OS_TICKS_PER_SEC*4);
+
+
     OSTaskCreateExt(emergency_stop_task,
                     NULL,
                     &emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE-1],
