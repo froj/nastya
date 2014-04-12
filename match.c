@@ -66,17 +66,17 @@ static int32_t cs_in(void *arg)
 void position_control_init()
 {
     pid_init(&pos_x_pid);
-    pid_set_gains(&pos_x_pid, 20, 0, 6); // KP, KI, KD
+    pid_set_gains(&pos_x_pid, 10, 0, 20); // KP, KI, KD
     pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 100, 0); // in , integral, out
     pid_set_out_shift(&pos_x_pid, 0);
     pid_set_derivate_filter(&pos_x_pid, 15);
     pid_init(&pos_y_pid);
-    pid_set_gains(&pos_y_pid, 20, 0, 6); // KP, KI, KD
+    pid_set_gains(&pos_y_pid, 10, 0, 20); // KP, KI, KD
     pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 100, 0); // in , integral, out
     pid_set_out_shift(&pos_y_pid, 0);
     pid_set_derivate_filter(&pos_y_pid, 15);
     pid_init(&theta_pid);
-    pid_set_gains(&theta_pid, 30, 0, 10); // KP, KI, KD
+    pid_set_gains(&theta_pid, 20, 0, 20); // KP, KI, KD
     pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 100, 0); // in , integral, out
     pid_set_out_shift(&theta_pid, 0);
     pid_set_derivate_filter(&theta_pid, 15);
@@ -110,7 +110,7 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         float heading_err = heading - set_heading;
         float x_err = pos_x - dest_x;
         float y_err = pos_y - dest_y;
-        if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.0002)
+        if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.0008)
             return 0;
         in_x = x_err * 1024;
         in_y = y_err * 1024;
@@ -121,9 +121,9 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         float current_speed_x, current_speed_y;
         get_velocity(&current_speed_x, &current_speed_y);
         float current_omega = get_omega();
-        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.02), 0.2);
-        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.02), 0.2);
-        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 1024, 0.01), 0.05);
+        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.1), 0.2);
+        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.1), 0.2);
+        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 1024, 0.4), 2.0);
         float cos_heading = cos(heading);
         float sin_heading = sin(heading);
         float set_speed_x_robot = cos_heading * set_speed_x + sin_heading * set_speed_y;
@@ -242,7 +242,7 @@ static void calibrate_position(void)
     control_update_setpoint_vx(0.03);
     OSTimeDly(OS_TICKS_PER_SEC * 4);
     control_update_setpoint_vx(0);
-    
+
     get_position(&x, &unused);
     position_reset_to(x, y, 0);
 }
@@ -272,10 +272,9 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    while (1) {
-        goto_position(0.5, 0, 1, 0);
-        goto_position(0, 0, 1, 0);
-    }
+    goto_position(0.5, 0, 0.25, 0.5);
+    goto_position(0, 0, 0.25, 0.5);
+
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
     control_update_setpoint_omega(0);
