@@ -9,6 +9,7 @@
 #include "control.h"
 #include "position_integration.h"
 #include "hardware.h"
+#include "plot_task.h"
 
 #include "match.h"
 
@@ -152,7 +153,7 @@ static bool emergency_stop(void)
 
     for (i = 0; i < beacon.nb_beacon; i++) {
         // TODO also take heading into account
-        if (beacon.beacon[i].distance < 50) {
+        if (beacon.beacon[i].distance > 15) {
             return true;
         }
     }
@@ -251,10 +252,9 @@ void match_task(void *arg)
 {
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
+    cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
     position_control_init();
     // calibrate_position();
-
-    cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 1000, 1., 1.);
 
     // wait for start signal
     while (0) OSTimeDly(OS_TICKS_PER_SEC/100);
@@ -272,8 +272,8 @@ void match_task(void *arg)
                     NULL, 0);
 
     while (1) {
-        goto_position(0.5, 0, 1, 0);
-        goto_position(0, 0, 1, 0);
+        //goto_position(0.5, 0, 1, 0);
+        //goto_position(0, 0, 1, 0);
     }
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
