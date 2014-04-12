@@ -247,6 +247,11 @@ static void calibrate_position(void)
     position_reset_to(0, x, 0);
 }
 
+static bool wait_for_start(void)
+{
+    return !(IORD(PIO_BASE, 0) & 0x1000);
+}
+
 
 void match_task(void *arg)
 {
@@ -257,7 +262,7 @@ void match_task(void *arg)
     // calibrate_position();
 
     // wait for start signal
-    while (0) OSTimeDly(OS_TICKS_PER_SEC/100);
+    while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
 
     match_start = uptime_get();
     printf("match started [%d]\n", (int)match_start);
