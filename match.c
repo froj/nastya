@@ -110,7 +110,7 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         float heading_err = heading - set_heading;
         float x_err = pos_x - dest_x;
         float y_err = pos_y - dest_y;
-        if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.02)
+        if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.0002)
             return 0;
         in_x = x_err * 1024;
         in_y = y_err * 1024;
@@ -121,8 +121,8 @@ static int goto_position(float dest_x, float dest_y, float lookat_x, float looka
         float current_speed_x, current_speed_y;
         get_velocity(&current_speed_x, &current_speed_y);
         float current_omega = get_omega();
-        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.02), 0.1);
-        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.02), 0.1);
+        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.02), 0.2);
+        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.02), 0.2);
         float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 1024, 0.01), 0.05);
         float cos_heading = cos(heading);
         float sin_heading = sin(heading);
