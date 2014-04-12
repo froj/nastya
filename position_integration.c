@@ -97,6 +97,16 @@ void position_reset(void)
     omega = 0;
 }
 
+void position_reset_to(float x, float y, float theta)
+{
+    pos_x = x;
+    pos_y = y;
+    theta = theta;
+    vel_x = 0;
+    vel_y = 0;
+    omega = 0;
+}
+
 void start_position_integration(void)
 {
     position_reset();

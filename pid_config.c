@@ -6,6 +6,7 @@
 #include "tasks.h"
 #include <ucos_ii.h>
 #include "control.h"
+#include "match.h"
 
 #include "pid_config.h"
 
@@ -45,6 +46,18 @@ void pid_conf_shell(int socket)
             } else if (strcmp(cmd, "r") == 0) {
                 pid = &nastya_cs.omega_pid;
                 pid_name = "pid omega";
+                continue;
+            } else if (strcmp(cmd, "px") == 0) {
+                pid = &pos_x_pid;
+                pid_name = "pid pos x";
+                continue;
+            } else if (strcmp(cmd, "py") == 0) {
+                pid = &pos_y_pid;
+                pid_name = "pid pos y";
+                continue;
+            } else if (strcmp(cmd, "pr") == 0) {
+                pid = &theta_pid;
+                pid_name = "pid theta";
                 continue;
             } else {
                 snprintf(w_buf, sizeof(w_buf)-1, "invalid pid [x,y,r]\n");

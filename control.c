@@ -65,6 +65,20 @@ void control_update_setpoint_omega(float omega)
     cs_set_consign(&nastya_cs.omega_cs, OMEGA_IN_SCALE * omega);
 }
 
+float control_get_setpoint_vx(void)
+{
+    return (float)cs_get_consign(&nastya_cs.vx_cs) / VX_IN_SCALE;
+}
+
+float control_get_setpoint_vy(void)
+{
+    return (float)cs_get_consign(&nastya_cs.vy_cs) / VY_IN_SCALE;
+}
+
+float control_get_setpoint_omega(void)
+{
+    return (float)cs_get_consign(&nastya_cs.omega_cs) / OMEGA_IN_SCALE;
+}
 
 void control_task(void *arg)
 {
