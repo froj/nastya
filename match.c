@@ -262,17 +262,17 @@ static bool wait_for_start(void)
 void match_task(void *arg)
 {
     static float ang1 = 0.5235987756;
-    static float waypoints[][4] = {
-        (0.2, 0.6, 10, 0},
-        (1.35, 0.6, 3, 1},
-        (1.35, 0.015, 1.35 + 10*cos(ang1), 0.015 + 10*sin(ang1)},
-        (1.35, 0.0, 1.35 + 10*cos(ang1), 0.0 + 10*sin(ang1)},
-        (1.35, 0.1, 1.35 + 10*cos(ang1), 0.1 + 10*sin(ang1)}
-    }
+    float waypoints[][4] = {
+        {0.2, 0.6, 10, 0},
+        {1.35, 0.6, 3, 1},
+        {1.35, 0.015, 1.35 + 10*cos(ang1), 0.015 + 10*sin(ang1)},
+        {1.35, 0.0, 1.35 + 10*cos(ang1), 0.0 + 10*sin(ang1)},
+        {1.35, 0.1, 1.35 + 10*cos(ang1), 0.1 + 10*sin(ang1)}
+    };
     int nbwaypoints = sizeof(waypoints) / sizeof(waypoints[0]);
 
     bool team_red;
-    team_red = false;
+    team_red = true;
 
     if (team_red) {
         int i;
@@ -302,6 +302,8 @@ void match_task(void *arg)
 
     match_start = uptime_get();
     printf("much started [%d]\nwow\n", (int)match_start);
+    OSTimeDly(OS_TICKS_PER_SEC*4);
+
 
     OSTaskCreateExt(emergency_stop_task,
                     NULL,
