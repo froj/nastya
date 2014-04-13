@@ -98,7 +98,7 @@ void position_control_init()
     cs_set_consign(&theta_cs, 0);
 }
 
-static int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
+int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
 {
     while (1) {
         OSTimeDly(OS_TICKS_PER_SEC / 20);

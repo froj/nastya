@@ -4,8 +4,9 @@
 #include "lua/lauxlib.h"
 #include "lua/lualib.h"
 
-#include "match.h"
 #include "position_integration.h"
+#include "control.h"
+#include "match.h"
 
 
 int cmd_get_pos(lua_State *l)
@@ -34,11 +35,11 @@ int cmd_get_pos_y(lua_State *l)
     return 1;
 }
 
-int cmd_get_pos_omega(lua_State *l)
+int cmd_get_pos_theta(lua_State *l)
 {
-    float omega;
-    omega = get_omega();
-    lua_pushnumber(l, (lua_Number)omega);
+    float theta;
+    theta = get_heading();
+    lua_pushnumber(l, (lua_Number)theta);
     return 1;
 }
 
@@ -50,6 +51,9 @@ int cmd_goto_position(lua_State *l)
         x = lua_tonumber(l, -2);
         y = lua_tonumber(l, -1);
         goto_position(x, y, 0, 0);
+        control_update_setpoint_vx(0);
+        control_update_setpoint_vy(0);
+        control_update_setpoint_omega(0);
         return 0;
     }
     if (lua_gettop(l) < 4) return 0;
@@ -59,6 +63,9 @@ int cmd_goto_position(lua_State *l)
     watch_x = lua_tonumber(l, -2);
     watch_y = lua_tonumber(l, -1);
     goto_position(x, y, watch_x, watch_y);
+    control_update_setpoint_vx(0);
+    control_update_setpoint_vy(0);
+    control_update_setpoint_omega(0);
 
     return 0;
 }
@@ -88,10 +95,13 @@ void commands_register(lua_State *l)
     lua_pushcfunction(l, cmd_get_pos_y);
     lua_setglobal(l, "y");
 
-    lua_pushcfunction(l, cmd_get_pos_omega);
-    lua_setglobal(l, "o");
+    lua_pushcfunction(l, cmd_get_pos_theta);
+    lua_setglobal(l, "r");
+
+    lua_pushcfunction(l, cmd_goto_position);
+    lua_setglobal(l, "move");
 
     lua_pushcfunction(l, cmd_position_reset_to);
-    lua_setglobal("reset_to");
+    lua_setglobal(l, "reset_to");
 }
 
