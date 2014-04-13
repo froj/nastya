@@ -288,13 +288,13 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    while(42) {
-        OSTimeDly(OS_TICKS_PER_SEC);
-    }
+//    while(42) {
+//        OSTimeDly(OS_TICKS_PER_SEC);
+//    }
 
     if (team_red) {
-        goto_position(2.8, 0.6, 10, 0);
-        goto_position(1.65, 0.6, 3, 1);
+        goto_position(2.8, 0.6, -10, 0);
+        goto_position(1.65, 0.6, 0, 1);
         float ang = 0.5235987756;
         goto_position(1.65, 0.015, 1.65 + 10*cos(ang), 0.015 + 10*sin(ang));
         goto_position(1.65, 0.0, 1.65 + 10*cos(ang), 0.0 + 10*sin(ang));
