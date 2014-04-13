@@ -27,6 +27,7 @@ timestamp_t match_start;
 static cvra_beacon_t beacon;
 
 bool disable_postion_control;
+bool team_red;
 
 
 static float limit_sym(float val, float max)
@@ -53,6 +54,14 @@ static int32_t in_x;
 static int32_t in_y;
 static int32_t in_rotation;
 
+float circular_range(float ang)
+{
+    while (ang > M_PI)
+        ang -= 2*M_PI;
+    while (ang <= -M_PI)
+        ang += 2*M_PI;
+    return ang;
+}
 
 static void cs_out(void *arg, int32_t out)
 {
@@ -67,17 +76,17 @@ static int32_t cs_in(void *arg)
 void position_control_init()
 {
     pid_init(&pos_x_pid);
-    pid_set_gains(&pos_x_pid, 10, 0, 20); // KP, KI, KD
+    pid_set_gains(&pos_x_pid, 7, 0, 20); // KP, KI, KD
     pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 100, 0); // in , integral, out
     pid_set_out_shift(&pos_x_pid, 0);
     pid_set_derivate_filter(&pos_x_pid, 15);
     pid_init(&pos_y_pid);
-    pid_set_gains(&pos_y_pid, 10, 0, 20); // KP, KI, KD
+    pid_set_gains(&pos_y_pid, 7, 0, 20); // KP, KI, KD
     pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 100, 0); // in , integral, out
     pid_set_out_shift(&pos_y_pid, 0);
     pid_set_derivate_filter(&pos_y_pid, 15);
     pid_init(&theta_pid);
-    pid_set_gains(&theta_pid, 20, 0, 20); // KP, KI, KD
+    pid_set_gains(&theta_pid, 15, 0, 20); // KP, KI, KD
     pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 100, 0); // in , integral, out
     pid_set_out_shift(&theta_pid, 0);
     pid_set_derivate_filter(&theta_pid, 15);
@@ -100,6 +109,13 @@ void position_control_init()
 
 int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
 {
+    static bool is_init = false;
+
+    if (!is_init) {
+        position_control_init();
+        is_init = true;
+    }
+
     while (1) {
         OSTimeDly(OS_TICKS_PER_SEC / 20);
         if (disable_postion_control)
@@ -108,7 +124,7 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
         get_position(&pos_x, &pos_y);
         heading = get_heading();
         float set_heading = atan2(lookat_y - pos_y, lookat_x - pos_x);
-        float heading_err = heading - set_heading;
+        float heading_err = circular_range(heading - set_heading);
         float x_err = pos_x - dest_x;
         float y_err = pos_y - dest_y;
         if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.0008)
@@ -122,14 +138,13 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
         float current_speed_x, current_speed_y;
         get_velocity(&current_speed_x, &current_speed_y);
         float current_omega = get_omega();
-        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.1), 0.2);
-        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.1), 0.2);
-        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 1024, 0.4), 2.0);
+        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.1), 1.0);
+        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.1), 1.0);
+        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 1024, 0.4), 2.5);
         float cos_heading = cos(heading);
         float sin_heading = sin(heading);
         float set_speed_x_robot = cos_heading * set_speed_x + sin_heading * set_speed_y;
         float set_speed_y_robot = -sin_heading * set_speed_x + cos_heading * set_speed_y;
-        printf("theta: %f xerr %f yerr %f\n", heading, x_err, y_err);
         control_update_setpoint_vx(set_speed_x_robot);
         control_update_setpoint_vy(set_speed_y_robot);
         control_update_setpoint_omega(set_omega);
@@ -256,15 +271,23 @@ static bool wait_for_start(void)
 
 void match_task(void *arg)
 {
+    control_update_setpoint_vx(0);
+    control_update_setpoint_vy(0);
+    control_update_setpoint_omega(0);
+    nastya_cs.vx_control_enable = false;
+    nastya_cs.vy_control_enable = false;
+    nastya_cs.omega_control_enable = false;
+
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
     cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
-    position_control_init();
     // calibrate_position();
 
-    bool team_red = true;
 
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    nastya_cs.vx_control_enable = true;
+    nastya_cs.vy_control_enable = true;
+    nastya_cs.omega_control_enable = true;
     OSTimeDly(OS_TICKS_PER_SEC);
     // wait for start signal
     while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
@@ -288,17 +311,17 @@ void match_task(void *arg)
                     EMERGENCY_STOP_TASK_STACKSIZE,
                     NULL, 0);
 
-    while(42) {
-        OSTimeDly(OS_TICKS_PER_SEC);
-    }
+    //while(42) {
+    //    OSTimeDly(OS_TICKS_PER_SEC);
+    //}
 
     if (team_red) {
-        goto_position(2.8, 0.6, 10, 0);
-        goto_position(1.65, 0.6, 3, 1);
+        goto_position(2.8, 0.6, -7, 0);
+        goto_position(1.65, 0.6, 0, 1);
         float ang = 0.5235987756;
-        goto_position(1.65, 0.015, 1.65 + 10*cos(ang), 0.015 + 10*sin(ang));
-        goto_position(1.65, 0.0, 1.65 + 10*cos(ang), 0.0 + 10*sin(ang));
-        goto_position(1.65, 0.1, 1.65 + 10*cos(ang), 0.1 + 10*sin(ang));
+        goto_position(1.65, 0.015, 1.65 - 10*cos(ang), 0.015 + 10*sin(ang));
+        goto_position(1.65, 0.0, 1.65 - 10*cos(ang), 0.0 + 10*sin(ang));
+        goto_position(1.65, 0.1, 1.65 - 10*cos(ang), 0.1 + 10*sin(ang));
         goto_position(1.5,  0.6, 0, 0);
     }
     else {
@@ -317,13 +340,7 @@ void match_task(void *arg)
     nastya_cs.vx_control_enable = false;
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
-    while (42) {
-        float px, py, theta;
-        get_position(&px, &py);
-        theta = get_heading();
-        printf("pos: %10f %10f %10f\n", px, py, theta);
-        OSTimeDly(OS_TICKS_PER_SEC/1);
-    }
+    OSTaskDel(EMERGENCY_STOP_TASK_PRIORITY);
     OSTaskDel(MATCH_TASK_PRIORITY);
 }
 
@@ -338,4 +355,19 @@ void ready_for_match(void)
                     &match_task_stk[0],
                     MATCH_TASK_STACKSIZE,
                     NULL, 0);
+}
+
+void match_set_red(void)
+{
+    team_red = true;
+}
+
+void match_set_yellow(void)
+{
+    team_red = false;
+}
+
+void match_set_disable_position_control(bool dis_pos_ctl)
+{
+    disable_postion_control = dis_pos_ctl;
 }

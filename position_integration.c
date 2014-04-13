@@ -7,6 +7,7 @@
 #include "hardware.h"
 
 #include "tasks.h"
+#include "plot_task.h"
 
 #include "position_integration.h"
 
@@ -97,11 +98,11 @@ void position_reset(void)
     omega = 0;
 }
 
-void position_reset_to(float x, float y, float theta)
+void position_reset_to(float x, float y, float t)
 {
     pos_x = x;
     pos_y = y;
-    theta = theta;
+    theta = t;
     vel_x = 0;
     vel_y = 0;
     omega = 0;

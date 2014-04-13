@@ -126,7 +126,7 @@ void init_task(void *pdata)
 
     start_drive_task();
 
-    ready_for_match();
+    //ready_for_match();
 
     OSTaskDel(INIT_TASK_PRIORITY);
 }
