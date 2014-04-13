@@ -14,14 +14,16 @@
 
 #define POSITON_INTEGRATION_FREQ 1000 // [Hz]
 
+#define LP_BUFFER_SIZE 100
+
 OS_STK position_integration_stk[POSITION_INTEGRATION_TASK_STACKSIZE];
 
 static double pos_x;
 static double pos_y;
 static double theta;
-static double vel_x;
-static double vel_y;
-static double omega;
+float vel_x;
+float vel_y;
+float omega;
 
 void get_position(float *x, float *y)
 {
@@ -47,6 +49,19 @@ float get_omega(void)
 
 void position_integration_task(void *pdata)
 {
+
+    static float lp_buffer_x[LP_BUFFER_SIZE] = {0};
+    static float lp_buffer_y[LP_BUFFER_SIZE] = {0};
+    static float lp_buffer_omega[LP_BUFFER_SIZE] = {0};
+
+    static float lp_acc_x = 0.0;
+    static float lp_acc_y = 0.0;
+    static float lp_acc_omega = 0.0;
+
+    static int lp_buf_index_x = 0;
+    static int lp_buf_index_y = 0;
+    static int lp_buf_index_omega = 0;
+
     printf("position integration task started\n");
     timestamp_t last_iteration = uptime_get();
     static int32_t prev_enc[3];
@@ -81,9 +96,29 @@ void position_integration_task(void *pdata)
         pos_x += dx * cos_theta - dy * sin_theta;
         pos_y += dx * sin_theta + dy * cos_theta;
         theta += dtheta;
-        vel_x = (dx * cos_theta - dy * sin_theta) / delta_t;
-        vel_y = (dx * sin_theta + dy * cos_theta) / delta_t;
-        omega = dtheta / delta_t;
+
+        float inst_vx, inst_vy, inst_omega;
+
+        inst_vx = (dx * cos_theta - dy * sin_theta) / delta_t;
+        inst_vy = (dx * sin_theta + dy * cos_theta) / delta_t;
+        inst_omega = dtheta / delta_t;
+
+        lp_acc_x += inst_vx - lp_buffer_x[lp_buf_index_x];
+        lp_acc_y += inst_vy - lp_buffer_y[lp_buf_index_y];
+        lp_acc_omega += inst_omega - lp_buffer_omega[lp_buf_index_omega];
+
+        lp_buffer_x[lp_buf_index_x] = inst_vx;
+        lp_buffer_y[lp_buf_index_y] = inst_vy;
+        lp_buffer_omega[lp_buf_index_omega] = inst_omega;
+
+        if (++lp_buf_index_x >= LP_BUFFER_SIZE) lp_buf_index_x = 0;
+        if (++lp_buf_index_y >= LP_BUFFER_SIZE) lp_buf_index_y = 0;
+        if (++lp_buf_index_omega >= LP_BUFFER_SIZE) lp_buf_index_omega = 0;
+
+        vel_x = lp_acc_x / LP_BUFFER_SIZE;
+        vel_y = lp_acc_y / LP_BUFFER_SIZE;
+        omega = lp_acc_omega / LP_BUFFER_SIZE;
+
         last_iteration = now;
     }
 }
@@ -119,4 +154,8 @@ void start_position_integration(void)
                     &position_integration_stk[0],
                     POSITION_INTEGRATION_TASK_STACKSIZE,
                     NULL, 0);
+
+    plot_add_variable("0: ", &vel_x, PLOT_FLOAT);
+    plot_add_variable("1: ", &vel_y, PLOT_FLOAT);
+    plot_add_variable("2: ", &omega, PLOT_FLOAT);
 }
