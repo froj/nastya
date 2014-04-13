@@ -63,6 +63,20 @@ int cmd_goto_position(lua_State *l)
     return 0;
 }
 
+int cmd_position_reset_to(lua_State *l)
+{
+    lua_Number x, y, theta;
+    if (lua_gettop(l) < 3) return 0;
+
+    x = lua_tonumber(l, -3);
+    y = lua_tonumber(l, -2);
+    theta = lua_tonumber(l, -1);
+
+    position_reset_to(x, y, theta);
+
+    return 0;
+}
+
 void commands_register(lua_State *l)
 {
     lua_pushcfunction(l, cmd_get_pos);
@@ -76,5 +90,8 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_get_pos_omega);
     lua_setglobal(l, "o");
+
+    lua_pushcfunction(l, cmd_position_reset_to);
+    lua_setglobal("reset_to");
 }
 
