@@ -12,9 +12,9 @@
 #include "position_integration.h"
 
 
-#define POSITON_INTEGRATION_FREQ 1000 // [Hz]
+#define POSITON_INTEGRATION_FREQ 100 // [Hz]
 
-#define LP_BUFFER_SIZE 100
+#define LP_BUFFER_SIZE (POSITON_INTEGRATION_FREQ / 10)
 
 OS_STK position_integration_stk[POSITION_INTEGRATION_TASK_STACKSIZE];
 
@@ -90,7 +90,7 @@ void position_integration_task(void *pdata)
                          / HW_WHEEL_ENCODER_STEPS_PER_REVOLUTION;
         float dx, dy, dtheta;
         holonomic_base_mixer_wheels_to_robot(delta_wheel, &dx, &dy, &dtheta);
-        int32_t delta_t = now - last_iteration;
+        float delta_t = (float)(now - last_iteration) / 1000000;
         float sin_theta = sin(theta);
         float cos_theta = cos(theta);
         pos_x += dx * cos_theta - dy * sin_theta;
