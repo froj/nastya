@@ -16,6 +16,11 @@
 
 #define MATCH_DURATION 90*1000000 // [us]
 
+#define GOTO_POS_FREQ 20    // [Hz]
+
+#define MAX_ACCELERATION_XY 0.2     //  [m/s/s]
+#define MAX_ACCELERATION_OMG (M_PI / 2)     //  [rad/s/s]
+
 #define X_MAX_ERR_INPUT 0.1 * 1024
 #define Y_MAX_ERR_INPUT 0.1 * 1024
 #define THETA_MAX_ERR_INPUT 0.1 *1024
@@ -75,19 +80,21 @@ static int32_t cs_in(void *arg)
 
 void position_control_init()
 {
+    cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
+
     pid_init(&pos_x_pid);
-    pid_set_gains(&pos_x_pid, 7, 0, 20); // KP, KI, KD
-    pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 100, 0); // in , integral, out
+    pid_set_gains(&pos_x_pid, 56, 0, 160); // KP, KI, KD
+    pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 800, 0); // in , integral, out
     pid_set_out_shift(&pos_x_pid, 0);
     pid_set_derivate_filter(&pos_x_pid, 15);
     pid_init(&pos_y_pid);
-    pid_set_gains(&pos_y_pid, 7, 0, 20); // KP, KI, KD
-    pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 100, 0); // in , integral, out
+    pid_set_gains(&pos_y_pid, 56, 0, 160); // KP, KI, KD
+    pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 800, 0); // in , integral, out
     pid_set_out_shift(&pos_y_pid, 0);
     pid_set_derivate_filter(&pos_y_pid, 15);
     pid_init(&theta_pid);
-    pid_set_gains(&theta_pid, 15, 0, 20); // KP, KI, KD
-    pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 100, 0); // in , integral, out
+    pid_set_gains(&theta_pid, 120, 0, 160); // KP, KI, KD
+    pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 800, 0); // in , integral, out
     pid_set_out_shift(&theta_pid, 0);
     pid_set_derivate_filter(&theta_pid, 15);
     cs_init(&pos_x_cs);
@@ -117,7 +124,7 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
     }
 
     while (1) {
-        OSTimeDly(OS_TICKS_PER_SEC / 20);
+        OSTimeDly(OS_TICKS_PER_SEC / GOTO_POS_FREQ);
         if (disable_postion_control)
             continue;
         float pos_x, pos_y, heading;
@@ -138,9 +145,10 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
         float current_speed_x, current_speed_y;
         get_velocity(&current_speed_x, &current_speed_y);
         float current_omega = get_omega();
-        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 1024, 0.1), 1.0);
-        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 1024, 0.1), 1.0);
-        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 1024, 0.4), 2.5);
+        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 8192, MAX_ACCELERATION_XY / GOTO_POS_FREQ), 1.0);
+        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 8192, MAX_ACCELERATION_XY / GOTO_POS_FREQ), 1.0);
+        printf("setspeed x: %f, y: %f\n", set_speed_x, set_speed_y);
+        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 8192, MAX_ACCELERATION_OMG / GOTO_POS_FREQ), 2.5);
         float cos_heading = cos(heading);
         float sin_heading = sin(heading);
         float set_speed_x_robot = cos_heading * set_speed_x + sin_heading * set_speed_y;
@@ -280,7 +288,6 @@ void match_task(void *arg)
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
-    cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
     // calibrate_position();
 
 
