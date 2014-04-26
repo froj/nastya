@@ -81,7 +81,7 @@ static param_t *param_find(const char *param_name)
             return p;
         p = p->next;
     }
-    return NULL;
+    return p;
 }
 
 bool param_read_by_name(const char *param_name, double *val)
