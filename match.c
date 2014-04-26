@@ -18,12 +18,15 @@
 
 #define GOTO_POS_FREQ 20    // [Hz]
 
-#define MAX_ACCELERATION_XY 0.2     //  [m/s/s]
-#define MAX_ACCELERATION_OMG (M_PI / 2)     //  [rad/s/s]
+#define MAX_ACCELERATION_XY 1.5     //  [m/s/s]
+#define MAX_ACCELERATION_OMG (M_PI * 6)     //  [rad/s/s]
 
-#define X_MAX_ERR_INPUT 0.1 * 1024
-#define Y_MAX_ERR_INPUT 0.1 * 1024
-#define THETA_MAX_ERR_INPUT 0.1 *1024
+#define MAX_SPEED_XY    0.5     // [m/s]
+#define MAX_OMEGA       M_PI     // [rad/s]
+
+#define X_MAX_ERR_INPUT 2.0 * 1024
+#define Y_MAX_ERR_INPUT 2.0 * 1024
+#define THETA_MAX_ERR_INPUT 0.3 *1024
 
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
@@ -83,20 +86,20 @@ void position_control_init()
     cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
 
     pid_init(&pos_x_pid);
-    pid_set_gains(&pos_x_pid, 56, 0, 160); // KP, KI, KD
+    pid_set_gains(&pos_x_pid, 100, 0, 3000); // KP, KI, KD
     pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 800, 0); // in , integral, out
     pid_set_out_shift(&pos_x_pid, 0);
-    pid_set_derivate_filter(&pos_x_pid, 15);
+    pid_set_derivate_filter(&pos_x_pid, 3);
     pid_init(&pos_y_pid);
-    pid_set_gains(&pos_y_pid, 56, 0, 160); // KP, KI, KD
+    pid_set_gains(&pos_y_pid, 100, 0, 3000); // KP, KI, KD
     pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 800, 0); // in , integral, out
     pid_set_out_shift(&pos_y_pid, 0);
-    pid_set_derivate_filter(&pos_y_pid, 15);
+    pid_set_derivate_filter(&pos_y_pid, 3);
     pid_init(&theta_pid);
-    pid_set_gains(&theta_pid, 120, 0, 160); // KP, KI, KD
-    pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 800, 0); // in , integral, out
+    pid_set_gains(&theta_pid, 4, 10, 2500); // KP, KI, KD
+    pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 400, 0); // in , integral, out
     pid_set_out_shift(&theta_pid, 0);
-    pid_set_derivate_filter(&theta_pid, 15);
+    pid_set_derivate_filter(&theta_pid, 3);
     cs_init(&pos_x_cs);
     cs_init(&pos_y_cs);
     cs_init(&theta_cs);
@@ -134,7 +137,10 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
         float heading_err = circular_range(heading - set_heading);
         float x_err = pos_x - dest_x;
         float y_err = pos_y - dest_y;
-        if (x_err*x_err + y_err*y_err + heading_err*heading_err < 0.0008)
+        float current_speed_x, current_speed_y;
+        float current_omega = get_omega();
+        get_velocity(&current_speed_x, &current_speed_y);
+        if (x_err*x_err + y_err*y_err + heading_err*heading_err + current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < 0.0032)
             return 0;
         in_x = x_err * 1024;
         in_y = y_err * 1024;
@@ -142,13 +148,10 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
         cs_manage(&pos_x_cs);
         cs_manage(&pos_y_cs);
         cs_manage(&theta_cs);
-        float current_speed_x, current_speed_y;
-        get_velocity(&current_speed_x, &current_speed_y);
-        float current_omega = get_omega();
-        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 8192, MAX_ACCELERATION_XY / GOTO_POS_FREQ), 1.0);
-        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 8192, MAX_ACCELERATION_XY / GOTO_POS_FREQ), 1.0);
+        float set_speed_x = limit_sym(current_speed_x + limit_sym((float)out_x / 8192 / 16, MAX_ACCELERATION_XY / GOTO_POS_FREQ), MAX_SPEED_XY);
+        float set_speed_y = limit_sym(current_speed_y + limit_sym((float)out_y / 8192 / 16, MAX_ACCELERATION_XY / GOTO_POS_FREQ), MAX_SPEED_XY);
         printf("setspeed x: %f, y: %f\n", set_speed_x, set_speed_y);
-        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 8192, MAX_ACCELERATION_OMG / GOTO_POS_FREQ), 2.5);
+        float set_omega = limit_sym(current_omega + limit_sym((float)out_rotation / 8192 / 16, MAX_ACCELERATION_OMG / GOTO_POS_FREQ), MAX_OMEGA);
         float cos_heading = cos(heading);
         float sin_heading = sin(heading);
         float set_speed_x_robot = cos_heading * set_speed_x + sin_heading * set_speed_y;
