@@ -12,6 +12,7 @@
 #include "plot_task.h"
 
 #include "match.h"
+#include "param.h"
 
 
 #define MATCH_DURATION 90*1000000 // [us]
@@ -117,6 +118,9 @@ void position_control_init()
     cs_set_consign(&theta_cs, 0);
 }
 
+static float goto_stop_thershold;
+static param_t goto_stop_thershold_param;
+
 int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
 {
     static bool is_init = false;
@@ -140,7 +144,12 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
         float current_speed_x, current_speed_y;
         float current_omega = get_omega();
         get_velocity(&current_speed_x, &current_speed_y);
-        if (x_err*x_err + y_err*y_err + heading_err*heading_err + current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < 0.0032)
+
+        if (param_has_changed(&goto_stop_thershold)){
+            goto_stop_thershold = param_get(&goto_stop_thershold);
+        }
+
+        if (x_err*x_err + y_err*y_err + heading_err*heading_err + current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < goto_stop_thershold)
             return 0;
         in_x = x_err * 1024;
         in_y = y_err * 1024;
@@ -354,6 +363,9 @@ void match_task(void *arg)
 
 void ready_for_match(void)
 {
+    param_add(&goto_stop_thershold, "goto_stop", NULL);
+    param_set(&goto_stop_thershold, 0.0032);
+
     OSTaskCreateExt(match_task,
                     NULL,
                     &match_task_stk[MATCH_TASK_STACKSIZE-1],
