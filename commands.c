@@ -152,7 +152,7 @@ int cmd_set_param(lua_State *l)
         else
             lua_pushstring(l, "Param not found.");
     }
-    return 0;
+    return 1;
 }
 
 int cmd_get_param(lua_State *l)
@@ -165,15 +165,18 @@ int cmd_get_param(lua_State *l)
         else
             lua_pushstring(l, "Param not found.");
     }
-    return 0;
+    return 1;
 }
 
 int cmd_list_param(lua_State *l)
 {
     static char buf[1000];
-    if (param_list(buf, sizeof(buf)) == 0)
+    if (param_list(buf, sizeof(buf)) == 0) {
         lua_pushstring(l, buf);
-    return 0;
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 void commands_register(lua_State *l)
