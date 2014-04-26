@@ -7,6 +7,7 @@
 #include "position_integration.h"
 #include "control.h"
 #include "match.h"
+#include "param.h"
 
 
 int cmd_get_pos(lua_State *l)
@@ -122,6 +123,38 @@ int cmd_control_off(lua_State *l)
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
     return 0;
+}
+
+int cmd_set_param(lua_State *l)
+{
+    if (lua_gettop(l) == 2) {
+        const char *name = lua_tostring(l, -2);
+        lua_Number val = lua_tonumber(l, -1);
+        if (param_set_by_name(name, val))
+            lua_pushstring(l, "OK");
+        else
+            lua_pushstring(l, "Param not found.");
+    }
+    return 0;
+}
+
+int cmd_get_param(lua_State *l)
+{
+    if (lua_gettop(l) == 1) {
+        const char *name = lua_tostring(l, -2);
+        double val;
+        if (param_get_by_name(name, &val))
+            lua_pushnumber(l, val);
+        else
+            lua_pushstring(l, "Param not found.");
+    }
+}
+
+int cmd_list_param(lua_State *l)
+{
+    static char buf[1000];
+    if (param_list(buf, sizeof(buf)) == 0)
+        lua_pushstring(l, buf);
 }
 
 void commands_register(lua_State *l)
