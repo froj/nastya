@@ -213,5 +213,14 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_m);
     lua_setglobal(l, "m");
+
+    lua_pushcfunction(l, cmd_set_param);
+    lua_setglobal(l, "param_set");
+
+    lua_pushcfunction(l, cmd_get_param);
+    lua_setglobal(l, "param_get");
+
+    lua_pushcfunction(l, cmd_list_param);
+    lua_setglobal(l, "param_list");
 }
 
