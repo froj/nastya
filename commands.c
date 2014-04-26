@@ -72,6 +72,23 @@ int cmd_goto_position(lua_State *l)
     return 0;
 }
 
+int cmd_m(lua_State *l)
+{
+    lua_Number x, y, watch_x, watch_y;
+    match_set_disable_position_control(false);
+
+    if (lua_gettop(l) < 2) return 0;
+
+    x = lua_tonumber(l, -2);
+    y = lua_tonumber(l, -1);
+    goto_position(x, y, 100, 0);
+    control_update_setpoint_vx(0);
+    control_update_setpoint_vy(0);
+    control_update_setpoint_omega(0);
+
+    return 0;
+}
+
 int cmd_position_reset_to(lua_State *l)
 {
     lua_Number x, y, theta;
@@ -158,5 +175,8 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_control_off);
     lua_setglobal(l, "coff");
+
+    lua_pushcfunction(l, cmd_m);
+    lua_setglobal(l, "m");
 }
 
