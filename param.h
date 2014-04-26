@@ -15,7 +15,7 @@ struct param_s {
     param_t *next;
 };
 
-
+// desc can be NULL
 void param_add(param_t *p, const char *name, const char *desc);
 
 // returns whether the parameter has changed since last get()

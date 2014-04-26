@@ -52,7 +52,11 @@ int param_list(char *buf, int bufsz)
     param_t *p = param_list_head;
     UNLOCK();
     while (p != NULL) {
-        int ret = snprintf(buf, remaining_sz, "%s (%s): %f\n", p->name, p->desc, p->val);
+        int ret;
+        if (p->desc == NULL)
+            ret = snprintf(buf, remaining_sz, "%s : %f\n", p->name, p->val);
+        else
+            ret = snprintf(buf, remaining_sz, "%s (%s): %f\n", p->name, p->desc, p->val);
         if (ret < 0) // encoding error
             return -1;
         if (ret < remaining_sz) {
