@@ -130,7 +130,7 @@ static void update_parameters(void)
                       param_get(&nastya_cs.vy_pid_D));
     }
     if (param_has_changed(&nastya_cs.vy_pid_I_bound)) {
-        pid_set_maximums(&nastya_cs.vy_pid, VX_MAX_ERR_INPUT,
+        pid_set_maximums(&nastya_cs.vy_pid, VY_MAX_ERR_INPUT,
                          param_get(&nastya_cs.vy_pid_I_bound), 0); // in , integral, out
     }
     if (param_has_changed(&nastya_cs.vy_pid_D_filt)) {
@@ -147,7 +147,7 @@ static void update_parameters(void)
                       param_get(&nastya_cs.omega_pid_D));
     }
     if (param_has_changed(&nastya_cs.omega_pid_I_bound)) {
-        pid_set_maximums(&nastya_cs.omega_pid, VX_MAX_ERR_INPUT,
+        pid_set_maximums(&nastya_cs.omega_pid, OMEGA_MAX_ERR_INPUT,
                          param_get(&nastya_cs.omega_pid_I_bound), 0); // in , integral, out
     }
     if (param_has_changed(&nastya_cs.omega_pid_D_filt)) {

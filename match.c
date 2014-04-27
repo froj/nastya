@@ -50,6 +50,26 @@ static float limit_sym(float val, float max)
 
 
 
+static param_t pos_xy_pid_P;
+static param_t pos_xy_pid_I;
+static param_t pos_xy_pid_D;
+static param_t pos_xy_pid_D_filt;
+static param_t pos_xy_pid_I_bound;
+static param_t pos_x_pid_P;
+static param_t pos_x_pid_I;
+static param_t pos_x_pid_D;
+static param_t pos_x_pid_D_filt;
+static param_t pos_x_pid_I_bound;
+static param_t pos_y_pid_P;
+static param_t pos_y_pid_I;
+static param_t pos_y_pid_D;
+static param_t pos_y_pid_D_filt;
+static param_t pos_y_pid_I_bound;
+static param_t theta_pid_P;
+static param_t theta_pid_I;
+static param_t theta_pid_D;
+static param_t theta_pid_D_filt;
+static param_t theta_pid_I_bound;
 static struct cs pos_x_cs;
 static struct cs pos_y_cs;
 static struct cs theta_cs;
@@ -89,21 +109,47 @@ void position_control_init()
 {
     cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
 
+    param_add(&pos_xy_pid_P, "pid_pos_xy_P", NULL);
+    param_add(&pos_xy_pid_I, "pid_pos_xy_I", NULL);
+    param_add(&pos_xy_pid_D, "pid_pos_xy_D", NULL);
+    param_add(&pos_xy_pid_D_filt, "pid_pos_xy_D_filt", NULL);
+    param_add(&pos_xy_pid_I_bound, "pid_pos_xy_I_bound", NULL);
+    param_add(&pos_x_pid_P, "pid_pos_x_P", NULL);
+    param_add(&pos_x_pid_I, "pid_pos_x_I", NULL);
+    param_add(&pos_x_pid_D, "pid_pos_x_D", NULL);
+    param_add(&pos_x_pid_D_filt, "pid_pos_x_D_filt", NULL);
+    param_add(&pos_x_pid_I_bound, "pid_pos_x_I_bound", NULL);
+    param_add(&pos_y_pid_P, "pid_pos_y_P", NULL);
+    param_add(&pos_y_pid_I, "pid_pos_y_I", NULL);
+    param_add(&pos_y_pid_D, "pid_pos_y_D", NULL);
+    param_add(&pos_y_pid_D_filt, "pid_pos_y_D_filt", NULL);
+    param_add(&pos_y_pid_I_bound, "pid_pos_y_I_bound", NULL);
+    param_add(&theta_pid_P, "pid_theta_P", NULL);
+    param_add(&theta_pid_I, "pid_theta_I", NULL);
+    param_add(&theta_pid_D, "pid_theta_D", NULL);
+    param_add(&theta_pid_D_filt, "pid_theta_D_filt", NULL);
+    param_add(&theta_pid_I_bound, "pid_theta_I_bound", NULL);
+
+    // pos xy
+    param_set(&pos_xy_pid_P, 100);
+    param_set(&pos_xy_pid_I, 0);
+    param_set(&pos_xy_pid_D, 3000);
+    param_set(&pos_xy_pid_D_filt, 3);
+    param_set(&pos_xy_pid_I_bound, 800);
+    // theta
+    param_set(&theta_pid_P, 4);
+    param_set(&theta_pid_I, 10);
+    param_set(&theta_pid_D, 2500);
+    param_set(&theta_pid_D_filt, 3);
+    param_set(&theta_pid_I_bound, 400);
+
     pid_init(&pos_x_pid);
-    pid_set_gains(&pos_x_pid, 100, 0, 3000); // KP, KI, KD
-    pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT, 800, 0); // in , integral, out
     pid_set_out_shift(&pos_x_pid, 0);
-    pid_set_derivate_filter(&pos_x_pid, 3);
     pid_init(&pos_y_pid);
-    pid_set_gains(&pos_y_pid, 100, 0, 3000); // KP, KI, KD
-    pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT, 800, 0); // in , integral, out
     pid_set_out_shift(&pos_y_pid, 0);
-    pid_set_derivate_filter(&pos_y_pid, 3);
     pid_init(&theta_pid);
-    pid_set_gains(&theta_pid, 4, 10, 2500); // KP, KI, KD
-    pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT, 400, 0); // in , integral, out
     pid_set_out_shift(&theta_pid, 0);
-    pid_set_derivate_filter(&theta_pid, 3);
+
     cs_init(&pos_x_cs);
     cs_init(&pos_y_cs);
     cs_init(&theta_cs);
@@ -120,8 +166,8 @@ void position_control_init()
     cs_set_consign(&pos_y_cs, 0);
     cs_set_consign(&theta_cs, 0);
 
-    param_add(&goto_stop_thershold, "goto_stop", NULL);
-    param_set(&goto_stop_thershold, 0.0032);
+    param_add(&goto_stop_thershold_param, "goto_stop", NULL);
+    param_set(&goto_stop_thershold_param, 0.0032);
 
     plot_add_variable("6: ", &in_x, PLOT_INT32);
     plot_add_variable("7: ", &in_y, PLOT_INT32);
@@ -131,10 +177,87 @@ void position_control_init()
     plot_add_variable("11: ", &out_rotation, PLOT_INT32);
 }
 
+static void update_parameters(void)
+{
+    // pid xy combined
+    if (param_has_changed(&pos_xy_pid_P)) {
+        param_set(&pos_x_pid_P, param_get(&pos_xy_pid_P));
+        param_set(&pos_y_pid_P, param_get(&pos_xy_pid_P));
+    }
+    if (param_has_changed(&pos_xy_pid_I)) {
+        param_set(&pos_x_pid_I, param_get(&pos_xy_pid_I));
+        param_set(&pos_y_pid_I, param_get(&pos_xy_pid_I));
+    }
+    if (param_has_changed(&pos_xy_pid_D)) {
+        param_set(&pos_x_pid_D, param_get(&pos_xy_pid_D));
+        param_set(&pos_y_pid_D, param_get(&pos_xy_pid_D));
+    }
+    if (param_has_changed(&pos_xy_pid_D_filt)) {
+        param_set(&pos_x_pid_D_filt, param_get(&pos_xy_pid_D_filt));
+        param_set(&pos_y_pid_D_filt, param_get(&pos_xy_pid_D_filt));
+    }
+    if (param_has_changed(&pos_xy_pid_I_bound)) {
+        param_set(&pos_x_pid_I_bound, param_get(&pos_xy_pid_I_bound));
+        param_set(&pos_y_pid_I_bound, param_get(&pos_xy_pid_I_bound));
+    }
+    // pid x
+    if (param_has_changed(&pos_x_pid_P)
+        || param_has_changed(&pos_x_pid_I)
+        || param_has_changed(&pos_x_pid_D)) {
+        pid_set_gains(&pos_x_pid,
+                      param_get(&pos_x_pid_P),
+                      param_get(&pos_x_pid_I),
+                      param_get(&pos_x_pid_D));
+    }
+    if (param_has_changed(&pos_x_pid_I_bound)) {
+        pid_set_maximums(&pos_x_pid, X_MAX_ERR_INPUT,
+                         param_get(&pos_x_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&pos_x_pid_D_filt)) {
+        pid_set_derivate_filter(&pos_x_pid,
+                                param_get(&pos_x_pid_D_filt));
+    }
+    // pid y
+    if (param_has_changed(&pos_y_pid_P)
+        || param_has_changed(&pos_y_pid_I)
+        || param_has_changed(&pos_y_pid_D)) {
+        pid_set_gains(&pos_y_pid,
+                      param_get(&pos_y_pid_P),
+                      param_get(&pos_y_pid_I),
+                      param_get(&pos_y_pid_D));
+    }
+    if (param_has_changed(&pos_y_pid_I_bound)) {
+        pid_set_maximums(&pos_y_pid, Y_MAX_ERR_INPUT,
+                         param_get(&pos_y_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&pos_y_pid_D_filt)) {
+        pid_set_derivate_filter(&pos_y_pid,
+                                param_get(&pos_y_pid_D_filt));
+    }
+    // pid theta
+    if (param_has_changed(&theta_pid_P)
+        || param_has_changed(&theta_pid_I)
+        || param_has_changed(&theta_pid_D)) {
+        pid_set_gains(&theta_pid,
+                      param_get(&theta_pid_P),
+                      param_get(&theta_pid_I),
+                      param_get(&theta_pid_D));
+    }
+    if (param_has_changed(&theta_pid_I_bound)) {
+        pid_set_maximums(&theta_pid, THETA_MAX_ERR_INPUT,
+                         param_get(&theta_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&theta_pid_D_filt)) {
+        pid_set_derivate_filter(&theta_pid,
+                                param_get(&theta_pid_D_filt));
+    }
+}
+
 int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
 {
     while (1) {
         OSTimeDly(OS_TICKS_PER_SEC / GOTO_POS_FREQ);
+        update_parameters();
         if (disable_postion_control)
             continue;
         float pos_x, pos_y, heading;
