@@ -5,8 +5,29 @@
 #include <stdbool.h>
 #include <control_system_manager/control_system_manager.h>
 #include <pid/pid.h>
+#include <param/param.h>
 
 struct holonomic_base_speed_cs {
+    param_t vxy_pid_P;
+    param_t vxy_pid_I;
+    param_t vxy_pid_D;
+    param_t vxy_pid_D_filt;
+    param_t vxy_pid_I_bound;
+    param_t vx_pid_P;
+    param_t vx_pid_I;
+    param_t vx_pid_D;
+    param_t vx_pid_D_filt;
+    param_t vx_pid_I_bound;
+    param_t vy_pid_P;
+    param_t vy_pid_I;
+    param_t vy_pid_D;
+    param_t vy_pid_D_filt;
+    param_t vy_pid_I_bound;
+    param_t omega_pid_P;
+    param_t omega_pid_I;
+    param_t omega_pid_D;
+    param_t omega_pid_D_filt;
+    param_t omega_pid_I_bound;
     bool vx_control_enable;
     bool vy_control_enable;
     bool omega_control_enable;
