@@ -158,9 +158,9 @@ int cmd_set_param(lua_State *l)
 int cmd_get_param(lua_State *l)
 {
     if (lua_gettop(l) == 1) {
-        const char *name = lua_tostring(l, -2);
+        const char *name = lua_tostring(l, -1);
         double val;
-        if (param_get_by_name(name, &val))
+        if (param_read_by_name(name, &val))
             lua_pushnumber(l, val);
         else
             lua_pushstring(l, "Param not found.");

@@ -82,6 +82,9 @@ static int32_t cs_in(void *arg)
     return *(int32_t*)arg;
 }
 
+static float goto_stop_thershold;
+static param_t goto_stop_thershold_param;
+
 void position_control_init()
 {
     cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
@@ -116,20 +119,13 @@ void position_control_init()
     cs_set_consign(&pos_x_cs, 0);
     cs_set_consign(&pos_y_cs, 0);
     cs_set_consign(&theta_cs, 0);
-}
 
-static float goto_stop_thershold;
-static param_t goto_stop_thershold_param;
+    param_add(&goto_stop_thershold, "goto_stop", NULL);
+    param_set(&goto_stop_thershold, 0.0032);
+}
 
 int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
 {
-    static bool is_init = false;
-
-    if (!is_init) {
-        position_control_init();
-        is_init = true;
-    }
-
     while (1) {
         OSTimeDly(OS_TICKS_PER_SEC / GOTO_POS_FREQ);
         if (disable_postion_control)
@@ -363,8 +359,6 @@ void match_task(void *arg)
 
 void ready_for_match(void)
 {
-    param_add(&goto_stop_thershold, "goto_stop", NULL);
-    param_set(&goto_stop_thershold, 0.0032);
 
     OSTaskCreateExt(match_task,
                     NULL,
