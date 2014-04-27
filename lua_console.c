@@ -2,10 +2,8 @@
 #include <lwip/api.h>
 #include <lwip/inet.h>
 
-#ifdef __unix__
 #include <stdlib.h>
 #include <string.h>
-#endif
 
 #include "lua/lua.h"
 #include "lua/lauxlib.h"
