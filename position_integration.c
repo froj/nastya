@@ -155,7 +155,7 @@ void start_position_integration(void)
                     POSITION_INTEGRATION_TASK_STACKSIZE,
                     NULL, 0);
 
-    plot_add_variable("0: ", &vel_x, PLOT_FLOAT);
-    plot_add_variable("1: ", &vel_y, PLOT_FLOAT);
-    plot_add_variable("2: ", &omega, PLOT_FLOAT);
+    //plot_add_variable("0: ", &vel_x, PLOT_FLOAT);
+    //plot_add_variable("1: ", &vel_y, PLOT_FLOAT);
+    //plot_add_variable("2: ", &omega, PLOT_FLOAT);
 }

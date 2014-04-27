@@ -212,12 +212,12 @@ void control_init(void)
     holonomic_base_speed_cs_init();
 
 
-    //plot_add_variable("0:", &nastya_cs.vx_cs.error_value, PLOT_INT32);
-    //plot_add_variable("1:", &nastya_cs.vy_cs.error_value, PLOT_INT32);
-    //plot_add_variable("2:", &nastya_cs.omega_cs.error_value, PLOT_INT32);
-    //plot_add_variable("3:", &nastya_cs.out_x, PLOT_INT32);
-    //plot_add_variable("4:", &nastya_cs.out_y, PLOT_INT32);
-    //plot_add_variable("5:", &nastya_cs.out_rotation, PLOT_INT32);
+    plot_add_variable("0:", &nastya_cs.vx_cs.error_value, PLOT_INT32);
+    plot_add_variable("1:", &nastya_cs.vy_cs.error_value, PLOT_INT32);
+    plot_add_variable("2:", &nastya_cs.omega_cs.error_value, PLOT_INT32);
+    plot_add_variable("3:", &nastya_cs.out_x, PLOT_INT32);
+    plot_add_variable("4:", &nastya_cs.out_y, PLOT_INT32);
+    plot_add_variable("5:", &nastya_cs.out_rotation, PLOT_INT32);
     //plot_add_variable("6:", &nastya_cs.vx, PLOT_FLOAT);
     //plot_add_variable("7:", &nastya_cs.vy, PLOT_FLOAT);
     //plot_add_variable("8:", &nastya_cs.omega, PLOT_FLOAT);
