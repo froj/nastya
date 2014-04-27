@@ -122,6 +122,13 @@ void position_control_init()
 
     param_add(&goto_stop_thershold, "goto_stop", NULL);
     param_set(&goto_stop_thershold, 0.0032);
+
+    plot_add_variable("6: ", &in_x, PLOT_INT32);
+    plot_add_variable("7: ", &in_y, PLOT_INT32);
+    plot_add_variable("8: ", &in_rotation, PLOT_INT32);
+    plot_add_variable("9: ", &out_x, PLOT_INT32);
+    plot_add_variable("10: ", &out_y, PLOT_INT32);
+    plot_add_variable("11: ", &out_rotation, PLOT_INT32);
 }
 
 int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
