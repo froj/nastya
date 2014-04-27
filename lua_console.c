@@ -105,7 +105,7 @@ void serve_conn(struct netconn *conn)
 
     err_t err;
 	lua_State *l;
-    char command[MAX_COMMAND_LEN], real_command[MAX_COMMAND_LEN];
+    static char command[MAX_COMMAND_LEN], real_command[MAX_COMMAND_LEN];
     int ret;
 
     l = luaL_newstate();
@@ -126,10 +126,14 @@ void serve_conn(struct netconn *conn)
         do {
             /* Copies the buffer data into a string. */
             netbuf_data(buf, &data, &len);
-            strncpy(command, data, len); // XXX buffer overflow
+            if (len >= MAX_COMMAND_LEN - 7) { // CMD_LEN - strlen("print()")
+                const char *msg = "command too long\n\r";
+                netconn_write(conn, msg, strlen(msg), NETCONN_COPY);
+            }
+            strncpy(command, data, len);
             command[len] = 0;
 
-            sprintf(real_command, "print(%s)", command); // XXX buffer overflow
+            sprintf(real_command, "print(%s)", command);
 
             luaL_loadstring(l, real_command);
             ret = lua_pcall(l, 0, LUA_MULTRET, 0);
