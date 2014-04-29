@@ -7,6 +7,7 @@
 #include "position_integration.h"
 #include "control.h"
 #include "match.h"
+#include "param.h"
 
 
 int cmd_get_pos(lua_State *l)
@@ -72,6 +73,23 @@ int cmd_goto_position(lua_State *l)
     return 0;
 }
 
+int cmd_m(lua_State *l)
+{
+    lua_Number x, y, watch_x, watch_y;
+    match_set_disable_position_control(false);
+
+    if (lua_gettop(l) < 2) return 0;
+
+    x = lua_tonumber(l, -2);
+    y = lua_tonumber(l, -1);
+    goto_position(x, y, 100, 0);
+    control_update_setpoint_vx(0);
+    control_update_setpoint_vy(0);
+    control_update_setpoint_omega(0);
+
+    return 0;
+}
+
 int cmd_position_reset_to(lua_State *l)
 {
     lua_Number x, y, theta;
@@ -124,6 +142,43 @@ int cmd_control_off(lua_State *l)
     return 0;
 }
 
+int cmd_set_param(lua_State *l)
+{
+    if (lua_gettop(l) == 2) {
+        const char *name = lua_tostring(l, -2);
+        lua_Number val = lua_tonumber(l, -1);
+        if (param_set_by_name(name, val))
+            lua_pushstring(l, "OK");
+        else
+            lua_pushstring(l, "Param not found.");
+    }
+    return 1;
+}
+
+int cmd_get_param(lua_State *l)
+{
+    if (lua_gettop(l) == 1) {
+        const char *name = lua_tostring(l, -1);
+        double val;
+        if (param_read_by_name(name, &val))
+            lua_pushnumber(l, val);
+        else
+            lua_pushstring(l, "Param not found.");
+    }
+    return 1;
+}
+
+int cmd_list_param(lua_State *l)
+{
+    static char buf[1000];
+    if (param_list(buf, sizeof(buf)) == 0) {
+        lua_pushstring(l, buf);
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 void commands_register(lua_State *l)
 {
     lua_pushcfunction(l, cmd_get_pos);
@@ -158,5 +213,17 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_control_off);
     lua_setglobal(l, "coff");
+
+    lua_pushcfunction(l, cmd_m);
+    lua_setglobal(l, "m");
+
+    lua_pushcfunction(l, cmd_set_param);
+    lua_setglobal(l, "param_set");
+
+    lua_pushcfunction(l, cmd_get_param);
+    lua_setglobal(l, "param_get");
+
+    lua_pushcfunction(l, cmd_list_param);
+    lua_setglobal(l, "param_list");
 }
 

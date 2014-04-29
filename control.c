@@ -80,6 +80,82 @@ float control_get_setpoint_omega(void)
     return (float)cs_get_consign(&nastya_cs.omega_cs) / OMEGA_IN_SCALE;
 }
 
+static void update_parameters(void)
+{
+    // pid xy combined
+    if (param_has_changed(&nastya_cs.vxy_pid_P)) {
+        param_set(&nastya_cs.vx_pid_P, param_get(&nastya_cs.vxy_pid_P));
+        param_set(&nastya_cs.vy_pid_P, param_get(&nastya_cs.vxy_pid_P));
+    }
+    if (param_has_changed(&nastya_cs.vxy_pid_I)) {
+        param_set(&nastya_cs.vx_pid_I, param_get(&nastya_cs.vxy_pid_I));
+        param_set(&nastya_cs.vy_pid_I, param_get(&nastya_cs.vxy_pid_I));
+    }
+    if (param_has_changed(&nastya_cs.vxy_pid_D)) {
+        param_set(&nastya_cs.vx_pid_D, param_get(&nastya_cs.vxy_pid_D));
+        param_set(&nastya_cs.vy_pid_D, param_get(&nastya_cs.vxy_pid_D));
+    }
+    if (param_has_changed(&nastya_cs.vxy_pid_D_filt)) {
+        param_set(&nastya_cs.vx_pid_D_filt, param_get(&nastya_cs.vxy_pid_D_filt));
+        param_set(&nastya_cs.vy_pid_D_filt, param_get(&nastya_cs.vxy_pid_D_filt));
+    }
+    if (param_has_changed(&nastya_cs.vxy_pid_I_bound)) {
+        param_set(&nastya_cs.vx_pid_I_bound, param_get(&nastya_cs.vxy_pid_I_bound));
+        param_set(&nastya_cs.vy_pid_I_bound, param_get(&nastya_cs.vxy_pid_I_bound));
+    }
+    // pid vx
+    if (param_has_changed(&nastya_cs.vx_pid_P)
+        || param_has_changed(&nastya_cs.vx_pid_I)
+        || param_has_changed(&nastya_cs.vx_pid_D)) {
+        pid_set_gains(&nastya_cs.vx_pid,
+                      param_get(&nastya_cs.vx_pid_P),
+                      param_get(&nastya_cs.vx_pid_I),
+                      param_get(&nastya_cs.vx_pid_D));
+    }
+    if (param_has_changed(&nastya_cs.vx_pid_I_bound)) {
+        pid_set_maximums(&nastya_cs.vx_pid, VX_MAX_ERR_INPUT,
+                         param_get(&nastya_cs.vx_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&nastya_cs.vx_pid_D_filt)) {
+        pid_set_derivate_filter(&nastya_cs.vx_pid,
+                                param_get(&nastya_cs.vx_pid_D_filt));
+    }
+    // pid vy
+    if (param_has_changed(&nastya_cs.vy_pid_P)
+        || param_has_changed(&nastya_cs.vy_pid_I)
+        || param_has_changed(&nastya_cs.vy_pid_D)) {
+        pid_set_gains(&nastya_cs.vy_pid,
+                      param_get(&nastya_cs.vy_pid_P),
+                      param_get(&nastya_cs.vy_pid_I),
+                      param_get(&nastya_cs.vy_pid_D));
+    }
+    if (param_has_changed(&nastya_cs.vy_pid_I_bound)) {
+        pid_set_maximums(&nastya_cs.vy_pid, VY_MAX_ERR_INPUT,
+                         param_get(&nastya_cs.vy_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&nastya_cs.vy_pid_D_filt)) {
+        pid_set_derivate_filter(&nastya_cs.vy_pid,
+                                param_get(&nastya_cs.vy_pid_D_filt));
+    }
+    // pid omega
+    if (param_has_changed(&nastya_cs.omega_pid_P)
+        || param_has_changed(&nastya_cs.omega_pid_I)
+        || param_has_changed(&nastya_cs.omega_pid_D)) {
+        pid_set_gains(&nastya_cs.omega_pid,
+                      param_get(&nastya_cs.omega_pid_P),
+                      param_get(&nastya_cs.omega_pid_I),
+                      param_get(&nastya_cs.omega_pid_D));
+    }
+    if (param_has_changed(&nastya_cs.omega_pid_I_bound)) {
+        pid_set_maximums(&nastya_cs.omega_pid, OMEGA_MAX_ERR_INPUT,
+                         param_get(&nastya_cs.omega_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&nastya_cs.omega_pid_D_filt)) {
+        pid_set_derivate_filter(&nastya_cs.omega_pid,
+                                param_get(&nastya_cs.omega_pid_D_filt));
+    }
+}
+
 void control_task(void *arg)
 {
     int32_t prev_enc[3] = {
@@ -90,6 +166,7 @@ void control_task(void *arg)
     timestamp_t prev_timest = uptime_get();
     while (42) {
         OSTimeDly(OS_TICKS_PER_SEC / CONTROL_FREQ);
+        update_parameters();
         int32_t enc[3];
         float wheel_ang_vel[3]; // [rad/s]
         float wheel_cmd[3];     // motor PWM (arbitrary unit)
@@ -167,24 +244,46 @@ static int32_t holonomic_base_cs_omega_input(void *arg)
 
 void holonomic_base_speed_cs_init(void)
 {
-    // velocity in x
+    param_add(&nastya_cs.vxy_pid_P, "pid_vxy_P", NULL);
+    param_add(&nastya_cs.vxy_pid_I, "pid_vxy_I", NULL);
+    param_add(&nastya_cs.vxy_pid_D, "pid_vxy_D", NULL);
+    param_add(&nastya_cs.vxy_pid_D_filt, "pid_vxy_D_filt", NULL);
+    param_add(&nastya_cs.vxy_pid_I_bound, "pid_vxy_I_bound", NULL);
+    param_add(&nastya_cs.vx_pid_P, "pid_vx_P", NULL);
+    param_add(&nastya_cs.vx_pid_I, "pid_vx_I", NULL);
+    param_add(&nastya_cs.vx_pid_D, "pid_vx_D", NULL);
+    param_add(&nastya_cs.vx_pid_D_filt, "pid_vx_D_filt", NULL);
+    param_add(&nastya_cs.vx_pid_I_bound, "pid_vx_I_bound", NULL);
+    param_add(&nastya_cs.vy_pid_P, "pid_vy_P", NULL);
+    param_add(&nastya_cs.vy_pid_I, "pid_vy_I", NULL);
+    param_add(&nastya_cs.vy_pid_D, "pid_vy_D", NULL);
+    param_add(&nastya_cs.vy_pid_D_filt, "pid_vy_D_filt", NULL);
+    param_add(&nastya_cs.vy_pid_I_bound, "pid_vy_I_bound", NULL);
+    param_add(&nastya_cs.omega_pid_P, "pid_omega_P", NULL);
+    param_add(&nastya_cs.omega_pid_I, "pid_omega_I", NULL);
+    param_add(&nastya_cs.omega_pid_D, "pid_omega_D", NULL);
+    param_add(&nastya_cs.omega_pid_D_filt, "pid_omega_D_filt", NULL);
+    param_add(&nastya_cs.omega_pid_I_bound, "pid_omega_I_bound", NULL);
+
+    // velocity xy
+    param_set(&nastya_cs.vxy_pid_P, 20);
+    param_set(&nastya_cs.vxy_pid_I, 30);
+    param_set(&nastya_cs.vxy_pid_D, 4);
+    param_set(&nastya_cs.vxy_pid_D_filt, 15);
+    param_set(&nastya_cs.vxy_pid_I_bound, 3000);
+    // omega
+    param_set(&nastya_cs.omega_pid_P, 30);
+    param_set(&nastya_cs.omega_pid_I, 30);
+    param_set(&nastya_cs.omega_pid_D, 10);
+    param_set(&nastya_cs.omega_pid_D_filt, 15);
+    param_set(&nastya_cs.omega_pid_I_bound, 3000);
+
     pid_init(&nastya_cs.vx_pid);
-    pid_set_gains(&nastya_cs.vx_pid, 20, 30, 4); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vx_pid, VX_MAX_ERR_INPUT, 3000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.vx_pid, 0);
-    pid_set_derivate_filter(&nastya_cs.vx_pid, 15);
-    // velocity in y
     pid_init(&nastya_cs.vy_pid);
-    pid_set_gains(&nastya_cs.vy_pid, 20, 30, 4); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.vy_pid, VY_MAX_ERR_INPUT, 3000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.vy_pid, 0);
-    pid_set_derivate_filter(&nastya_cs.vy_pid, 15);
-    // angular velocity omega
     pid_init(&nastya_cs.omega_pid);
-    pid_set_gains(&nastya_cs.omega_pid, 30, 30, 10); // KP, KI, KD
-    pid_set_maximums(&nastya_cs.omega_pid, OMEGA_MAX_ERR_INPUT, 3000, 0); // in , integral, out
     pid_set_out_shift(&nastya_cs.omega_pid, 0);
-    pid_set_derivate_filter(&nastya_cs.omega_pid, 15);
 
     cs_init(&nastya_cs.vx_cs);
     cs_init(&nastya_cs.vy_cs);
@@ -212,12 +311,12 @@ void control_init(void)
     holonomic_base_speed_cs_init();
 
 
-    //plot_add_variable("0:", &nastya_cs.vx_cs.error_value, PLOT_INT32);
-    //plot_add_variable("1:", &nastya_cs.vy_cs.error_value, PLOT_INT32);
-    //plot_add_variable("2:", &nastya_cs.omega_cs.error_value, PLOT_INT32);
-    //plot_add_variable("3:", &nastya_cs.out_x, PLOT_INT32);
-    //plot_add_variable("4:", &nastya_cs.out_y, PLOT_INT32);
-    //plot_add_variable("5:", &nastya_cs.out_rotation, PLOT_INT32);
+    plot_add_variable("0:", &nastya_cs.vx_cs.error_value, PLOT_INT32);
+    plot_add_variable("1:", &nastya_cs.vy_cs.error_value, PLOT_INT32);
+    plot_add_variable("2:", &nastya_cs.omega_cs.error_value, PLOT_INT32);
+    plot_add_variable("3:", &nastya_cs.out_x, PLOT_INT32);
+    plot_add_variable("4:", &nastya_cs.out_y, PLOT_INT32);
+    plot_add_variable("5:", &nastya_cs.out_rotation, PLOT_INT32);
     //plot_add_variable("6:", &nastya_cs.vx, PLOT_FLOAT);
     //plot_add_variable("7:", &nastya_cs.vy, PLOT_FLOAT);
     //plot_add_variable("8:", &nastya_cs.omega, PLOT_FLOAT);
