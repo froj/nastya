@@ -1,9 +1,15 @@
 [submodule "modules"]
 	path = modules
-	url = git@github.com:cvra/modules.git
+    url=git@github.com:stapelzeiger/modules.git
 [submodule "lwip_ucos2"]
 	path = lwip_ucos2
 	url = git@github.com:cvra/lwip_ucos2.git
 [submodule "nios_files"]
 	path = nios_files
 	url = git@github.com:cvra/nios_files.git
+[submodule "socket_handler"]
+	path = socket_handler
+	url = git@github.com:froj/cvra-socket-handler-c.git
+[submodule "lua"]
+	path = lua
+	url = git@github.com:cvra/lua.git
