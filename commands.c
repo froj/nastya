@@ -170,7 +170,7 @@ int cmd_get_param(lua_State *l)
 
 int cmd_list_param(lua_State *l)
 {
-    static char buf[1000];
+    static char buf[3000];
     if (param_list(buf, sizeof(buf)) == 0) {
         lua_pushstring(l, buf);
         return 1;
