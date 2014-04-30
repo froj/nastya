@@ -99,7 +99,7 @@ void imu_readout_send(struct netconn *conn)
 
 void imu_readout_init(void)
 {
-    imu_serial = fopen("/dev/comBT1", "r");
+    imu_serial = fopen("/dev/comIMU", "r");
     if (imu_serial == NULL) {
         printf("imu readout init: ERROR could not open serial port\n");
         return;
