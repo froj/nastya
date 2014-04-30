@@ -116,7 +116,7 @@ void init_task(void *pdata)
 
     ip_stack_init();
 
-    plot_init();
+    // plot_init();
 
     luaconsole_init();
 
