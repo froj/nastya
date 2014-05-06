@@ -5,11 +5,12 @@
 #include <ucos_ii.h>
 #include <lwip/udp.h>
 #include <errno.h>
+#include <param.h>
 #include "tasks.h"
 #include "plot_task.h"
 
-
-#define PLOT_FREQ 20 // [Hz]
+#define PLOT_FREQ 1 // [Hz]
+param_t plot_freq;
 
 OS_STK    plot_stk[PLOT_TASK_STACKSIZE];
 
@@ -26,6 +27,7 @@ struct udp_pcb *pcb;
 
 void plot_task(void)
 {
+    uint32_t plot_period = 0;
     int i;
     char plot_string[1024];
     char* pos;
@@ -46,6 +48,9 @@ void plot_task(void)
 
     struct plot_data *to_plot;
     while (23) {
+        if (param_has_changed(&plot_freq))
+            plot_period = (int64_t)OS_TICKS_PER_SEC / param_get(&plot_freq);
+
         pos = plot_string;
         to_plot = plots;
         while (to_plot != NULL) {
@@ -101,7 +106,7 @@ void plot_task(void)
         //        (struct sockaddr *)&client_addr, sizeof(struct sockaddr));
 
         //printf("sendto ret %d, errno = %d\n", ret, errno);
-        OSTimeDly((int64_t)OS_TICKS_PER_SEC/PLOT_FREQ);
+        OSTimeDly(plot_period);
     }
 }
 
@@ -134,6 +139,10 @@ void plot_add_variable(char description[8], void* variable, enum plot_types type
 
 void plot_init(void)
 {
+
+    param_add(&plot_freq, "plot freq", "UDP plot freq");
+    param_set(&plot_freq, PLOT_FREQ);
+
 //    int addr_len, bytes_read;
 //    struct sockaddr_in server_addr , client_addr;
 
