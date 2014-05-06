@@ -7,14 +7,13 @@
 #include <lwip/ip.h>
 #include <netif/slipif.h>
 
+#include <trace/trace_over_ip.h>
+
 #include "control.h"
-
-#include "plot_task.h"
-
+#include "match.h"
+#include "position_integration.h"
 #include "drive.h"
-
 #include "encoder_readout_task.h"
-
 #include "tasks.h"
 
 
@@ -116,13 +115,11 @@ void init_task(void *pdata)
 
     ip_stack_init();
 
-    // plot_init();
-
     luaconsole_init();
 
     start_position_integration();
 
-    start_pid_conf_shell(1337);
+    trace_over_ip_init(10000);
 
     start_drive_task();
 

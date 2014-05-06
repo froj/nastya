@@ -3,6 +3,7 @@
 #include <math.h>
 #include <ucos_ii.h>
 #include <robot_base_mixer/robot_base_mixer.h>
+#include <trace/trace.h>
 #include "uptime/uptime.h"
 #include "cvra_param_robot.h"
 #include "tasks.h"
@@ -10,8 +11,6 @@
 
 
 #include "control.h"
-
-#include "plot_task.h"
 
 #define CONTROL_FREQ 100 // [Hz]
 
@@ -158,6 +157,19 @@ static void update_parameters(void)
 
 void control_task(void *arg)
 {
+    static trace_var_t t_err_vx;
+    static trace_var_t t_err_vy;
+    static trace_var_t t_err_omega;
+    static trace_var_t t_out_vx;
+    static trace_var_t t_out_vy;
+    static trace_var_t t_out_omega;
+    trace_var_add(&t_err_vx, "cs_vx_err");
+    trace_var_add(&t_err_vy, "cs_vy_err");
+    trace_var_add(&t_err_omega, "cs_omega_err");
+    trace_var_add(&t_out_vx, "cs_vx_out");
+    trace_var_add(&t_out_vy, "cs_vy_out");
+    trace_var_add(&t_out_omega, "cs_omega_out");
+
     int32_t prev_enc[3] = {
         hw_get_wheel_0_encoder(),
         hw_get_wheel_1_encoder(),
@@ -216,6 +228,13 @@ void control_task(void *arg)
         hw_set_wheel_0_motor_pwm(wheel_cmd[0]);
         hw_set_wheel_1_motor_pwm(wheel_cmd[1]);
         hw_set_wheel_2_motor_pwm(wheel_cmd[2]);
+
+        trace_var_update(&t_err_vx, nastya_cs.vx - (float)cs_get_consign(&nastya_cs.vx_cs) / VX_IN_SCALE);
+        trace_var_update(&t_err_vy, nastya_cs.vy - (float)cs_get_consign(&nastya_cs.vy_cs) / VY_IN_SCALE);
+        trace_var_update(&t_err_omega, nastya_cs.omega - (float)cs_get_consign(&nastya_cs.omega_cs) / OMEGA_IN_SCALE);
+        trace_var_update(&t_out_vx, cmd_x);
+        trace_var_update(&t_out_vy, cmd_y);
+        trace_var_update(&t_out_omega, cmd_rot);
     }
 }
 
@@ -309,18 +328,6 @@ void holonomic_base_speed_cs_init(void)
 void control_init(void)
 {
     holonomic_base_speed_cs_init();
-
-
-    plot_add_variable("0:", &nastya_cs.vx_cs.error_value, PLOT_INT32);
-    plot_add_variable("1:", &nastya_cs.vy_cs.error_value, PLOT_INT32);
-    plot_add_variable("2:", &nastya_cs.omega_cs.error_value, PLOT_INT32);
-    plot_add_variable("3:", &nastya_cs.out_x, PLOT_INT32);
-    plot_add_variable("4:", &nastya_cs.out_y, PLOT_INT32);
-    plot_add_variable("5:", &nastya_cs.out_rotation, PLOT_INT32);
-    //plot_add_variable("6:", &nastya_cs.vx, PLOT_FLOAT);
-    //plot_add_variable("7:", &nastya_cs.vy, PLOT_FLOAT);
-    //plot_add_variable("8:", &nastya_cs.omega, PLOT_FLOAT);
-
 
     OSTaskCreateExt(control_task,
                     NULL,

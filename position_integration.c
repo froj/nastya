@@ -6,8 +6,8 @@
 #include <uptime.h>
 #include "hardware.h"
 
+#include <trace.h>
 #include "tasks.h"
-#include "plot_task.h"
 
 #include "position_integration.h"
 
@@ -49,6 +49,18 @@ float get_omega(void)
 
 void position_integration_task(void *pdata)
 {
+    trace_var_t t_vx;
+    trace_var_t t_vy;
+    trace_var_t t_omega;
+    trace_var_t t_x;
+    trace_var_t t_y;
+    trace_var_t t_theta;
+    trace_var_add(&t_vx, "vx");
+    trace_var_add(&t_vy, "vy");
+    trace_var_add(&t_omega, "omega");
+    trace_var_add(&t_x, "x");
+    trace_var_add(&t_y, "y");
+    trace_var_add(&t_theta, "theta");
 
     static float lp_buffer_x[LP_BUFFER_SIZE] = {0};
     static float lp_buffer_y[LP_BUFFER_SIZE] = {0};
@@ -119,6 +131,13 @@ void position_integration_task(void *pdata)
         vel_y = lp_acc_y / LP_BUFFER_SIZE;
         omega = lp_acc_omega / LP_BUFFER_SIZE;
 
+        trace_var_update(&t_vx, vel_x);
+        trace_var_update(&t_vy, vel_y);
+        trace_var_update(&t_omega, omega);
+        trace_var_update(&t_x, pos_x);
+        trace_var_update(&t_y, pos_y);
+        trace_var_update(&t_theta, theta);
+
         last_iteration = now;
     }
 }
@@ -155,7 +174,4 @@ void start_position_integration(void)
                     POSITION_INTEGRATION_TASK_STACKSIZE,
                     NULL, 0);
 
-    //plot_add_variable("0: ", &vel_x, PLOT_FLOAT);
-    //plot_add_variable("1: ", &vel_y, PLOT_FLOAT);
-    //plot_add_variable("2: ", &omega, PLOT_FLOAT);
 }

@@ -30,6 +30,9 @@
 #define PLOT_TASK_PRIORITY                         21
 #define PLOT_TASK_STACKSIZE                      2048
 
+#define TRACE_TASK_PRIORITY                        22
+#define TRACE_TASK_STACKSIZE                     2048
+
 #define DRIVE_TASK_PRIORITY                        19
 #define DRIVE_TASK_STACKSIZE                     2048
 
