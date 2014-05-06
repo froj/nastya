@@ -47,7 +47,8 @@ OS_STK control_task_stk[CONTROL_TASK_STACKSIZE];
 
 struct holonomic_base_speed_cs nastya_cs;
 
-
+#define SPEED_CTRL_FREQ_DEFAULT 20 // [Hz]
+static param_t speed_ctrl_freq;
 
 void control_update_setpoint_vx(float vx)
 {
@@ -176,8 +177,12 @@ void control_task(void *arg)
         hw_get_wheel_2_encoder()
     };
     timestamp_t prev_timest = uptime_get();
+    int period_us = 1;
     while (42) {
-        OSTimeDly(OS_TICKS_PER_SEC / CONTROL_FREQ);
+        if (param_has_changed(&speed_ctrl_freq)) {
+            period_us = OS_TICKS_PER_SEC / param_get(&speed_ctrl_freq);
+        }
+        OSTimeDly(period_us);
         update_parameters();
         int32_t enc[3];
         float wheel_ang_vel[3]; // [rad/s]
@@ -328,6 +333,8 @@ void holonomic_base_speed_cs_init(void)
 void control_init(void)
 {
     holonomic_base_speed_cs_init();
+    param_add(&speed_ctrl_freq, "speed_ctrl_freq", "[Hz]");
+    param_set(&speed_ctrl_freq, SPEED_CTRL_FREQ_DEFAULT);
 
     OSTaskCreateExt(control_task,
                     NULL,

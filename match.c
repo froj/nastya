@@ -3,7 +3,6 @@
 #include <ucos_ii.h>
 #include <control_system_manager/control_system_manager.h>
 #include <pid/pid.h>
-#include <cvra_beacon.h>
 #include "tasks.h"
 #include <uptime.h>
 #include "control.h"
@@ -15,7 +14,6 @@
 #include "param.h"
 
 
-#define MATCH_DURATION 90*1000000 // [us]
 
 #define GOTO_POS_FREQ 20    // [Hz]
 
@@ -29,15 +27,12 @@
 #define Y_MAX_ERR_INPUT 2.0 * 1024
 #define THETA_MAX_ERR_INPUT 0.3 *1024
 
-OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
-OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
 
-timestamp_t match_start;
-static cvra_beacon_t beacon;
-
-bool disable_postion_control;
+// bool disable_postion_control;
 bool team_red;
 
+timestamp_t match_start;
+bool match_has_startd = false;
 
 static float limit_sym(float val, float max)
 {
@@ -258,8 +253,8 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
     while (1) {
         OSTimeDly(OS_TICKS_PER_SEC / GOTO_POS_FREQ);
         update_parameters();
-        if (disable_postion_control)
-            continue;
+        // if (disable_postion_control)
+        //     continue;
         float pos_x, pos_y, heading;
         get_position(&pos_x, &pos_y);
         heading = get_heading();
@@ -301,79 +296,6 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y)
 
 
 
-#define EMERGENCY_STOP_ACCELERATION_XY    5.0 // [m/s^2]
-#define EMERGENCY_STOP_ACCELERATION_ALPHA 5.0 // [rad/s^2]
-#define EMERGENCY_STOP_UPDATE_FREQ        100 // [Hz]
-
-#define EMERGENCY_STOP_DELTA_OMEGA EMERGENCY_STOP_ACCELERATION_ALPHA / EMERGENCY_STOP_UPDATE_FREQ
-#define EMERGENCY_STOP_DELTA_VXY EMERGENCY_STOP_ACCELERATION_XY / EMERGENCY_STOP_UPDATE_FREQ
-
-static bool emergency_stop(void)
-{
-    int i;
-
-    for (i = 0; i < beacon.nb_beacon; i++) {
-        // TODO also take heading into account
-        if (beacon.beacon[i].distance > 15) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-void emergency_stop_task(void *arg)
-{
-    int stop_timeout = 0;
-    while (1) {
-        if (emergency_stop() || uptime_get() - match_start > MATCH_DURATION) {
-            stop_timeout = EMERGENCY_STOP_UPDATE_FREQ / 10; // reset stop timer
-        }
-        if (stop_timeout > 0) {
-            stop_timeout--;
-            disable_postion_control = true;
-            // ramp speed to 0
-            float vx, vy, omega;
-            vx = control_get_setpoint_vx();
-            vy = control_get_setpoint_vy();
-            omega = control_get_setpoint_omega();
-            // get_velocity(&vx, &vy);
-            // omega = get_omega();
-            if (fabs(omega) < EMERGENCY_STOP_DELTA_OMEGA) {
-                omega = 0;
-            } else if (omega > 0) {
-                omega -= EMERGENCY_STOP_DELTA_OMEGA;
-            } else if (omega < 0) {
-                omega += EMERGENCY_STOP_DELTA_OMEGA;
-            }
-            if (fabs(vx) < EMERGENCY_STOP_DELTA_VXY) {
-                vx = 0;
-            } else if (vx > 0) {
-                vx -= EMERGENCY_STOP_DELTA_VXY;
-            } else if (vx < 0) {
-                vx += EMERGENCY_STOP_DELTA_VXY;
-            }
-            if (fabs(vy) < EMERGENCY_STOP_DELTA_VXY) {
-                vy = 0;
-            } else if (vy > 0) {
-                vy -= EMERGENCY_STOP_DELTA_VXY;
-            } else if (vy < 0) {
-                vy += EMERGENCY_STOP_DELTA_VXY;
-            }
-            // printf("stop: %f %f %f\n", vx, vy, omega);
-            control_update_setpoint_vx(vx);
-            control_update_setpoint_vy(vy);
-            control_update_setpoint_omega(omega);
-        } else {
-            disable_postion_control = false;
-        }
-        OSTimeDly(OS_TICKS_PER_SEC/EMERGENCY_STOP_UPDATE_FREQ);
-    }
-}
-
-
-
 static void calibrate_position(void)
 {
     control_update_setpoint_omega(M_PI/2/5);
@@ -409,11 +331,11 @@ static void calibrate_position(void)
     position_reset_to(x, y, 0);
 }
 
+
 static bool wait_for_start(void)
 {
     return !(IORD(PIO_BASE, 0) & 0x1000);
 }
-
 
 void match_task(void *arg)
 {
@@ -442,19 +364,12 @@ void match_task(void *arg)
         position_reset_to(0.102, 0.120, 0);
 
     match_start = uptime_get();
+    match_has_startd = true;
     printf("much started [%d]\nwow\n", (int)match_start);
 
     OSTimeDly(OS_TICKS_PER_SEC*4);
 
 
-    OSTaskCreateExt(emergency_stop_task,
-                    NULL,
-                    &emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE-1],
-                    EMERGENCY_STOP_TASK_PRIORITY,
-                    EMERGENCY_STOP_TASK_PRIORITY,
-                    &emergency_stop_task_stk[0],
-                    EMERGENCY_STOP_TASK_STACKSIZE,
-                    NULL, 0);
 
 
     if (team_red) {
@@ -482,7 +397,6 @@ void match_task(void *arg)
     nastya_cs.vx_control_enable = false;
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
-    OSTaskDel(EMERGENCY_STOP_TASK_PRIORITY);
     OSTaskDel(MATCH_TASK_PRIORITY);
 }
 
@@ -512,5 +426,5 @@ void match_set_yellow(void)
 
 void match_set_disable_position_control(bool dis_pos_ctl)
 {
-    disable_postion_control = dis_pos_ctl;
+    // disable_postion_control = dis_pos_ctl;
 }
