@@ -16,4 +16,7 @@ struct dynamic_waypoint {
 void drive_open_loop_dynamic_path(struct dynamic_waypoint *wp,
     int nb_waypoints);
 
+// receive path over udp
+void udp_get_dynamic_path(void);
+
 #endif // DRIVE_OPEN_LOOP_DYNAMIC_PATH
