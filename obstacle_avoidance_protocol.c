@@ -90,8 +90,8 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
 {
     /* XXX find a better way to do this. */
     #define MAX_LEN 2048
-    char *data, to_append[TCP_MSS+1];
-    char answer[MAX_LEN];
+    char *data;
+    static char answer[MAX_LEN];
     void *tmp;
     struct netconn *conn = NULL;
 
@@ -118,13 +118,17 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
 
     free(data);
 
+    int answer_offset = 0;
     while ((err = netconn_recv(conn, &buf)) == ERR_OK) {
         do {
             /* Copies the buffer data into a string. */
             netbuf_data(buf, &tmp, &len);
-            memcpy(to_append, tmp, len);
-            to_append[len] = 0;
-            snprintf(answer, MAX_LEN, "%s%s", answer, to_append);
+            if (answer_offset + len > MAX_LEN) {
+                return ERR_BUF
+            }
+            memcpy(answer + answer_relative_ptr, tmp, len);
+            answer_relative_ptr += len;
+
         } while (netbuf_next(buf) >= 0);
         netbuf_delete(buf);
     }
