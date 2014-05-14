@@ -5,11 +5,6 @@
 #include <stdbool.h>
 #include <uptime.h>
 
-extern struct pid_filter pos_x_pid;
-extern struct pid_filter pos_y_pid;
-extern struct pid_filter theta_pid;
-
-
 #define MATCH_DURATION 90*1000000 // [us]
 
 extern bool match_has_startd;

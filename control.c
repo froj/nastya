@@ -23,9 +23,9 @@
 // max command = 16384 * 1024 + 16384 * 40 * 3000 + 16384 * 2 * 1024
 // = 2016411648 < 2^31 = 2147483648
 
-#define VX_IN_SCALE     2048
-#define VY_IN_SCALE     2048
-#define OMEGA_IN_SCALE  2048
+#define VX_IN_SCALE         2048
+#define VY_IN_SCALE         2048
+#define OMEGA_IN_SCALE      2048
 
 #define VX_MAX_ERR_INPUT    4096
 #define VY_MAX_ERR_INPUT    4096
@@ -37,9 +37,9 @@
 //  with the pid-builtin bitshift. This is to avoid losing resolution
 //  because the transform from robot coordinates to wheels introduces
 //  another scaling factor before the command is output to PWM motor control)
-#define VX_OUT_SCALE    4096
-#define VY_OUT_SCALE    4096
-#define OMEGA_OUT_SCALE 4096
+#define VX_OUT_SCALE        4096
+#define VY_OUT_SCALE        4096
+#define OMEGA_OUT_SCALE     4096
 
 
 

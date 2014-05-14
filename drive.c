@@ -12,8 +12,6 @@
 
 OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
-#define DRIVE_CTRL_FREQ_DEFAULT 20 // [Hz]
-static param_t drive_ctrl_freq;
 
 
 bool disable_postion_control = false;
@@ -24,12 +22,313 @@ int drive_goto(float x, float y)
 
 }
 
+static float dest_x, dest_y;
+static float dest_heading;
+static float look_at_x;
+static float look_at_y;
+#define DRIVE_MODE_
+static int drive_mode;
 
+
+
+
+
+#define DRIVE_CTRL_FREQ_DEFAULT 20 // [Hz]
+static param_t drive_ctrl_freq;
+
+#define MAX_ACC_XY_DEFAULT      0 // TODO
+#define MAX_SPEED_XY_DEFAULT    0 // TODO
+#define MAX_ALPHA_DEFAULT       0 // TODO
+#define MAX_OMEGA_DEFAULT       0 // TODO
+static param_t max_acc_xy_p;
+static param_t max_speed_xy_p;
+static param_t max_alpha_p;
+static param_t max_omega_p;
+static float max_acc_xy = 0;
+static float max_speed_xy = 0;
+static float max_alpha = 0;
+static float max_omega = 0;
+
+struct pos_cs_s {
+    param_t pos_xy_pid_P;
+    param_t pos_xy_pid_I;
+    param_t pos_xy_pid_D;
+    param_t pos_xy_pid_D_filt;
+    param_t pos_xy_pid_I_bound;
+    param_t pos_x_pid_P;
+    param_t pos_x_pid_I;
+    param_t pos_x_pid_D;
+    param_t pos_x_pid_D_filt;
+    param_t pos_x_pid_I_bound;
+    param_t pos_y_pid_P;
+    param_t pos_y_pid_I;
+    param_t pos_y_pid_D;
+    param_t pos_y_pid_D_filt;
+    param_t pos_y_pid_I_bound;
+    param_t theta_pid_P;
+    param_t theta_pid_I;
+    param_t theta_pid_D;
+    param_t theta_pid_D_filt;
+    param_t theta_pid_I_bound;
+    struct cs pos_x_cs;
+    struct cs pos_y_cs;
+    struct cs theta_cs;
+    struct pid_filter pos_x_pid;
+    struct pid_filter pos_y_pid;
+    struct pid_filter theta_pid;
+};
+
+#define PID_SCALE_OUT           1024
+#define PID_SCALE_IN            1024
+
+#define X_MAX_ERR_INPUT         2.0 * PID_SCALE_IN
+#define Y_MAX_ERR_INPUT         2.0 * PID_SCALE_IN
+#define THETA_MAX_ERR_INPUT     0.3 *PID_SCALE_IN
+
+static struct pos_cs_s pos_cs;
+static struct pos_cs_s fallback_pos_cs;
+
+static int32_t out_x;
+static int32_t out_y;
+static int32_t out_rotation;
+static int32_t in_x;
+static int32_t in_y;
+static int32_t in_rotation;
+
+static void cs_out(void *arg, int32_t out)
+{
+    *(int32_t*)arg = out;
+}
+
+static int32_t cs_in(void *arg)
+{
+    return *(int32_t*)arg;
+}
+
+void position_control_init()
+{
+    // waypoint position control
+
+    param_add(&pos_cs.pos_xy_pid_P, "pid_pos_xy_P", NULL);
+    param_add(&pos_cs.pos_xy_pid_I, "pid_pos_xy_I", NULL);
+    param_add(&pos_cs.pos_xy_pid_D, "pid_pos_xy_D", NULL);
+    param_add(&pos_cs.pos_xy_pid_D_filt, "pid_pos_xy_D_filt", NULL);
+    param_add(&pos_cs.pos_xy_pid_I_bound, "pid_pos_xy_I_bound", NULL);
+    param_add(&pos_cs.pos_x_pid_P, "pid_pos_x_P", NULL);
+    param_add(&pos_cs.pos_x_pid_I, "pid_pos_x_I", NULL);
+    param_add(&pos_cs.pos_x_pid_D, "pid_pos_x_D", NULL);
+    param_add(&pos_cs.pos_x_pid_D_filt, "pid_pos_x_D_filt", NULL);
+    param_add(&pos_cs.pos_x_pid_I_bound, "pid_pos_x_I_bound", NULL);
+    param_add(&pos_cs.pos_y_pid_P, "pid_pos_y_P", NULL);
+    param_add(&pos_cs.pos_y_pid_I, "pid_pos_y_I", NULL);
+    param_add(&pos_cs.pos_y_pid_D, "pid_pos_y_D", NULL);
+    param_add(&pos_cs.pos_y_pid_D_filt, "pid_pos_y_D_filt", NULL);
+    param_add(&pos_cs.pos_y_pid_I_bound, "pid_pos_y_I_bound", NULL);
+    param_add(&pos_cs.theta_pid_P, "pid_theta_P", NULL);
+    param_add(&pos_cs.theta_pid_I, "pid_theta_I", NULL);
+    param_add(&pos_cs.theta_pid_D, "pid_theta_D", NULL);
+    param_add(&pos_cs.theta_pid_D_filt, "pid_theta_D_filt", NULL);
+    param_add(&pos_cs.theta_pid_I_bound, "pid_theta_I_bound", NULL);
+
+    // pos xy
+    param_set(&pos_cs.pos_xy_pid_P, 100);
+    param_set(&pos_cs.pos_xy_pid_I, 0);
+    param_set(&pos_cs.pos_xy_pid_D, 3000);
+    param_set(&pos_cs.pos_xy_pid_D_filt, 3);
+    param_set(&pos_cs.pos_xy_pid_I_bound, 800);
+    // theta
+    param_set(&pos_cs.theta_pid_P, 4);
+    param_set(&pos_cs.theta_pid_I, 10);
+    param_set(&pos_cs.theta_pid_D, 2500);
+    param_set(&pos_cs.theta_pid_D_filt, 3);
+    param_set(&pos_cs.theta_pid_I_bound, 400);
+
+    pid_init(&pos_cs.pos_x_pid);
+    pid_set_out_shift(&pos_cs.pos_x_pid, 0);
+    pid_init(&pos_cs.pos_y_pid);
+    pid_set_out_shift(&pos_cs.pos_y_pid, 0);
+    pid_init(&pos_cs.theta_pid);
+    pid_set_out_shift(&pos_cs.theta_pid, 0);
+
+    cs_init(&pos_cs.pos_x_cs);
+    cs_init(&pos_cs.pos_y_cs);
+    cs_init(&pos_cs.theta_cs);
+    cs_set_correct_filter(&pos_cs.pos_x_cs, pid_do_filter, &pos_cs.pos_x_pid);
+    cs_set_correct_filter(&pos_cs.pos_y_cs, pid_do_filter, &pos_cs.pos_y_pid);
+    cs_set_correct_filter(&pos_cs.theta_cs, pid_do_filter, &pos_cs.theta_pid);
+    cs_set_process_in(&pos_cs.pos_x_cs, cs_out, &out_x);
+    cs_set_process_in(&pos_cs.pos_y_cs, cs_out, &out_y);
+    cs_set_process_in(&pos_cs.theta_cs, cs_out, &out_rotation);
+    cs_set_process_out(&pos_cs.pos_x_cs, cs_in, &in_x);
+    cs_set_process_out(&pos_cs.pos_y_cs, cs_in, &in_y);
+    cs_set_process_out(&pos_cs.theta_cs, cs_in, &in_rotation);
+    cs_set_consign(&pos_cs.pos_x_cs, 0);
+    cs_set_consign(&pos_cs.pos_y_cs, 0);
+    cs_set_consign(&pos_cs.theta_cs, 0);
+
+
+    // fallback position control
+
+    param_add(&fallback_pos_cs.pos_xy_pid_P, "fallback_pid_pos_xy_P", NULL);
+    param_add(&fallback_pos_cs.pos_xy_pid_I, "fallback_pid_pos_xy_I", NULL);
+    param_add(&fallback_pos_cs.pos_xy_pid_D, "fallback_pid_pos_xy_D", NULL);
+    param_add(&fallback_pos_cs.pos_xy_pid_D_filt, "fallback_pid_pos_xy_D_filt", NULL);
+    param_add(&fallback_pos_cs.pos_xy_pid_I_bound, "fallback_pid_pos_xy_I_bound", NULL);
+    param_add(&fallback_pos_cs.pos_x_pid_P, "fallback_pid_pos_x_P", NULL);
+    param_add(&fallback_pos_cs.pos_x_pid_I, "fallback_pid_pos_x_I", NULL);
+    param_add(&fallback_pos_cs.pos_x_pid_D, "fallback_pid_pos_x_D", NULL);
+    param_add(&fallback_pos_cs.pos_x_pid_D_filt, "fallback_pid_pos_x_D_filt", NULL);
+    param_add(&fallback_pos_cs.pos_x_pid_I_bound, "fallback_pid_pos_x_I_bound", NULL);
+    param_add(&fallback_pos_cs.pos_y_pid_P, "fallback_pid_pos_y_P", NULL);
+    param_add(&fallback_pos_cs.pos_y_pid_I, "fallback_pid_pos_y_I", NULL);
+    param_add(&fallback_pos_cs.pos_y_pid_D, "fallback_pid_pos_y_D", NULL);
+    param_add(&fallback_pos_cs.pos_y_pid_D_filt, "fallback_pid_pos_y_D_filt", NULL);
+    param_add(&fallback_pos_cs.pos_y_pid_I_bound, "fallback_pid_pos_y_I_bound", NULL);
+    param_add(&fallback_pos_cs.theta_pid_P, "fallback_pid_theta_P", NULL);
+    param_add(&fallback_pos_cs.theta_pid_I, "fallback_pid_theta_I", NULL);
+    param_add(&fallback_pos_cs.theta_pid_D, "fallback_pid_theta_D", NULL);
+    param_add(&fallback_pos_cs.theta_pid_D_filt, "fallback_pid_theta_D_filt", NULL);
+    param_add(&fallback_pos_cs.theta_pid_I_bound, "fallback_pid_theta_I_bound", NULL);
+
+    // pos xy
+    param_set(&fallback_pos_cs.pos_xy_pid_P, 100);
+    param_set(&fallback_pos_cs.pos_xy_pid_I, 0);
+    param_set(&fallback_pos_cs.pos_xy_pid_D, 3000);
+    param_set(&fallback_pos_cs.pos_xy_pid_D_filt, 3);
+    param_set(&fallback_pos_cs.pos_xy_pid_I_bound, 800);
+    // theta
+    param_set(&fallback_pos_cs.theta_pid_P, 4);
+    param_set(&fallback_pos_cs.theta_pid_I, 10);
+    param_set(&fallback_pos_cs.theta_pid_D, 2500);
+    param_set(&fallback_pos_cs.theta_pid_D_filt, 3);
+    param_set(&fallback_pos_cs.theta_pid_I_bound, 400);
+
+    pid_init(&fallback_pos_cs.pos_x_pid);
+    pid_set_out_shift(&fallback_pos_cs.pos_x_pid, 0);
+    pid_init(&fallback_pos_cs.pos_y_pid);
+    pid_set_out_shift(&fallback_pos_cs.pos_y_pid, 0);
+    pid_init(&fallback_pos_cs.theta_pid);
+    pid_set_out_shift(&fallback_pos_cs.theta_pid, 0);
+
+    cs_init(&fallback_pos_cs.pos_x_cs);
+    cs_init(&fallback_pos_cs.pos_y_cs);
+    cs_init(&fallback_pos_cs.theta_cs);
+    cs_set_correct_filter(&fallback_pos_cs.pos_x_cs, pid_do_filter, &fallback_pos_cs.pos_x_pid);
+    cs_set_correct_filter(&fallback_pos_cs.pos_y_cs, pid_do_filter, &fallback_pos_cs.pos_y_pid);
+    cs_set_correct_filter(&fallback_pos_cs.theta_cs, pid_do_filter, &fallback_pos_cs.theta_pid);
+    cs_set_process_in(&fallback_pos_cs.pos_x_cs, cs_out, &out_x);
+    cs_set_process_in(&fallback_pos_cs.pos_y_cs, cs_out, &out_y);
+    cs_set_process_in(&fallback_pos_cs.theta_cs, cs_out, &out_rotation);
+    cs_set_process_out(&fallback_pos_cs.pos_x_cs, cs_in, &in_x);
+    cs_set_process_out(&fallback_pos_cs.pos_y_cs, cs_in, &in_y);
+    cs_set_process_out(&fallback_pos_cs.theta_cs, cs_in, &in_rotation);
+    cs_set_consign(&fallback_pos_cs.pos_x_cs, 0);
+    cs_set_consign(&fallback_pos_cs.pos_y_cs, 0);
+    cs_set_consign(&fallback_pos_cs.theta_cs, 0);
+}
+
+static void update_pid_parameters(struct pos_cs_s *p)
+{
+    // pid xy combined
+    if (param_has_changed(&p->pos_xy_pid_P)) {
+        param_set(&p->pos_x_pid_P, param_get(&p->pos_xy_pid_P));
+        param_set(&p->pos_y_pid_P, param_get(&p->pos_xy_pid_P));
+    }
+    if (param_has_changed(&p->pos_xy_pid_I)) {
+        param_set(&p->pos_x_pid_I, param_get(&p->pos_xy_pid_I));
+        param_set(&p->pos_y_pid_I, param_get(&p->pos_xy_pid_I));
+    }
+    if (param_has_changed(&p->pos_xy_pid_D)) {
+        param_set(&p->pos_x_pid_D, param_get(&p->pos_xy_pid_D));
+        param_set(&p->pos_y_pid_D, param_get(&p->pos_xy_pid_D));
+    }
+    if (param_has_changed(&p->pos_xy_pid_D_filt)) {
+        param_set(&p->pos_x_pid_D_filt, param_get(&p->pos_xy_pid_D_filt));
+        param_set(&p->pos_y_pid_D_filt, param_get(&p->pos_xy_pid_D_filt));
+    }
+    if (param_has_changed(&p->pos_xy_pid_I_bound)) {
+        param_set(&p->pos_x_pid_I_bound, param_get(&p->pos_xy_pid_I_bound));
+        param_set(&p->pos_y_pid_I_bound, param_get(&p->pos_xy_pid_I_bound));
+    }
+    // pid x
+    if (param_has_changed(&p->pos_x_pid_P)
+        || param_has_changed(&p->pos_x_pid_I)
+        || param_has_changed(&p->pos_x_pid_D)) {
+        pid_set_gains(&p->pos_x_pid,
+                      param_get(&p->pos_x_pid_P),
+                      param_get(&p->pos_x_pid_I),
+                      param_get(&p->pos_x_pid_D));
+    }
+    if (param_has_changed(&p->pos_x_pid_I_bound)) {
+        pid_set_maximums(&p->pos_x_pid, X_MAX_ERR_INPUT,
+                         param_get(&p->pos_x_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&p->pos_x_pid_D_filt)) {
+        pid_set_derivate_filter(&p->pos_x_pid,
+                                param_get(&p->pos_x_pid_D_filt));
+    }
+    // pid y
+    if (param_has_changed(&p->pos_y_pid_P)
+        || param_has_changed(&p->pos_y_pid_I)
+        || param_has_changed(&p->pos_y_pid_D)) {
+        pid_set_gains(&p->pos_y_pid,
+                      param_get(&p->pos_y_pid_P),
+                      param_get(&p->pos_y_pid_I),
+                      param_get(&p->pos_y_pid_D));
+    }
+    if (param_has_changed(&p->pos_y_pid_I_bound)) {
+        pid_set_maximums(&p->pos_y_pid, Y_MAX_ERR_INPUT,
+                         param_get(&p->pos_y_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&p->pos_y_pid_D_filt)) {
+        pid_set_derivate_filter(&p->pos_y_pid,
+                                param_get(&p->pos_y_pid_D_filt));
+    }
+    // pid theta
+    if (param_has_changed(&p->theta_pid_P)
+        || param_has_changed(&p->theta_pid_I)
+        || param_has_changed(&p->theta_pid_D)) {
+        pid_set_gains(&p->theta_pid,
+                      param_get(&p->theta_pid_P),
+                      param_get(&p->theta_pid_I),
+                      param_get(&p->theta_pid_D));
+    }
+    if (param_has_changed(&p->theta_pid_I_bound)) {
+        pid_set_maximums(&p->theta_pid, THETA_MAX_ERR_INPUT,
+                         param_get(&p->theta_pid_I_bound), 0); // in , integral, out
+    }
+    if (param_has_changed(&p->theta_pid_D_filt)) {
+        pid_set_derivate_filter(&p->theta_pid,
+                                param_get(&p->theta_pid_D_filt));
+    }
+}
+
+static void update_drive_params(void)
+{
+    if (param_has_changed(&max_acc_xy_p)) {
+        max_acc_xy = param_get(&max_acc_xy_p);
+    }
+    if (param_has_changed(&max_speed_xy_p)) {
+        max_speed_xy = param_get(&max_speed_xy_p);
+    }
+    if (param_has_changed(&max_alpha_p)) {
+        max_alpha = param_get(&max_alpha_p);
+    }
+    if (param_has_changed(&max_omega_p)) {
+        max_omega = param_get(&max_omega_p);
+    }
+}
 
 void drive_task(void *pdata)
 {
     printf("drive task started\n");
     int period_us = 1;
+    float set_vx = 0;
+    float set_vy = 0;
+    float set_omega = 0;
+    float prev_set_vx = 0;
+    float prev_set_vy = 0;
+    float prev_set_omega = 0;
     while (1) {
         if (param_has_changed(&drive_ctrl_freq)) {
             period_us = OS_TICKS_PER_SEC / param_get(&drive_ctrl_freq);
@@ -38,20 +337,82 @@ void drive_task(void *pdata)
         if (disable_postion_control)
             continue;
 
-        // if 
+        update_drive_params();
 
-        // if waypts avail
-        //   use next waypt for destxy
+        // float current_speed_x, current_speed_y;
+        // float current_omega = get_omega();
+        // get_velocity(&current_speed_x, &current_speed_y);
+        // if (x_err*x_err + y_err*y_err + heading_err*heading_err + current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < goto_stop_thershold)
+        //     return 0;
 
-        // pid x,y
 
-        // vxy += dxy
+        float pos_x, pos_y;
+        get_position(&pos_x, &pos_y);
 
-        // switch theta ctrl mode
+        if (waypoints_available()) {
+            update_pid_parameters(&pos_cs);
+            waypoint_t wp;
+            if ((wp = waypoint_get_next()) == NULL) {
+                // ramp speed down
+            } else {
+                set_vx = wp->speed_x;
+                set_vy = wp->speed_y;
+                set_omega = 0;
+                float x_err = pos_x - wp->pos_x;
+                float y_err = pos_y - wp->pos_y;
+                // pid control
+                in_x = x_err * PID_SCALE_IN;
+                in_y = y_err * PID_SCALE_IN;
+                cs_manage(&pos_cs.pos_x_cs);
+                cs_manage(&pos_cs.pos_y_cs);
+            }
+        } else { // use fallback position controller
+            update_pid_parameters(&fallback_pos_cs);
+            set_vx = 0;
+            set_vy = 0;
+            set_omega = 0;
+            float x_err = pos_x - dest_x;
+            float y_err = pos_y - dest_y;
+            // pid control
+            in_x = x_err * PID_SCALE_IN;
+            in_y = y_err * PID_SCALE_IN;
+            cs_manage(&fallback_pos_cs.pos_x_cs);
+            cs_manage(&fallback_pos_cs.pos_y_cs);
+        }
+        set_vx += (float)out_x / PID_SCALE_OUT;
+        set_vy += (float)out_y / PID_SCALE_OUT;
 
+        // switch heading contorl mode
+        //      heading control -> pid_rot_out
+        // float heading = get_heading();
+        // float set_heading = atan2(lookat_y - pos_y, lookat_x - pos_x);
+        // float heading_err = circular_range(heading - set_heading);
+        // in_rotation = heading_err * PID_SCALE_IN;
+        // cs_manage(&pos_cs.theta_cs);
+        // set_omega += (float)out_rotation / PID_SCALE_OUT;
+
+        // limit acceleration & maximum speed
+        float delta_vx = limit_sym(set_vx - prev_set_vx, max_acc_xy);
+        set_vx = limit_sym(prev_set_vx + delta_vx, max_speed_xy);
+        float delta_vy = limit_sym(set_vy - prev_set_vy, max_acc_xy);
+        set_vy = limit_sym(prev_set_vy + delta_vy, max_speed_xy);
+        float delta_omega = limit_sym(set_omega - prev_set_omega, max_alpha);
+        set_omega = limit_sym(prev_set_omega + delta_omega, max_omega);
+        prev_set_vx = set_vx;
+        prev_set_vy = set_vy;
+        prev_set_omega = set_omega;
+
+        // coordinate transform to robot coordinate system
+        float sin_heading = sin(heading);
+        float cos_heading = cos(heading);
+        control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
+        control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
+        control_update_setpoint_omega(set_omega);
     }
 }
 
+
+// TODO move to drive_emergency_stop.c/h
 
 #include <cvra_beacon.h>
 
@@ -132,10 +493,24 @@ void emergency_stop_task(void *arg)
 }
 
 
+
+
+
 void start_drive_task(void)
 {
     param_add(&drive_ctrl_freq, "drive_ctrl_freq", "[Hz]");
     param_set(&drive_ctrl_freq, DRIVE_CTRL_FREQ_DEFAULT);
+
+    param_add(&max_acc_xy_p, "max_acc_xy", NULL);
+    param_add(&max_speed_xy_p, "max_speed_xy", NULL);
+    param_add(&max_alpha_p, "max_alpha", NULL);
+    param_add(&max_omega_p, "max_omega", NULL);
+    param_set(&max_acc_xy_p, MAX_ACC_XY_DEFAULT);
+    param_set(&max_speed_xy_p, MAX_SPEED_XY_DEFAULT);
+    param_set(&max_alpha_p, MAX_ALPHA_DEFAULT);
+    param_set(&max_omega_p, MAX_OMEGA_DEFAULT);
+
+    position_control_init();
 
     OSTaskCreateExt(drive_task,
                     NULL,
@@ -146,6 +521,8 @@ void start_drive_task(void)
                     DRIVE_TASK_STACKSIZE,
                     NULL, 0);
 
+    // Emergency stop init
+    cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
     OSTaskCreateExt(emergency_stop_task,
                     NULL,
                     &emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE-1],
