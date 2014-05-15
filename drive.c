@@ -5,7 +5,9 @@
 #include <ucos_ii.h>
 #include "control.h"
 #include <param/param.h>
+#include "position_integration.h"
 #include "match.h"
+#include "util.h"
 #include "tasks.h"
 
 #include "drive.h"
@@ -17,19 +19,26 @@ OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 bool disable_postion_control = false;
 
 
-int drive_goto(float x, float y)
-{
-
-}
-
 static float dest_x, dest_y;
 static float dest_heading;
 static float look_at_x;
 static float look_at_y;
-#define DRIVE_MODE_
-static int drive_mode;
+#define DRIVE_HEADING_MODE_FREE
+#define DRIVE_HEADING_MODE_ANGLE
+#define DRIVE_HEADING_MODE_POINT
+static int drive_heading_mode;
 
 
+
+int drive_goto(float x, float y)
+{
+    OS_CPU_SR cpu_sr;
+    OS_ENTER_CRITICAL();
+    dest_x = x;
+    dest_y = y;
+    OS_EXIT_CRITICAL();
+    drive_waypoint_set_destination(x, y);
+}
 
 
 
@@ -83,7 +92,7 @@ struct pos_cs_s {
 
 #define X_MAX_ERR_INPUT         2.0 * PID_SCALE_IN
 #define Y_MAX_ERR_INPUT         2.0 * PID_SCALE_IN
-#define THETA_MAX_ERR_INPUT     0.3 *PID_SCALE_IN
+#define THETA_MAX_ERR_INPUT     0.3 * PID_SCALE_IN
 
 static struct pos_cs_s pos_cs;
 static struct pos_cs_s fallback_pos_cs;
@@ -319,6 +328,17 @@ static void update_drive_params(void)
     }
 }
 
+static bool destination_reached()
+{
+    float current_speed_x, current_speed_y;
+    get_velocity(&current_speed_x, &current_speed_y);
+    float current_omega = get_omega();
+    if (x_err*x_err + y_err*y_err + heading_err*heading_err < goto_stop_thershold
+        && current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < goto_stop_thershold) {
+        // destination reached
+    }
+}
+
 void drive_task(void *pdata)
 {
     printf("drive task started\n");
@@ -339,40 +359,32 @@ void drive_task(void *pdata)
 
         update_drive_params();
 
-        // float current_speed_x, current_speed_y;
-        // float current_omega = get_omega();
-        // get_velocity(&current_speed_x, &current_speed_y);
-        // if (x_err*x_err + y_err*y_err + heading_err*heading_err + current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < goto_stop_thershold)
-        //     return 0;
-
-
         float pos_x, pos_y;
         get_position(&pos_x, &pos_y);
 
-        if (waypoints_available()) {
+        drive_waypoint_t *wp;
+        if ((wp = drive_waypoint_get_next()) == NULL) { // waypoints available
             update_pid_parameters(&pos_cs);
-            waypoint_t wp;
-            if ((wp = waypoint_get_next()) == NULL) {
-                // ramp speed down
-            } else {
-                set_vx = wp->speed_x;
-                set_vy = wp->speed_y;
-                set_omega = 0;
-                float x_err = pos_x - wp->pos_x;
-                float y_err = pos_y - wp->pos_y;
-                // pid control
-                in_x = x_err * PID_SCALE_IN;
-                in_y = y_err * PID_SCALE_IN;
-                cs_manage(&pos_cs.pos_x_cs);
-                cs_manage(&pos_cs.pos_y_cs);
-            }
-        } else { // use fallback position controller
+            set_vx = wp->vx;
+            set_vy = wp->vy;
+            set_omega = 0;
+            float x_err = pos_x - wp->x;
+            float y_err = pos_y - wp->y;
+            // pid control
+            in_x = x_err * PID_SCALE_IN;
+            in_y = y_err * PID_SCALE_IN;
+            cs_manage(&pos_cs.pos_x_cs);
+            cs_manage(&pos_cs.pos_y_cs);
+        } else { // no waypoints available: use fallback position controller
             update_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
             set_omega = 0;
+            OS_CPU_SR cpu_sr;
+            OS_ENTER_CRITICAL();
             float x_err = pos_x - dest_x;
             float y_err = pos_y - dest_y;
+            OS_EXIT_CRITICAL();
             // pid control
             in_x = x_err * PID_SCALE_IN;
             in_y = y_err * PID_SCALE_IN;
@@ -382,6 +394,7 @@ void drive_task(void *pdata)
         set_vx += (float)out_x / PID_SCALE_OUT;
         set_vy += (float)out_y / PID_SCALE_OUT;
 
+        float current_heading = get_heading();
         // switch heading contorl mode
         //      heading control -> pid_rot_out
         // float heading = get_heading();
@@ -403,8 +416,8 @@ void drive_task(void *pdata)
         prev_set_omega = set_omega;
 
         // coordinate transform to robot coordinate system
-        float sin_heading = sin(heading);
-        float cos_heading = cos(heading);
+        float sin_heading = sin(current_heading);
+        float cos_heading = cos(current_heading);
         control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
         control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
         control_update_setpoint_omega(set_omega);
