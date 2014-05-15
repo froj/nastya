@@ -39,6 +39,11 @@ char *obstacle_avoidance_request_encode(obstacle_avoidance_request_t *r)
     json_append_element(array_head, json_mknumber(r->start.vy));
     json_append_element(node, array_head);
 
+    array_head = json_mkarray();
+    json_append_element(array_head, json_mknumber(r->end.x));
+    json_append_element(array_head, json_mknumber(r->end.y));
+    json_append_element(node, array_head);
+
     json_append_element(node, json_mknumber(r->desired_samplerate));
     json_append_element(node, json_mknumber(r->desired_datapoints));
 
@@ -80,6 +85,7 @@ int obstacle_avoidance_decode_path(obstacle_avoidance_path_t *path,const char *j
         path->points[i].y  = json_find_element(n, 1)->number_;
         path->points[i].vx = json_find_element(n, 2)->number_;
         path->points[i].vy = json_find_element(n, 3)->number_;
+        path->points[i].timestamp = json_find_element(n, 4)->number_;
         i++;
     }
 
@@ -123,13 +129,13 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
         do {
             /* Copies the buffer data into a string. */
             netbuf_data(buf, &tmp, &len);
-            if (answer_offset + len > MAX_LEN) {
-                return ERR_BUF
+            if (answer_offset + len >= MAX_LEN) {   /* >= for null-terminator */
+                return ERR_BUF;
             }
-            memcpy(answer + answer_relative_ptr, tmp, len);
-            answer_relative_ptr += len;
-
+            memcpy(answer + answer_offset, tmp, len);
+            answer_offset += len;
         } while (netbuf_next(buf) >= 0);
+        answer[answer_offset] = '\0';
         netbuf_delete(buf);
     }
 
