@@ -13,4 +13,4 @@ drive_waypoint_t* drive_waypoint_get_next();
 
 void drive_waypoint_set_destination(float x, float y);
 
-#endif
+#endif // DRIVE_WAYPOINT_H_

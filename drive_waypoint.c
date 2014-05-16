@@ -2,20 +2,17 @@
 #include <lwip/ip.h>
 #include <param/param.h>
 #include "position_integration.h"
-#include "drive_waypoint.h"
 #include "obstacle_avoidance_protocol.h"
-
-#ifdef COMPILE_ON_ROBOT
 #include <ucos_ii.h>
+#include "tasks.h"
+
+#include "drive_waypoint.h"
+
 static OS_CPU_SR cpu_sr;
 static OS_EVENT* mutex;
 OS_STK drive_waypoint_stk[DRIVE_WAYPOINT_STACKSIZE];
 #define LOCK() {OS_ENTER_CRITICAL();}
 #define UNLOCK() {OS_EXIT_CRITICAL();}
-#else
-#define LOCK() {}
-#define UNLOCK() {}
-#endif
 
 #define DRIVE_REQUEST_TIMEOUT_DEFAULT   100000 // [us]
 #define DESIRED_NB_DATAPOINTS_DEFAULT       50
@@ -33,6 +30,7 @@ static obstacle_avoidance_path_t path;
 static timestamp_t request_time;
 static int waypoint_index;
 
+void drive_waypoint_task(void *arg);
 static void send_request();
 
 void drive_waypoint_init()
@@ -126,7 +124,7 @@ static void send_request()
     INT8U uCErr;
     struct ip_addr remote_ip;
 
-    IP4_ADDR(remote_ip, 10, 0, 0, 21);
+    IP4_ADDR(&remote_ip, 10, 0, 0, 21);
 
     timestamp_t request_started = uptime_get();
     obstacle_avoidance_request_create(&request, 0);
@@ -164,7 +162,7 @@ static void send_request()
     obstacle_avoidance_request_delete(&request);
 }
 
-void drive_waypoint_task(void)
+void drive_waypoint_task(void *arg)
 {
     while(42) {
         send_request();
