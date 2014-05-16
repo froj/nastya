@@ -3,9 +3,13 @@
 
 
 void get_position(float *x, float *y);
+float get_position_x();
+float get_position_y();
 float get_heading(void);
 
 void get_velocity(float *x, float *y);
+float get_velocity_x();
+float get_velocity_y();
 float get_omega(void);
 
 void position_reset(void);

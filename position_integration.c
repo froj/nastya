@@ -31,6 +31,16 @@ void get_position(float *x, float *y)
     *y = pos_y;
 }
 
+float get_position_x()
+{
+    return pos_x;
+}
+
+float get_position_y()
+{
+    return pos_y;
+}
+
 float get_heading(void)
 {
     return theta;
@@ -40,6 +50,16 @@ void get_velocity(float *x, float *y)
 {
     *x = vel_x;
     *y = vel_y;
+}
+
+float get_velocity_x()
+{
+    return vel_x;
+}
+
+float get_velocity_y()
+{
+    return vel_y;
 }
 
 float get_omega(void)
