@@ -29,6 +29,26 @@ static float look_at_y;
 static int drive_heading_mode;
 
 
+static bool destination_reached()
+{
+    float goto_stop_thershold = 0.0032;
+    float current_speed_x, current_speed_y;
+    get_velocity(&current_speed_x, &current_speed_y);
+    float current_omega = get_omega();
+    float pos_x, pos_y;
+    get_position(&pos_x, &pos_y);
+    OS_CPU_SR cpu_sr;
+    OS_ENTER_CRITICAL();
+    float x_err = pos_x - dest_x;
+    float y_err = pos_y - dest_y;
+    OS_EXIT_CRITICAL();
+    if (x_err*x_err + y_err*y_err < goto_stop_thershold
+        && current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < goto_stop_thershold) {
+        return true; // destination reached
+    } else {
+        return false;
+    }
+}
 
 int drive_goto(float x, float y)
 {
@@ -38,6 +58,9 @@ int drive_goto(float x, float y)
     dest_y = y;
     OS_EXIT_CRITICAL();
     drive_waypoint_set_destination(x, y);
+    while (!destination_reached()) {
+        OSTimeDly(OS_TICKS_PER_SEC/20);
+    }
 }
 
 
@@ -325,17 +348,6 @@ static void update_drive_params(void)
     }
     if (param_has_changed(&max_omega_p)) {
         max_omega = param_get(&max_omega_p);
-    }
-}
-
-static bool destination_reached()
-{
-    float current_speed_x, current_speed_y;
-    get_velocity(&current_speed_x, &current_speed_y);
-    float current_omega = get_omega();
-    if (x_err*x_err + y_err*y_err + heading_err*heading_err < goto_stop_thershold
-        && current_speed_x*current_speed_x + current_speed_y*current_speed_y + current_omega*current_omega < goto_stop_thershold) {
-        // destination reached
     }
 }
 
