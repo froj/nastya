@@ -13,18 +13,6 @@
 #include "match.h"
 #include "param.h"
 
-#define GOTO_POS_FREQ 20    // [Hz]
-
-#define MAX_ACCELERATION_XY 1.5     //  [m/s/s]
-#define MAX_ACCELERATION_OMG (M_PI * 6)     //  [rad/s/s]
-
-#define MAX_SPEED_XY    0.5     // [m/s]
-#define MAX_OMEGA       M_PI     // [rad/s]
-
-#define X_MAX_ERR_INPUT 2.0 * 1024
-#define Y_MAX_ERR_INPUT 2.0 * 1024
-#define THETA_MAX_ERR_INPUT 0.3 *1024
-
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 
 // bool disable_postion_control;
@@ -32,7 +20,6 @@ bool team_red;
 
 timestamp_t match_start;
 bool match_has_startd = false;
-
 
 
 static void calibrate_position(void)

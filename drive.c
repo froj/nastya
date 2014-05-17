@@ -20,14 +20,15 @@ OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 bool disable_postion_control = false;
 
 
-static float dest_x, dest_y;
-static float dest_heading;
-static float look_at_x;
-static float look_at_y;
-#define DRIVE_HEADING_MODE_FREE
-#define DRIVE_HEADING_MODE_ANGLE
-#define DRIVE_HEADING_MODE_POINT
-static int drive_heading_mode;
+static float dest_x = 0;
+static float dest_y = 0;
+static float dest_heading = 0;
+static float look_at_x = 0;
+static float look_at_y = 0;
+#define DRIVE_HEADING_MODE_FREE   0
+#define DRIVE_HEADING_MODE_ANGLE  1
+#define DRIVE_HEADING_MODE_POINT  2
+static int drive_heading_mode = DRIVE_HEADING_MODE_FREE;
 
 
 static bool destination_reached()
@@ -70,10 +71,10 @@ int drive_goto(float x, float y)
 #define DRIVE_CTRL_FREQ_DEFAULT 20 // [Hz]
 static param_t drive_ctrl_freq;
 
-#define MAX_ACC_XY_DEFAULT      0 // TODO
-#define MAX_SPEED_XY_DEFAULT    0 // TODO
-#define MAX_ALPHA_DEFAULT       0 // TODO
-#define MAX_OMEGA_DEFAULT       0 // TODO
+#define MAX_ACC_XY_DEFAULT      1.5         // [m/s^2]
+#define MAX_SPEED_XY_DEFAULT    0.5         // [m/s]
+#define MAX_ALPHA_DEFAULT       (M_PI * 6)  // [rad/s^2]
+#define MAX_OMEGA_DEFAULT       M_PI        // [rad/s]
 static param_t max_acc_xy_p;
 static param_t max_speed_xy_p;
 static param_t max_alpha_p;
@@ -368,16 +369,25 @@ void drive_task(void *pdata)
             period_us = OS_TICKS_PER_SEC / param_get(&drive_ctrl_freq);
         }
         OSTimeDly(period_us);
-        if (disable_postion_control)
+        // static bool pos_ctrl_was_prev_disabled = true;
+        if (disable_postion_control) {
+            // pos_ctrl_was_prev_disabled = true;
             continue;
-
-        update_drive_params();
+        }
 
         float pos_x, pos_y;
         get_position(&pos_x, &pos_y);
 
+        // if (pos_ctrl_was_prev_disabled) {
+
+        //     pos_ctrl_was_prev_disabled = false;
+        // }
+
+        update_drive_params();
+
         drive_waypoint_t *wp;
-        if ((wp = drive_waypoint_get_next()) == NULL) { // waypoints available
+        if ((wp = drive_waypoint_get_next()) != NULL) { // waypoints available
+            printf("drive using waypoints\n");
             update_pid_parameters(&pos_cs);
             set_vx = wp->vx;
             set_vy = wp->vy;
@@ -390,6 +400,7 @@ void drive_task(void *pdata)
             cs_manage(&pos_cs.pos_x_cs);
             cs_manage(&pos_cs.pos_y_cs);
         } else { // no waypoints available: use fallback position controller
+            printf("drive using fallback pid\n");
             update_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
