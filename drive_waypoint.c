@@ -44,7 +44,8 @@ void drive_waypoint_init()
     path.points = NULL;
     path.len = 0;
 
-    request_time = uptime_get();
+    // ensure timeout if there has never been a connection to server
+    request_time = uptime_get() - param_get(&drive_request_timeout);
 
     param_add(&drive_request_timeout, "drive_request_timeout", "[us]");
     param_add(&desired_nb_datapoints, "desired_nb_datapoints", NULL);
