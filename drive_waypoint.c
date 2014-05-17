@@ -44,9 +44,6 @@ void drive_waypoint_init()
     path.points = NULL;
     path.len = 0;
 
-    // ensure timeout if there has never been a connection to server
-    request_time = uptime_get() - param_get(&drive_request_timeout);
-
     param_add(&drive_request_timeout, "drive_request_timeout", "[us]");
     param_add(&desired_nb_datapoints, "desired_nb_datapoints", NULL);
     param_add(&desired_sample_period, "desired_sample_period", "[ms]");
@@ -54,6 +51,9 @@ void drive_waypoint_init()
     param_set(&drive_request_timeout, DRIVE_REQUEST_TIMEOUT_DEFAULT);
     param_set(&desired_nb_datapoints, DESIRED_NB_DATAPOINTS_DEFAULT);
     param_set(&desired_sample_period, DESIRED_SAMPLE_PERIOD_DEFAULT);
+
+    // ensure timeout if there has never been a connection to server
+    request_time = uptime_get() - param_get(&drive_request_timeout);
 
     OSTaskCreateExt(drive_waypoint_task,
                     NULL,
