@@ -39,6 +39,9 @@
 #define MATCH_TASK_PRIORITY                        10
 #define MATCH_TASK_STACKSIZE                     2048
 
+#define DRIVE_WAYPOINT_PRIORITY                    11
+#define DRIVE_WAYPOINT_STACKSIZE                 2048
+
 #define EMERGENCY_STOP_TASK_PRIORITY                9
 #define EMERGENCY_STOP_TASK_STACKSIZE            2048
 

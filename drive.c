@@ -8,6 +8,7 @@
 #include "position_integration.h"
 #include "match.h"
 #include "util.h"
+#include "drive_waypoint.h"
 #include "tasks.h"
 
 #include "drive.h"
@@ -61,6 +62,7 @@ int drive_goto(float x, float y)
     while (!destination_reached()) {
         OSTimeDly(OS_TICKS_PER_SEC/20);
     }
+    return 0;
 }
 
 
@@ -547,7 +549,7 @@ void start_drive_task(void)
                     NULL, 0);
 
     // Emergency stop init
-    cvra_beacon_init(&beacon, AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
+    cvra_beacon_init(&beacon, (void*)AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
     OSTaskCreateExt(emergency_stop_task,
                     NULL,
                     &emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE-1],

@@ -7,6 +7,7 @@
 #include "position_integration.h"
 #include "control.h"
 #include "match.h"
+#include "drive.h"
 #include "param.h"
 
 
@@ -46,47 +47,16 @@ int cmd_get_pos_theta(lua_State *l)
 
 int cmd_goto_position(lua_State *l)
 {
-    lua_Number x, y, watch_x, watch_y;
-    match_set_disable_position_control(false);
-
-    if (lua_gettop(l) < 2) return 0;
-    if (lua_gettop(l) < 3) {
+    lua_Number x, y;
+    if (lua_gettop(l) == 2) {
         x = lua_tonumber(l, -2);
         y = lua_tonumber(l, -1);
-        goto_position(x, y, 0, 0);
-        control_update_setpoint_vx(0);
-        control_update_setpoint_vy(0);
-        control_update_setpoint_omega(0);
+        drive_goto(x, y);
+        // control_update_setpoint_vx(0);
+        // control_update_setpoint_vy(0);
+        // control_update_setpoint_omega(0);
         return 0;
     }
-    if (lua_gettop(l) < 4) return 0;
-
-    x = lua_tonumber(l, -4);
-    y = lua_tonumber(l, -3);
-    watch_x = lua_tonumber(l, -2);
-    watch_y = lua_tonumber(l, -1);
-    goto_position(x, y, watch_x, watch_y);
-    control_update_setpoint_vx(0);
-    control_update_setpoint_vy(0);
-    control_update_setpoint_omega(0);
-
-    return 0;
-}
-
-int cmd_m(lua_State *l)
-{
-    lua_Number x, y, watch_x, watch_y;
-    match_set_disable_position_control(false);
-
-    if (lua_gettop(l) < 2) return 0;
-
-    x = lua_tonumber(l, -2);
-    y = lua_tonumber(l, -1);
-    goto_position(x, y, 100, 0);
-    control_update_setpoint_vx(0);
-    control_update_setpoint_vy(0);
-    control_update_setpoint_omega(0);
-
     return 0;
 }
 
@@ -213,9 +183,6 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_control_off);
     lua_setglobal(l, "coff");
-
-    lua_pushcfunction(l, cmd_m);
-    lua_setglobal(l, "m");
 
     lua_pushcfunction(l, cmd_set_param);
     lua_setglobal(l, "param_set");
