@@ -6,6 +6,7 @@
 #include <lwip/tcpip.h>
 #include <lwip/ip.h>
 #include <netif/slipif.h>
+#include <error.h>
 
 #include <trace/trace_over_ip.h>
 
