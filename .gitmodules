@@ -3,7 +3,7 @@
     url=git@github.com:stapelzeiger/modules.git
 [submodule "lwip_ucos2"]
 	path = lwip_ucos2
-	url = git@github.com:cvra/lwip_ucos2.git
+	url = git@github.com:stapelzeiger/lwip_ucos2.git
 [submodule "nios_files"]
 	path = nios_files
 	url = git@github.com:cvra/nios_files.git
