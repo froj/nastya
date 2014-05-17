@@ -140,12 +140,13 @@ int cmd_get_param(lua_State *l)
 
 int cmd_list_param(lua_State *l)
 {
-    static char buf[3000];
+    static char buf[10000];
     if (param_list(buf, sizeof(buf)) == 0) {
         lua_pushstring(l, buf);
         return 1;
     } else {
-        return 0;
+        lua_pushstring(l, "buffer too small");
+        return 1;
     }
 }
 

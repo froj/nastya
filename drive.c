@@ -5,6 +5,7 @@
 #include <ucos_ii.h>
 #include "control.h"
 #include <param/param.h>
+#include <trace/trace.h>
 #include "position_integration.h"
 #include "match.h"
 #include "util.h"
@@ -113,7 +114,7 @@ struct pos_cs_s {
     struct pid_filter theta_pid;
 };
 
-#define PID_SCALE_OUT           1024
+#define PID_SCALE_OUT           131072
 #define PID_SCALE_IN            1024
 
 #define X_MAX_ERR_INPUT         2.0 * PID_SCALE_IN
@@ -140,7 +141,7 @@ static int32_t cs_in(void *arg)
     return *(int32_t*)arg;
 }
 
-void position_control_init()
+static void position_control_init()
 {
     // waypoint position control
 
@@ -364,6 +365,18 @@ void drive_task(void *pdata)
     float prev_set_vx = 0;
     float prev_set_vy = 0;
     float prev_set_omega = 0;
+    trace_var_t x_err_tr;
+    trace_var_t y_err_tr;
+    trace_var_t theta_err_tr;
+    trace_var_t x_out_tr;
+    trace_var_t y_out_tr;
+    trace_var_t theta_out_tr;
+    trace_var_add(&x_err_tr, "x_err");
+    trace_var_add(&y_err_tr, "y_err");
+    trace_var_add(&theta_err_tr, "theta_err");
+    trace_var_add(&x_out_tr, "x_out");
+    trace_var_add(&y_out_tr, "y_out");
+    trace_var_add(&theta_out_tr, "theta_out");
     while (1) {
         if (param_has_changed(&drive_ctrl_freq)) {
             period_us = OS_TICKS_PER_SEC / param_get(&drive_ctrl_freq);
@@ -384,31 +397,31 @@ void drive_task(void *pdata)
         // }
 
         update_drive_params();
-
+        float x_err, y_err;
         drive_waypoint_t *wp;
         if ((wp = drive_waypoint_get_next()) != NULL) { // waypoints available
-            printf("drive using waypoints\n");
+            // printf("drive using waypoints\n");
             update_pid_parameters(&pos_cs);
             set_vx = wp->vx;
             set_vy = wp->vy;
             set_omega = 0;
-            float x_err = pos_x - wp->x;
-            float y_err = pos_y - wp->y;
+            x_err = pos_x - wp->x;
+            y_err = pos_y - wp->y;
             // pid control
             in_x = x_err * PID_SCALE_IN;
             in_y = y_err * PID_SCALE_IN;
             cs_manage(&pos_cs.pos_x_cs);
             cs_manage(&pos_cs.pos_y_cs);
         } else { // no waypoints available: use fallback position controller
-            printf("drive using fallback pid\n");
+            // printf("drive using fallback pid\n");
             update_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
             set_omega = 0;
             OS_CPU_SR cpu_sr;
             OS_ENTER_CRITICAL();
-            float x_err = pos_x - dest_x;
-            float y_err = pos_y - dest_y;
+            x_err = pos_x - dest_x;
+            y_err = pos_y - dest_y;
             OS_EXIT_CRITICAL();
             // pid control
             in_x = x_err * PID_SCALE_IN;
@@ -420,6 +433,7 @@ void drive_task(void *pdata)
         set_vy += (float)out_y / PID_SCALE_OUT;
 
         float current_heading = get_heading();
+        float heading_err = 0;
         // switch heading contorl mode
         //      heading control -> pid_rot_out
         // float heading = get_heading();
@@ -428,6 +442,9 @@ void drive_task(void *pdata)
         // in_rotation = heading_err * PID_SCALE_IN;
         // cs_manage(&pos_cs.theta_cs);
         // set_omega += (float)out_rotation / PID_SCALE_OUT;
+        trace_var_update(&x_err_tr, x_err);
+        trace_var_update(&y_err_tr, y_err);
+        trace_var_update(&theta_err_tr, heading_err);
 
         // limit acceleration & maximum speed
         float delta_vx = limit_sym(set_vx - prev_set_vx, max_acc_xy);
@@ -439,6 +456,9 @@ void drive_task(void *pdata)
         prev_set_vx = set_vx;
         prev_set_vy = set_vy;
         prev_set_omega = set_omega;
+        trace_var_update(&x_out_tr, set_vx);
+        trace_var_update(&y_out_tr, set_vy);
+        trace_var_update(&theta_out_tr, set_omega);
 
         // coordinate transform to robot coordinate system
         float sin_heading = sin(current_heading);
@@ -536,6 +556,8 @@ void emergency_stop_task(void *arg)
 
 void start_drive_task(void)
 {
+    drive_waypoint_init();
+
     param_add(&drive_ctrl_freq, "drive_ctrl_freq", "[Hz]");
     param_set(&drive_ctrl_freq, DRIVE_CTRL_FREQ_DEFAULT);
 
