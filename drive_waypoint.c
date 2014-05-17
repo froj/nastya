@@ -99,7 +99,13 @@ drive_waypoint_t* drive_waypoint_get_next()
     int i;
     for (i = waypoint_index; i < path.len; i++) {
         if (path.points[i].timestamp >= relative_now) {
-            // TODO closest, not just next
+            // closest in time, not just next
+            if (i > 0) {
+                if (relative_now - path.points[i-1].timestamp <
+                    path.points[i].timestamp - relative_now) {
+                    i--;
+                }
+            }
             break;
         }
     }
