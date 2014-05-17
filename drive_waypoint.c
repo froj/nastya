@@ -41,6 +41,12 @@ void drive_waypoint_init()
     destination.vx = 0;
     destination.vy = 0;
 
+    path.points = NULL;
+    path.len = 0;
+
+    // ensure timeout if there has never been a connection to server
+    request_time = uptime_get() - param_get(&drive_request_timeout);
+
     param_add(&drive_request_timeout, "drive_request_timeout", "[us]");
     param_add(&desired_nb_datapoints, "desired_nb_datapoints", NULL);
     param_add(&desired_sample_period, "desired_sample_period", "[ms]");
@@ -79,6 +85,12 @@ drive_waypoint_t* drive_waypoint_get_next()
     INT8U uCErr;
     OSSemPend(mutex, 0, &uCErr);
 
+    int32_t relative_now = uptime_get() - request_time;
+    if (relative_now > param_get(&drive_request_timeout)) {
+        OSSemPost(mutex);
+        return NULL;
+    }
+
     if (path.len == 0) {
         OSSemPost(mutex);
         LOCK();
@@ -90,16 +102,16 @@ drive_waypoint_t* drive_waypoint_get_next()
         return &next_waypoint;
     }
 
-    int32_t relative_now = uptime_get() - request_time;
-    if (relative_now > param_get(&drive_request_timeout)) {
-        OSSemPost(mutex);
-        return NULL;
-    }
-
     int i;
     for (i = waypoint_index; i < path.len; i++) {
         if (path.points[i].timestamp >= relative_now) {
-            // TODO closest, not just next
+            // closest in time, not just next
+            if (i > 0) {
+                if (relative_now - path.points[i-1].timestamp <
+                    path.points[i].timestamp - relative_now) {
+                    i--;
+                }
+            }
             break;
         }
     }
