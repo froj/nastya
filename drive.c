@@ -268,7 +268,7 @@ static void position_control_init()
     param_add(&heading_cs.theta_pid_D_filt, "pid_theta_D_filt", NULL);
     param_add(&heading_cs.theta_pid_I_bound, "pid_theta_I_bound", NULL);
 
-    param_set(&heading_cs.theta_pid_P, 0);
+    param_set(&heading_cs.theta_pid_P, 100);
     param_set(&heading_cs.theta_pid_I, 0);
     param_set(&heading_cs.theta_pid_D, 0);
     param_set(&heading_cs.theta_pid_D_filt, 3);
