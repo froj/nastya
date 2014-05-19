@@ -361,6 +361,39 @@ static void update_drive_params(void)
     }
 }
 
+
+typedef struct {
+    timestamp_t last_sign_change;
+    int prev_sign;
+    int32_t min_period;
+} anti_osc_filt_t;
+
+void anti_osc_filt_init(anti_osc_filt_t *f, float freq)
+{
+    f->last_sign_change = uptime_get();
+    f->prev_sign = 1;
+    f->min_period = 1000000 / freq;
+}
+
+float anti_osc_filt(anti_osc_filt_t *f, float in)
+{
+    if (in > 0 && f->prev_sign > 0) {
+        return in;
+    }
+    if (in < 0 && f->prev_sign < 0) {
+        return in;
+    }
+    // input sign changed
+    timestamp_t now = uptime_get();
+    if (now - f->last_sign_change < f->min_period) {
+        return 0; // don't change sing yet, out = 0
+    } else {
+        f->prev_sign = - f->prev_sign;
+        f->last_sign_change = now;
+        return in;
+    }
+}
+
 void drive_task(void *pdata)
 {
     printf("drive task started\n");
