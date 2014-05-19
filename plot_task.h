@@ -10,6 +10,6 @@ enum plot_types {
 };
 
 
-void plot_task(void);
+void plot_task(void *arg);
 void plot_add_variable(char description[8], void* variable, enum plot_types type);
 void plot_init(void);
