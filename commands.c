@@ -95,6 +95,7 @@ int cmd_position_reset_to(lua_State *l)
 
     position_reset_to(x, y, theta);
     drive_set_dest(x,y);
+    drive_disable_heading_ctrl();
     lua_pushstring(l, "OK");
     return 1;
 }

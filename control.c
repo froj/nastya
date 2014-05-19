@@ -47,7 +47,7 @@ OS_STK control_task_stk[CONTROL_TASK_STACKSIZE];
 
 struct holonomic_base_speed_cs nastya_cs;
 
-#define SPEED_CTRL_FREQ_DEFAULT 20 // [Hz]
+#define SPEED_CTRL_FREQ_DEFAULT 100 // [Hz]
 static param_t speed_ctrl_freq;
 
 void control_update_setpoint_vx(float vx)
@@ -291,13 +291,13 @@ void holonomic_base_speed_cs_init(void)
 
     // velocity xy
     param_set(&nastya_cs.vxy_pid_P, 20);
-    param_set(&nastya_cs.vxy_pid_I, 30);
-    param_set(&nastya_cs.vxy_pid_D, 4);
+    param_set(&nastya_cs.vxy_pid_I, 5);
+    param_set(&nastya_cs.vxy_pid_D, 10);
     param_set(&nastya_cs.vxy_pid_D_filt, 15);
     param_set(&nastya_cs.vxy_pid_I_bound, 3000);
     // omega
-    param_set(&nastya_cs.omega_pid_P, 30);
-    param_set(&nastya_cs.omega_pid_I, 30);
+    param_set(&nastya_cs.omega_pid_P, 20);
+    param_set(&nastya_cs.omega_pid_I, 15);
     param_set(&nastya_cs.omega_pid_D, 10);
     param_set(&nastya_cs.omega_pid_D_filt, 15);
     param_set(&nastya_cs.omega_pid_I_bound, 3000);

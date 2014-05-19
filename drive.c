@@ -102,13 +102,13 @@ int drive_goto(float x, float y)
 
 
 
-#define DRIVE_CTRL_FREQ_DEFAULT 20 // [Hz]
+#define DRIVE_CTRL_FREQ_DEFAULT 33.333 // [Hz]
 static param_t drive_ctrl_freq;
 
-#define MAX_ACC_XY_DEFAULT      1.5         // [m/s^2]
-#define MAX_SPEED_XY_DEFAULT    0.5         // [m/s]
-#define MAX_ALPHA_DEFAULT       (M_PI * 6)  // [rad/s^2]
-#define MAX_OMEGA_DEFAULT       M_PI        // [rad/s]
+#define MAX_ACC_XY_DEFAULT      0.05         // [m/s^2]
+#define MAX_SPEED_XY_DEFAULT    0.75         // [m/s]
+#define MAX_ALPHA_DEFAULT       1.5          // [rad/s^2]
+#define MAX_OMEGA_DEFAULT       M_PI         // [rad/s]
 static param_t max_acc_xy_p;
 static param_t max_speed_xy_p;
 static param_t max_alpha_p;
@@ -238,9 +238,9 @@ static void position_control_init()
     param_add(&fallback_pos_cs.pos_y_pid_D_filt, "fallback_pid_pos_y_D_filt", NULL);
     param_add(&fallback_pos_cs.pos_y_pid_I_bound, "fallback_pid_pos_y_I_bound", NULL);
 
-    param_set(&fallback_pos_cs.pos_xy_pid_P, 30);
-    param_set(&fallback_pos_cs.pos_xy_pid_I, 0);
-    param_set(&fallback_pos_cs.pos_xy_pid_D, 10);
+    param_set(&fallback_pos_cs.pos_xy_pid_P, 400);
+    param_set(&fallback_pos_cs.pos_xy_pid_I, 1);
+    param_set(&fallback_pos_cs.pos_xy_pid_D, 60);
     param_set(&fallback_pos_cs.pos_xy_pid_D_filt, 3);
     param_set(&fallback_pos_cs.pos_xy_pid_I_bound, 800);
 
@@ -268,9 +268,9 @@ static void position_control_init()
     param_add(&heading_cs.theta_pid_D_filt, "pid_theta_D_filt", NULL);
     param_add(&heading_cs.theta_pid_I_bound, "pid_theta_I_bound", NULL);
 
-    param_set(&heading_cs.theta_pid_P, 100);
-    param_set(&heading_cs.theta_pid_I, 0);
-    param_set(&heading_cs.theta_pid_D, 0);
+    param_set(&heading_cs.theta_pid_P, 1200);
+    param_set(&heading_cs.theta_pid_I, 10);
+    param_set(&heading_cs.theta_pid_D, 200);
     param_set(&heading_cs.theta_pid_D_filt, 3);
     param_set(&heading_cs.theta_pid_I_bound, 400);
 
