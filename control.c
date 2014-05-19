@@ -156,6 +156,39 @@ static void update_parameters(void)
     }
 }
 
+typedef struct {
+    timestamp_t last_sign_change;
+    int prev_sign;
+    int32_t min_period;
+} anti_osc_filt_t;
+
+void anti_osc_filt_init(anti_osc_filt_t *f, float freq)
+{
+    f->last_sign_change = uptime_get();
+    f->prev_sign = 1;
+    f->min_period = 1000000 / freq;
+}
+
+float anti_osc_filt(anti_osc_filt_t *f, float in)
+{
+    if (in > 0 && f->prev_sign > 0) {
+        return in;
+    }
+    if (in < 0 && f->prev_sign < 0) {
+        return in;
+    }
+    // input sign changed
+    timestamp_t now = uptime_get();
+    if (now - f->last_sign_change < f->min_period) {
+        return 0; // don't change sing yet, out = 0
+    } else {
+        f->prev_sign = - f->prev_sign;
+        f->last_sign_change = now;
+        return in;
+    }
+}
+
+
 void control_task(void *arg)
 {
     static trace_var_t t_err_vx;
@@ -164,6 +197,15 @@ void control_task(void *arg)
     static trace_var_t t_out_vx;
     static trace_var_t t_out_vy;
     static trace_var_t t_out_omega;
+
+    static anti_osc_filt_t anti_osc_vx;
+    static anti_osc_filt_t anti_osc_vy;
+    static anti_osc_filt_t anti_osc_omega;
+
+    anti_osc_filt_init(&anti_osc_vx, 2);
+    anti_osc_filt_init(&anti_osc_vy, 2);
+    anti_osc_filt_init(&anti_osc_omega, 2);
+
     trace_var_add(&t_err_vx, "cs_vx_err");
     trace_var_add(&t_err_vy, "cs_vy_err");
     trace_var_add(&t_err_omega, "cs_omega_err");
@@ -227,6 +269,10 @@ void control_task(void *arg)
         float cmd_x = (float)nastya_cs.out_x / VX_OUT_SCALE;
         float cmd_y = (float)nastya_cs.out_y / VY_OUT_SCALE;
         float cmd_rot = (float)nastya_cs.out_rotation / OMEGA_OUT_SCALE;
+
+        cmd_x = anti_osc_filt(&anti_osc_vx, cmd_x);
+        cmd_y = anti_osc_filt(&anti_osc_vy, cmd_y);
+        cmd_rot = anti_osc_filt(&anti_osc_omega, cmd_rot);
 
         holonomic_base_mixer_robot_to_wheels(cmd_x, cmd_y, cmd_rot, wheel_cmd);
 
