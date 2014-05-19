@@ -70,7 +70,7 @@ int cmd_position_reset_to(lua_State *l)
     theta = lua_tonumber(l, -1);
 
     position_reset_to(x, y, theta);
-
+    drive_set_dest(x,y);
     return 0;
 }
 
@@ -88,7 +88,7 @@ int cmd_set_yellow(lua_State *l)
 
 int cmd_match(lua_State *l)
 {
-    ready_for_match();
+    match_restart(false);
     return 0;
 }
 

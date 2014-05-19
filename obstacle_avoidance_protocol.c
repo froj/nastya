@@ -4,7 +4,7 @@
 #include <lwip/ip.h>
 #include <lwip/sys.h>
 #include "obstacle_avoidance_protocol.h"
-#include "json.h"
+#include <json.h>
 
 
 void obstacle_avoidance_request_create(obstacle_avoidance_request_t *r, int obstacle_count)
@@ -109,7 +109,7 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
 
     conn = netconn_new(NETCONN_TCP);
 
-    err = netconn_connect(conn, &remote_ip, 2048);
+    err = netconn_connect(conn, &remote_ip, port);
     if (err != ERR_OK) {
         free(data);
         netconn_delete(conn);

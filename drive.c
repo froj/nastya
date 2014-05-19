@@ -32,7 +32,7 @@ static float look_at_y = 0;
 static int drive_heading_mode = DRIVE_HEADING_MODE_FREE;
 
 
-static bool destination_reached()
+bool destination_reached()
 {
     float goto_stop_thershold = 0.0032;
     float current_speed_x, current_speed_y;
@@ -53,7 +53,8 @@ static bool destination_reached()
     }
 }
 
-int drive_goto(float x, float y)
+
+void drive_set_dest(float x, float y)
 {
     OS_CPU_SR cpu_sr;
     OS_ENTER_CRITICAL();
@@ -61,6 +62,11 @@ int drive_goto(float x, float y)
     dest_y = y;
     OS_EXIT_CRITICAL();
     drive_waypoint_set_destination(x, y);
+}
+
+int drive_goto(float x, float y)
+{
+    drive_set_dest(x, y);
     while (!destination_reached()) {
         OSTimeDly(OS_TICKS_PER_SEC/20);
     }
@@ -167,15 +173,15 @@ static void position_control_init()
     param_add(&pos_cs.theta_pid_I_bound, "pid_theta_I_bound", NULL);
 
     // pos xy
-    param_set(&pos_cs.pos_xy_pid_P, 100);
+    param_set(&pos_cs.pos_xy_pid_P, 0);
     param_set(&pos_cs.pos_xy_pid_I, 0);
-    param_set(&pos_cs.pos_xy_pid_D, 3000);
+    param_set(&pos_cs.pos_xy_pid_D, 0);
     param_set(&pos_cs.pos_xy_pid_D_filt, 3);
     param_set(&pos_cs.pos_xy_pid_I_bound, 800);
     // theta
-    param_set(&pos_cs.theta_pid_P, 4);
-    param_set(&pos_cs.theta_pid_I, 10);
-    param_set(&pos_cs.theta_pid_D, 2500);
+    param_set(&pos_cs.theta_pid_P, 0);
+    param_set(&pos_cs.theta_pid_I, 0);
+    param_set(&pos_cs.theta_pid_D, 0);
     param_set(&pos_cs.theta_pid_D_filt, 3);
     param_set(&pos_cs.theta_pid_I_bound, 400);
 
@@ -227,9 +233,9 @@ static void position_control_init()
     param_add(&fallback_pos_cs.theta_pid_I_bound, "fallback_pid_theta_I_bound", NULL);
 
     // pos xy
-    param_set(&fallback_pos_cs.pos_xy_pid_P, 100);
+    param_set(&fallback_pos_cs.pos_xy_pid_P, 30);
     param_set(&fallback_pos_cs.pos_xy_pid_I, 0);
-    param_set(&fallback_pos_cs.pos_xy_pid_D, 3000);
+    param_set(&fallback_pos_cs.pos_xy_pid_D, 10);
     param_set(&fallback_pos_cs.pos_xy_pid_D_filt, 3);
     param_set(&fallback_pos_cs.pos_xy_pid_I_bound, 800);
     // theta
@@ -400,7 +406,8 @@ void drive_task(void *pdata)
         float x_err, y_err;
         drive_waypoint_t *wp;
         if ((wp = drive_waypoint_get_next()) != NULL) { // waypoints available
-            // printf("drive using waypoints\n");
+            printf("drive using waypoints %f %f\n (%f %f %f %f)\n\n",
+                dest_x, dest_y, wp->x, wp->y, wp->vx, wp->vy);
             update_pid_parameters(&pos_cs);
             set_vx = wp->vx;
             set_vy = wp->vy;
@@ -413,7 +420,7 @@ void drive_task(void *pdata)
             cs_manage(&pos_cs.pos_x_cs);
             cs_manage(&pos_cs.pos_y_cs);
         } else { // no waypoints available: use fallback position controller
-            // printf("drive using fallback pid\n");
+            printf("drive using fallback pid %f %f\n", dest_x, dest_y);
             update_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
@@ -505,7 +512,7 @@ void emergency_stop_task(void *arg)
     int stop_timeout = 0;
     while (1) {
         if (emergency_stop() ||
-            (match_has_startd && uptime_get() - match_start > MATCH_DURATION)) {
+            (match_has_started && uptime_get() - match_start > MATCH_DURATION)) {
             stop_timeout = EMERGENCY_STOP_UPDATE_FREQ / 10; // reset stop timer
         }
         if (stop_timeout > 0) {

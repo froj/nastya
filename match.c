@@ -9,17 +9,18 @@
 #include "position_integration.h"
 #include "hardware.h"
 #include "plot_task.h"
+#include "drive.h"
 
 #include "match.h"
 #include "param.h"
 
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 
-// bool disable_postion_control;
-bool team_red;
+bool next_match_team_red = false;
+static bool restart_match = false;
 
 timestamp_t match_start;
-bool match_has_startd = false;
+bool match_has_started = false;
 
 
 static void calibrate_position(void)
@@ -63,35 +64,39 @@ static bool wait_for_start(void)
     return !(IORD(PIO_BASE, 0) & 0x1000);
 }
 
-void match_task(void *arg)
+void match_run(bool team_red)
 {
+    match_has_started = false;
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
     control_update_setpoint_omega(0);
     nastya_cs.vx_control_enable = false;
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
+
     OSTimeDly(OS_TICKS_PER_SEC / 2);
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    OSTimeDly(OS_TICKS_PER_SEC / 2);
+
+    if (team_red) {
+        position_reset_to(2.898, 0.120, 3.14159);
+        drive_set_dest(2.898, 0.120);
+    } else {
+        position_reset_to(0.102, 0.120, 0);
+        drive_set_dest(0.102, 0.120);
+    }
     nastya_cs.vx_control_enable = true;
     nastya_cs.vy_control_enable = true;
     nastya_cs.omega_control_enable = true;
-    OSTimeDly(OS_TICKS_PER_SEC);
+
     // wait for start signal
     while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
-    if (team_red)
-        position_reset_to(2.898, 0.120, 3.14159);
-    else
-        position_reset_to(0.102, 0.120, 0);
 
     match_start = uptime_get();
-    match_has_startd = true;
+    match_has_started = true;
     printf("much started [%d]\nwow\n", (int)match_start);
 
-    OSTimeDly(OS_TICKS_PER_SEC*4);
-
-
-
+    OSTimeDly((MATCH_DURATION/1000000) * OS_TICKS_PER_SEC);
 
     // if (team_red) {
     //     goto_position(2.8, 0.6, -10, 0);
@@ -112,15 +117,25 @@ void match_task(void *arg)
     //     goto_position(1.5,  0.6, 0, 0);
     // }
 
-    control_update_setpoint_vx(0);
-    control_update_setpoint_vy(0);
-    control_update_setpoint_omega(0);
+    // control_update_setpoint_vx(0);
+    // control_update_setpoint_vy(0);
+    // control_update_setpoint_omega(0);
     nastya_cs.vx_control_enable = false;
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
-    OSTaskDel(MATCH_TASK_PRIORITY);
 }
 
+
+
+void match_task(void *arg)
+{
+    while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    while (1) {
+        match_run(next_match_team_red);
+        // while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
+        restart_match = false;
+    }
+}
 
 void ready_for_match(void)
 {
@@ -137,11 +152,17 @@ void ready_for_match(void)
 
 void match_set_red(void)
 {
-    team_red = true;
+    next_match_team_red = true;
 }
 
 void match_set_yellow(void)
 {
-    team_red = false;
+    next_match_team_red = false;
+}
+
+void match_restart(bool team_red)
+{
+    restart_match = true;
+    next_match_team_red = team_red;
 }
 

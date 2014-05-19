@@ -14,7 +14,7 @@ OS_STK drive_waypoint_stk[DRIVE_WAYPOINT_STACKSIZE];
 #define LOCK() {OS_ENTER_CRITICAL();}
 #define UNLOCK() {OS_EXIT_CRITICAL();}
 
-#define DRIVE_REQUEST_TIMEOUT_DEFAULT   100000 // [us]
+#define DRIVE_REQUEST_TIMEOUT_DEFAULT   300000 // [us]
 #define DESIRED_NB_DATAPOINTS_DEFAULT       50
 #define DESIRED_SAMPLE_PERIOD_DEFAULT       20 // [ms]
 
@@ -31,7 +31,7 @@ static timestamp_t request_time;
 static int waypoint_index;
 
 void drive_waypoint_task(void *arg);
-static void send_request();
+static int send_request();
 
 void drive_waypoint_init()
 {
@@ -85,8 +85,10 @@ drive_waypoint_t* drive_waypoint_get_next()
     INT8U uCErr;
     OSSemPend(mutex, 0, &uCErr);
 
-    int32_t relative_now = uptime_get() - request_time;
+    timestamp_t now = uptime_get();
+    int32_t relative_now = now - request_time;
     if (relative_now > param_get(&drive_request_timeout)) {
+        printf("rel now: %d, req: %d, now %d\n", relative_now, request_time, now);
         OSSemPost(mutex);
         return NULL;
     }
@@ -115,6 +117,11 @@ drive_waypoint_t* drive_waypoint_get_next()
             break;
         }
     }
+    if (i == path.len) {
+        OSSemPost(mutex);
+        return NULL;
+    }
+    printf("wp nb %d (%d): %d %d\n", i, path.len, path.points[i].x, path.points[i].y);
     next_waypoint.x = (float)path.points[i].x / 1000;
     next_waypoint.y = (float)path.points[i].y / 1000;
     next_waypoint.vx = (float)path.points[i].vx / 1000;
@@ -128,7 +135,7 @@ drive_waypoint_t* drive_waypoint_get_next()
 
 }
 
-static void send_request()
+static int send_request()
 {
     static obstacle_avoidance_path_t path_buffer;
     obstacle_avoidance_request_t request;
@@ -142,10 +149,10 @@ static void send_request()
     obstacle_avoidance_request_create(&request, 0);
     request.desired_datapoints = param_get(&desired_nb_datapoints);
     request.desired_samplerate = param_get(&desired_sample_period);
-    request.start.x = get_position_x();
-    request.start.y = get_position_y();
-    request.start.vx = get_velocity_x();
-    request.start.vy = get_velocity_y();
+    request.start.x = get_position_x() * 1000;
+    request.start.y = get_position_y() * 1000;
+    request.start.vx = get_velocity_x() * 1000;
+    request.start.vy = get_velocity_y() * 1000;
 
     LOCK();
     request.end = destination;
@@ -164,20 +171,35 @@ static void send_request()
         path_buffer.len = 0;
         obstacle_avoidance_delete_path(&path_buffer);
 
+        // int i;
+        // for (i = 0; i < path.len; i++) {
+        //     printf("   [%d] %d %d %d %d\n", path.points[i].timestamp,
+        //         path.points[i].x, path.points[i].y,
+        //         path.points[i].vx,path.points[i].vy);
+        // }
+        // printf("Path len: %d\n", path.len);
+
         waypoint_index = 0;
 
         request_time = request_started;
 
         OSSemPost(mutex);
+    } else {
+        printf("pius err %d\n", err);
     }
 
     obstacle_avoidance_request_delete(&request);
+    return err;
 }
 
 void drive_waypoint_task(void *arg)
 {
     while(42) {
-        send_request();
+        printf("new req: %d %d\n", destination.x, destination.y);
+        int err = send_request();
+        if (err != ERR_OK) {
+            OSTimeDly(OS_TICKS_PER_SEC/20);
+        }
     }
 }
 

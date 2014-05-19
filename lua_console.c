@@ -169,12 +169,12 @@ static void luaconsole_thread(void *arg)
 
     /* Tell connection to go into listening mode. */
     netconn_listen(conn);
-        printf("started\n");
+    printf("lua shell started\n");
 
     while(1) {
         /* Grab new connection. */
         err = netconn_accept(conn, &newconn);
-        printf("accepted\n");
+        printf("lua shell connection accepted\n");
         if(err == ERR_OK) {
             serve_conn(newconn);
 
