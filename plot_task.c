@@ -25,7 +25,7 @@ static struct plot_data *plots = NULL;
 struct udp_pcb *pcb;
 
 
-void plot_task(void)
+void plot_task(void *arg)
 {
     uint32_t plot_period = 0;
     int i;
@@ -194,6 +194,6 @@ void plot_init(void)
                     PLOT_TASK_PRIORITY,
                     &plot_stk[0],
                     PLOT_TASK_STACKSIZE,
-                    NULL, NULL);
+                    NULL, 0);
 
 }
