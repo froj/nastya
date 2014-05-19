@@ -111,7 +111,7 @@ drive_waypoint_t* drive_waypoint_get_next()
                     (get_position_x() - (float)path.points[i].x / 1000) +
                     (get_position_y() - (float)path.points[i].y / 1000) *
                     (get_position_y() - (float)path.points[i].y / 1000);
-        if (i != 0 && delta_pos > old_delta_pos) {
+        if (i != waypoint_index && delta_pos > old_delta_pos) {
             i--;
             break;
         }
