@@ -105,22 +105,23 @@ drive_waypoint_t* drive_waypoint_get_next()
     }
 
     int i;
-    for (i = waypoint_index; i < path.len; i++) {
-        if (path.points[i].timestamp >= relative_now) {
-            // closest in time, not just next
-            if (i > 0) {
-                if (relative_now - path.points[i-1].timestamp <
-                    path.points[i].timestamp - relative_now) {
-                    i--;
-                }
-            }
+    float delta_pos, old_delta_pos;
+    for (i = waypoint_index; i < path.len - 1; i++) {
+        delta_pos = (get_position_x() - path.points[i].x / 1000) *
+                    (get_position_x() - path.points[i].x / 1000) +
+                    (get_position_y() - path.points[i].y / 1000) *
+                    (get_position_y() - path.points[i].y / 1000);
+        if (i != 0 && delta_pos > old_delta_pos) {
+            i--;
             break;
+        } else {
+            old_delta_pos = delta_pos;
         }
     }
-    if (i == path.len) {
-        OSSemPost(mutex);
-        return NULL;
-    }
+    //if (i == path.len) {
+    //    OSSemPost(mutex);
+    //    return NULL;
+    //}
     printf("wp nb %d (%d): %d %d\n", i, path.len, path.points[i].x, path.points[i].y);
     next_waypoint.x = (float)path.points[i].x / 1000;
     next_waypoint.y = (float)path.points[i].y / 1000;
