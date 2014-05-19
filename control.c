@@ -205,6 +205,13 @@ void control_task(void *arg)
     anti_osc_filt_init(&anti_osc_vx, 2);
     anti_osc_filt_init(&anti_osc_vy, 2);
     anti_osc_filt_init(&anti_osc_omega, 2);
+    static anti_osc_filt_t m1_flt;
+    static anti_osc_filt_t m2_flt;
+    static anti_osc_filt_t m3_flt;
+    anti_osc_filt_init(&m1_flt, 2);
+    anti_osc_filt_init(&m2_flt, 2);
+    anti_osc_filt_init(&m3_flt, 2);
+
 
     trace_var_add(&t_err_vx, "cs_vx_err");
     trace_var_add(&t_err_vy, "cs_vy_err");
@@ -270,15 +277,15 @@ void control_task(void *arg)
         float cmd_y = (float)nastya_cs.out_y / VY_OUT_SCALE;
         float cmd_rot = (float)nastya_cs.out_rotation / OMEGA_OUT_SCALE;
 
-        cmd_x = anti_osc_filt(&anti_osc_vx, cmd_x);
-        cmd_y = anti_osc_filt(&anti_osc_vy, cmd_y);
-        cmd_rot = anti_osc_filt(&anti_osc_omega, cmd_rot);
+        // cmd_x = anti_osc_filt(&anti_osc_vx, cmd_x);
+        // cmd_y = anti_osc_filt(&anti_osc_vy, cmd_y);
+        // cmd_rot = anti_osc_filt(&anti_osc_omega, cmd_rot);
 
         holonomic_base_mixer_robot_to_wheels(cmd_x, cmd_y, cmd_rot, wheel_cmd);
 
-        hw_set_wheel_0_motor_pwm(wheel_cmd[0]);
-        hw_set_wheel_1_motor_pwm(wheel_cmd[1]);
-        hw_set_wheel_2_motor_pwm(wheel_cmd[2]);
+        hw_set_wheel_0_motor_pwm(anti_osc_filt(&m1_flt, wheel_cmd[0]));
+        hw_set_wheel_1_motor_pwm(anti_osc_filt(&m2_flt, wheel_cmd[1]));
+        hw_set_wheel_2_motor_pwm(anti_osc_filt(&m3_flt, wheel_cmd[2]));
 
         trace_var_update(&t_err_vx, nastya_cs.vx - (float)cs_get_consign(&nastya_cs.vx_cs) / VX_IN_SCALE);
         trace_var_update(&t_err_vy, nastya_cs.vy - (float)cs_get_consign(&nastya_cs.vy_cs) / VY_IN_SCALE);
