@@ -107,16 +107,15 @@ drive_waypoint_t* drive_waypoint_get_next()
     int i;
     float delta_pos, old_delta_pos;
     for (i = waypoint_index; i < path.len - 1; i++) {
-        delta_pos = (get_position_x() - path.points[i].x / 1000) *
-                    (get_position_x() - path.points[i].x / 1000) +
-                    (get_position_y() - path.points[i].y / 1000) *
-                    (get_position_y() - path.points[i].y / 1000);
+        delta_pos = (get_position_x() - (float)path.points[i].x / 1000) *
+                    (get_position_x() - (float)path.points[i].x / 1000) +
+                    (get_position_y() - (float)path.points[i].y / 1000) *
+                    (get_position_y() - (float)path.points[i].y / 1000);
         if (i != 0 && delta_pos > old_delta_pos) {
             i--;
             break;
-        } else {
-            old_delta_pos = delta_pos;
         }
+        old_delta_pos = delta_pos;
     }
     //if (i == path.len) {
     //    OSSemPost(mutex);
@@ -198,6 +197,7 @@ void drive_waypoint_task(void *arg)
     while(42) {
         printf("new req: %d %d\n", destination.x, destination.y);
         int err = send_request();
+        OSTimeDly(OS_TICKS_PER_SEC*0.5);
         if (err != ERR_OK) {
             OSTimeDly(OS_TICKS_PER_SEC/20);
         }
