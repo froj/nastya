@@ -60,10 +60,34 @@ int cmd_goto_position(lua_State *l)
     return 0;
 }
 
+int cmd_lookat(lua_State *l)
+{
+    lua_Number x, y;
+    if (lua_gettop(l) == 2) {
+        x = lua_tonumber(l, -2);
+        y = lua_tonumber(l, -1);
+        drive_set_look_at(x, y);
+        return 0;
+    }
+}
+
+int cmd_heading(lua_State *l)
+{
+    lua_Number a;
+    if (lua_gettop(l) == 1) {
+        a = lua_tonumber(l, -1);
+        drive_set_heading(a);
+        return 0;
+    }
+}
+
 int cmd_position_reset_to(lua_State *l)
 {
     lua_Number x, y, theta;
-    if (lua_gettop(l) < 3) return 0;
+    if (lua_gettop(l) < 3) {
+        lua_pushstring(l, "expected: x,y,theta");
+        return 1;
+    }
 
     x = lua_tonumber(l, -3);
     y = lua_tonumber(l, -2);
@@ -71,7 +95,8 @@ int cmd_position_reset_to(lua_State *l)
 
     position_reset_to(x, y, theta);
     drive_set_dest(x,y);
-    return 0;
+    lua_pushstring(l, "OK");
+    return 1;
 }
 
 int cmd_set_red(lua_State *l)
@@ -193,5 +218,11 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_list_param);
     lua_setglobal(l, "param_list");
+
+    lua_pushcfunction(l, cmd_lookat);
+    lua_setglobal(l, "lookat");
+
+    lua_pushcfunction(l, cmd_heading);
+    lua_setglobal(l, "heading");
 }
 

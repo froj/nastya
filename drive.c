@@ -53,6 +53,33 @@ bool destination_reached()
     }
 }
 
+void drive_set_heading(float heading)
+{
+    OS_CPU_SR cpu_sr;
+    OS_ENTER_CRITICAL();
+    dest_heading = heading;
+    drive_heading_mode = DRIVE_HEADING_MODE_ANGLE;
+    OS_EXIT_CRITICAL();
+}
+
+void drive_set_look_at(float x, float y)
+{
+    OS_CPU_SR cpu_sr;
+    OS_ENTER_CRITICAL();
+    look_at_x = x;
+    look_at_y = y;
+    drive_heading_mode = DRIVE_HEADING_MODE_POINT;
+    OS_EXIT_CRITICAL();
+}
+
+void drive_disable_heading_ctrl()
+{
+    OS_CPU_SR cpu_sr;
+    OS_ENTER_CRITICAL();
+    drive_heading_mode = DRIVE_HEADING_MODE_FREE;
+    OS_EXIT_CRITICAL();
+}
+
 
 void drive_set_dest(float x, float y)
 {
@@ -107,16 +134,19 @@ struct pos_cs_s {
     param_t pos_y_pid_D;
     param_t pos_y_pid_D_filt;
     param_t pos_y_pid_I_bound;
+    struct cs pos_x_cs;
+    struct cs pos_y_cs;
+    struct pid_filter pos_x_pid;
+    struct pid_filter pos_y_pid;
+};
+
+struct heading_cs_s {
     param_t theta_pid_P;
     param_t theta_pid_I;
     param_t theta_pid_D;
     param_t theta_pid_D_filt;
     param_t theta_pid_I_bound;
-    struct cs pos_x_cs;
-    struct cs pos_y_cs;
     struct cs theta_cs;
-    struct pid_filter pos_x_pid;
-    struct pid_filter pos_y_pid;
     struct pid_filter theta_pid;
 };
 
@@ -129,6 +159,7 @@ struct pos_cs_s {
 
 static struct pos_cs_s pos_cs;
 static struct pos_cs_s fallback_pos_cs;
+static struct heading_cs_s heading_cs;
 
 static int32_t out_x;
 static int32_t out_y;
@@ -166,48 +197,28 @@ static void position_control_init()
     param_add(&pos_cs.pos_y_pid_D, "pid_pos_y_D", NULL);
     param_add(&pos_cs.pos_y_pid_D_filt, "pid_pos_y_D_filt", NULL);
     param_add(&pos_cs.pos_y_pid_I_bound, "pid_pos_y_I_bound", NULL);
-    param_add(&pos_cs.theta_pid_P, "pid_theta_P", NULL);
-    param_add(&pos_cs.theta_pid_I, "pid_theta_I", NULL);
-    param_add(&pos_cs.theta_pid_D, "pid_theta_D", NULL);
-    param_add(&pos_cs.theta_pid_D_filt, "pid_theta_D_filt", NULL);
-    param_add(&pos_cs.theta_pid_I_bound, "pid_theta_I_bound", NULL);
 
-    // pos xy
     param_set(&pos_cs.pos_xy_pid_P, 0);
     param_set(&pos_cs.pos_xy_pid_I, 0);
     param_set(&pos_cs.pos_xy_pid_D, 0);
     param_set(&pos_cs.pos_xy_pid_D_filt, 3);
     param_set(&pos_cs.pos_xy_pid_I_bound, 800);
-    // theta
-    param_set(&pos_cs.theta_pid_P, 0);
-    param_set(&pos_cs.theta_pid_I, 0);
-    param_set(&pos_cs.theta_pid_D, 0);
-    param_set(&pos_cs.theta_pid_D_filt, 3);
-    param_set(&pos_cs.theta_pid_I_bound, 400);
 
     pid_init(&pos_cs.pos_x_pid);
     pid_set_out_shift(&pos_cs.pos_x_pid, 0);
     pid_init(&pos_cs.pos_y_pid);
     pid_set_out_shift(&pos_cs.pos_y_pid, 0);
-    pid_init(&pos_cs.theta_pid);
-    pid_set_out_shift(&pos_cs.theta_pid, 0);
 
     cs_init(&pos_cs.pos_x_cs);
     cs_init(&pos_cs.pos_y_cs);
-    cs_init(&pos_cs.theta_cs);
     cs_set_correct_filter(&pos_cs.pos_x_cs, pid_do_filter, &pos_cs.pos_x_pid);
     cs_set_correct_filter(&pos_cs.pos_y_cs, pid_do_filter, &pos_cs.pos_y_pid);
-    cs_set_correct_filter(&pos_cs.theta_cs, pid_do_filter, &pos_cs.theta_pid);
     cs_set_process_in(&pos_cs.pos_x_cs, cs_out, &out_x);
     cs_set_process_in(&pos_cs.pos_y_cs, cs_out, &out_y);
-    cs_set_process_in(&pos_cs.theta_cs, cs_out, &out_rotation);
     cs_set_process_out(&pos_cs.pos_x_cs, cs_in, &in_x);
     cs_set_process_out(&pos_cs.pos_y_cs, cs_in, &in_y);
-    cs_set_process_out(&pos_cs.theta_cs, cs_in, &in_rotation);
     cs_set_consign(&pos_cs.pos_x_cs, 0);
     cs_set_consign(&pos_cs.pos_y_cs, 0);
-    cs_set_consign(&pos_cs.theta_cs, 0);
-
 
     // fallback position control
 
@@ -226,50 +237,54 @@ static void position_control_init()
     param_add(&fallback_pos_cs.pos_y_pid_D, "fallback_pid_pos_y_D", NULL);
     param_add(&fallback_pos_cs.pos_y_pid_D_filt, "fallback_pid_pos_y_D_filt", NULL);
     param_add(&fallback_pos_cs.pos_y_pid_I_bound, "fallback_pid_pos_y_I_bound", NULL);
-    param_add(&fallback_pos_cs.theta_pid_P, "fallback_pid_theta_P", NULL);
-    param_add(&fallback_pos_cs.theta_pid_I, "fallback_pid_theta_I", NULL);
-    param_add(&fallback_pos_cs.theta_pid_D, "fallback_pid_theta_D", NULL);
-    param_add(&fallback_pos_cs.theta_pid_D_filt, "fallback_pid_theta_D_filt", NULL);
-    param_add(&fallback_pos_cs.theta_pid_I_bound, "fallback_pid_theta_I_bound", NULL);
 
-    // pos xy
     param_set(&fallback_pos_cs.pos_xy_pid_P, 30);
     param_set(&fallback_pos_cs.pos_xy_pid_I, 0);
     param_set(&fallback_pos_cs.pos_xy_pid_D, 10);
     param_set(&fallback_pos_cs.pos_xy_pid_D_filt, 3);
     param_set(&fallback_pos_cs.pos_xy_pid_I_bound, 800);
-    // theta
-    param_set(&fallback_pos_cs.theta_pid_P, 4);
-    param_set(&fallback_pos_cs.theta_pid_I, 10);
-    param_set(&fallback_pos_cs.theta_pid_D, 2500);
-    param_set(&fallback_pos_cs.theta_pid_D_filt, 3);
-    param_set(&fallback_pos_cs.theta_pid_I_bound, 400);
 
     pid_init(&fallback_pos_cs.pos_x_pid);
     pid_set_out_shift(&fallback_pos_cs.pos_x_pid, 0);
     pid_init(&fallback_pos_cs.pos_y_pid);
     pid_set_out_shift(&fallback_pos_cs.pos_y_pid, 0);
-    pid_init(&fallback_pos_cs.theta_pid);
-    pid_set_out_shift(&fallback_pos_cs.theta_pid, 0);
 
     cs_init(&fallback_pos_cs.pos_x_cs);
     cs_init(&fallback_pos_cs.pos_y_cs);
-    cs_init(&fallback_pos_cs.theta_cs);
     cs_set_correct_filter(&fallback_pos_cs.pos_x_cs, pid_do_filter, &fallback_pos_cs.pos_x_pid);
     cs_set_correct_filter(&fallback_pos_cs.pos_y_cs, pid_do_filter, &fallback_pos_cs.pos_y_pid);
-    cs_set_correct_filter(&fallback_pos_cs.theta_cs, pid_do_filter, &fallback_pos_cs.theta_pid);
     cs_set_process_in(&fallback_pos_cs.pos_x_cs, cs_out, &out_x);
     cs_set_process_in(&fallback_pos_cs.pos_y_cs, cs_out, &out_y);
-    cs_set_process_in(&fallback_pos_cs.theta_cs, cs_out, &out_rotation);
     cs_set_process_out(&fallback_pos_cs.pos_x_cs, cs_in, &in_x);
     cs_set_process_out(&fallback_pos_cs.pos_y_cs, cs_in, &in_y);
-    cs_set_process_out(&fallback_pos_cs.theta_cs, cs_in, &in_rotation);
     cs_set_consign(&fallback_pos_cs.pos_x_cs, 0);
     cs_set_consign(&fallback_pos_cs.pos_y_cs, 0);
-    cs_set_consign(&fallback_pos_cs.theta_cs, 0);
+
+    // heading control
+
+    param_add(&heading_cs.theta_pid_P, "pid_theta_P", NULL);
+    param_add(&heading_cs.theta_pid_I, "pid_theta_I", NULL);
+    param_add(&heading_cs.theta_pid_D, "pid_theta_D", NULL);
+    param_add(&heading_cs.theta_pid_D_filt, "pid_theta_D_filt", NULL);
+    param_add(&heading_cs.theta_pid_I_bound, "pid_theta_I_bound", NULL);
+
+    param_set(&heading_cs.theta_pid_P, 100);
+    param_set(&heading_cs.theta_pid_I, 0);
+    param_set(&heading_cs.theta_pid_D, 0);
+    param_set(&heading_cs.theta_pid_D_filt, 3);
+    param_set(&heading_cs.theta_pid_I_bound, 400);
+
+    pid_init(&heading_cs.theta_pid);
+    pid_set_out_shift(&heading_cs.theta_pid, 0);
+
+    cs_init(&heading_cs.theta_cs);
+    cs_set_correct_filter(&heading_cs.theta_cs, pid_do_filter, &heading_cs.theta_pid);
+    cs_set_process_in(&heading_cs.theta_cs, cs_out, &out_rotation);
+    cs_set_process_out(&heading_cs.theta_cs, cs_in, &in_rotation);
+    cs_set_consign(&heading_cs.theta_cs, 0);
 }
 
-static void update_pid_parameters(struct pos_cs_s *p)
+static void update_pos_pid_parameters(struct pos_cs_s *p)
 {
     // pid xy combined
     if (param_has_changed(&p->pos_xy_pid_P)) {
@@ -326,7 +341,10 @@ static void update_pid_parameters(struct pos_cs_s *p)
         pid_set_derivate_filter(&p->pos_y_pid,
                                 param_get(&p->pos_y_pid_D_filt));
     }
-    // pid theta
+}
+
+static void update_heading_pid_parameters(struct heading_cs_s *p)
+{
     if (param_has_changed(&p->theta_pid_P)
         || param_has_changed(&p->theta_pid_I)
         || param_has_changed(&p->theta_pid_D)) {
@@ -408,7 +426,7 @@ void drive_task(void *pdata)
         if ((wp = drive_waypoint_get_next()) != NULL) { // waypoints available
             printf("drive using waypoints %f %f\n (%f %f %f %f)\n\n",
                 dest_x, dest_y, wp->x, wp->y, wp->vx, wp->vy);
-            update_pid_parameters(&pos_cs);
+            update_pos_pid_parameters(&pos_cs);
             set_vx = wp->vx;
             set_vy = wp->vy;
             set_omega = 0;
@@ -421,7 +439,7 @@ void drive_task(void *pdata)
             cs_manage(&pos_cs.pos_y_cs);
         } else { // no waypoints available: use fallback position controller
             printf("drive using fallback pid %f %f\n", dest_x, dest_y);
-            update_pid_parameters(&fallback_pos_cs);
+            update_pos_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
             set_omega = 0;
@@ -440,18 +458,22 @@ void drive_task(void *pdata)
         set_vy += (float)out_y / PID_SCALE_OUT;
 
         float current_heading = get_heading();
-        float heading_err = 0;
-        // switch heading contorl mode
-        //      heading control -> pid_rot_out
-        // float heading = get_heading();
-        // float set_heading = atan2(lookat_y - pos_y, lookat_x - pos_x);
-        // float heading_err = circular_range(heading - set_heading);
-        // in_rotation = heading_err * PID_SCALE_IN;
-        // cs_manage(&pos_cs.theta_cs);
-        // set_omega += (float)out_rotation / PID_SCALE_OUT;
-        trace_var_update(&x_err_tr, x_err);
-        trace_var_update(&y_err_tr, y_err);
-        trace_var_update(&theta_err_tr, heading_err);
+        float heading_err = circular_range(current_heading - dest_heading);
+        float set_heading;
+        switch (drive_heading_mode) {
+        case DRIVE_HEADING_MODE_POINT:
+            set_heading = atan2(look_at_y - pos_y, look_at_x - pos_x);
+            heading_err = circular_range(current_heading - set_heading);
+        case DRIVE_HEADING_MODE_ANGLE:
+            update_heading_pid_parameters(&heading_cs);
+            in_rotation = heading_err * PID_SCALE_IN;
+            cs_manage(&heading_cs.theta_cs);
+            set_omega += (float)out_rotation / PID_SCALE_OUT;
+            break;
+        case DRIVE_HEADING_MODE_FREE:
+            set_omega = 0;
+            break;
+        }
 
         // limit acceleration & maximum speed
         float delta_vx = limit_sym(set_vx - prev_set_vx, max_acc_xy);
@@ -463,6 +485,10 @@ void drive_task(void *pdata)
         prev_set_vx = set_vx;
         prev_set_vy = set_vy;
         prev_set_omega = set_omega;
+
+        trace_var_update(&x_err_tr, x_err);
+        trace_var_update(&y_err_tr, y_err);
+        trace_var_update(&theta_err_tr, heading_err);
         trace_var_update(&x_out_tr, set_vx);
         trace_var_update(&y_out_tr, set_vy);
         trace_var_update(&theta_out_tr, set_omega);
