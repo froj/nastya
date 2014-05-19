@@ -132,7 +132,7 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
         return err;
     }
 
-    timestamp_t request_sent = uptime_get() - connection_established;
+    timestamp_t request_sent = uptime_get() - connection_established - request_started;
     printf("Request sent: +%d\n", request_sent);
 
     free(data);
@@ -152,12 +152,12 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
         netbuf_delete(buf);
     }
 
-    timestamp_t response = uptime_get() - request_sent;
+    timestamp_t response = uptime_get() - request_sent - request_started;
     printf("Response received: +%d\n", response);
 
     err = obstacle_avoidance_decode_path(path, answer);
 
-    timestamp_t decoded = uptime_get() - response;
+    timestamp_t decoded = uptime_get() - response - request_started;
     printf("Response decoded: +%d\n", decoded);
 
     netconn_delete(conn);
