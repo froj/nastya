@@ -6,6 +6,8 @@
 #include "obstacle_avoidance_protocol.h"
 #include <json.h>
 
+#include <uptime/uptime.h>
+
 
 void obstacle_avoidance_request_create(obstacle_avoidance_request_t *r, int obstacle_count)
 {
@@ -105,6 +107,9 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
     u16_t len;
     int err;
 
+    timestamp_t request_started = uptime_get();
+    printf("Send request started: %d\n", request_started);
+
     data = obstacle_avoidance_request_encode(request);
 
     conn = netconn_new(NETCONN_TCP);
@@ -116,6 +121,9 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
         return err;
     }
 
+    timestamp_t connection_established = uptime_get() - request_started;
+    printf("Connection established: +%d\n", connection_established);
+
     err = netconn_write(conn, data, strlen(data), NETCONN_COPY);
 
     if (err != ERR_OK) {
@@ -123,6 +131,9 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
         netconn_delete(conn);
         return err;
     }
+
+    timestamp_t request_sent = uptime_get() - connection_established;
+    printf("Request sent: +%d\n", request_sent);
 
     free(data);
 
@@ -141,7 +152,14 @@ int obstacle_avoidance_send_request(obstacle_avoidance_request_t *request, struc
         netbuf_delete(buf);
     }
 
+    timestamp_t response = uptime_get() - request_sent;
+    printf("Response received: +%d\n", response);
+
     err = obstacle_avoidance_decode_path(path, answer);
+
+    timestamp_t decoded = uptime_get() - response;
+    printf("Response decoded: +%d\n", decoded);
+
     netconn_delete(conn);
     return err;
 }

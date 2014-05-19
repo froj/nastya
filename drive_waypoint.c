@@ -87,8 +87,8 @@ drive_waypoint_t* drive_waypoint_get_next()
 
     timestamp_t now = uptime_get();
     int32_t relative_now = now - request_time;
+    printf("rel now: %d, req: %d, now %d\n", relative_now, request_time, now);
     if (relative_now > param_get(&drive_request_timeout)) {
-        printf("rel now: %d, req: %d, now %d\n", relative_now, request_time, now);
         OSSemPost(mutex);
         return NULL;
     }
