@@ -71,6 +71,8 @@ int cmd_lookat(lua_State *l)
         drive_set_look_at(x, y);
         return 0;
     }
+    lua_pushstring(l, "missing arg");
+    return 1;
 }
 
 int cmd_heading(lua_State *l)
@@ -81,6 +83,8 @@ int cmd_heading(lua_State *l)
         drive_set_heading(a);
         return 0;
     }
+    lua_pushstring(l, "missing arg");
+    return 1;
 }
 
 int cmd_position_reset_to(lua_State *l)
