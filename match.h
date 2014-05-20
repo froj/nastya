@@ -32,5 +32,7 @@ typedef struct {
 
 int match_action_list(char* buffer, int buf_len);
 void match_action_modify(int index, int cmd, float arg1, float arg2);
+void match_action_delete(int index);
+int match_action_save_as_c_code(char* buffer, int buf_len);
 
 #endif // MATCH_H
