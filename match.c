@@ -237,8 +237,11 @@ int match_action_list(char* buffer, int buf_len)
     return 0;
 }
 
-void match_action_modify(int index, int cmd, float arg1, float arg2) {
-
+void match_action_modify(int index, int cmd, float arg1, float arg2)
+{
+    match_actions[index].cmd = cmd;
+    match_actions[index].arg1 = arg1;
+    match_actions[index].arg2 = arg2;
 }
 
 void match_action_insert(int index) {

@@ -31,5 +31,6 @@ typedef struct {
 } match_action_t;
 
 int match_action_list(char* buffer, int buf_len);
+void match_action_modify(int index, int cmd, float arg1, float arg2);
 
 #endif // MATCH_H
