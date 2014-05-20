@@ -30,4 +30,6 @@ typedef struct {
     float arg1, arg2;
 } match_action_t;
 
+int match_action_list(char* buffer, int buf_len);
+
 #endif // MATCH_H
