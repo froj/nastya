@@ -22,6 +22,11 @@ static bool restart_match = false;
 timestamp_t match_start;
 bool match_has_started = false;
 
+#define MAX_NB_MATCH_ACTIONS    128
+static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
+    {MATCH_ACTION_MOVE, 0.3, 0.3}
+};
+
 
 static void calibrate_position(void)
 {
@@ -96,7 +101,7 @@ void match_run(bool team_red)
     match_has_started = true;
     printf("much started [%d]\nwow\n", (int)match_start);
 
-    OSTimeDly((MATCH_DURATION/1000000) * OS_TICKS_PER_SEC);
+    OSTimeDlyHMSM(0, 0, MATCH_DURATION/1000000, 0);
 
     // if (team_red) {
     //     goto_position(2.8, 0.6, -10, 0);
@@ -166,3 +171,24 @@ void match_restart(bool team_red)
     next_match_team_red = team_red;
 }
 
+
+
+int match_action_list(char* buffer) {
+
+}
+
+void match_action_modify(int index, int cmd, float arg1, float arg2) {
+
+}
+
+void match_action_insert(int index) {
+
+}
+
+void match_action_delete(int index) {
+
+}
+
+int match_action_save_as_c_code(char* buffer) {
+
+}
