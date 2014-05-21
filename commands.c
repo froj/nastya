@@ -11,6 +11,7 @@
 #include "drive.h"
 #include "match.h"
 #include "param.h"
+#include <cvra_servo.h>
 
 
 int cmd_get_pos(lua_State *l)
@@ -294,6 +295,17 @@ int cmd_match_action_c_code(lua_State *l)
     return 1;
 }
 
+int cmd_set_servo(lua_State *l)
+{
+    if (lua_gettop(l) < 2) {
+        lua_pushstring(l, "usage: servo(index, ms_high_time)");
+        return 1;
+    }
+    cvra_servo_all_off();
+    cvra_servo_set(lua_tonumber(l, 1), lua_tonumber(l, 2) * 10000);
+    return 0;
+}
+
 
 void commands_register(lua_State *l)
 {
@@ -355,5 +367,8 @@ void commands_register(lua_State *l)
     lua_setglobal(l, "match_delete");
     lua_pushcfunction(l, cmd_match_action_c_code);
     lua_setglobal(l, "match_c_code");
+
+    lua_pushcfunction(l, cmd_set_servo);
+    lua_setglobal(l, "servo");
 }
 
