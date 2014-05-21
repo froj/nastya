@@ -231,15 +231,15 @@ int cmd_match_action_modify(lua_State *l)
             }
             match_action_modify(ind, MATCH_ACTION_FIRE_CANNON,
                 lua_tonumber(l, 3), 0);
-        } else if (strcmp(cmd, "capture") == 0) {
-            match_action_modify(ind, MATCH_ACTION_CAPTURE_MAMMOTH, 0, 0);
+        } else if (strcmp(cmd, "sleepms") == 0) {
+            match_action_modify(ind, MATCH_ACTION_SLEEP_MS, 0, 0);
         } else if (strcmp(cmd, "waiteom") == 0) {
             match_action_modify(ind, MATCH_ACTION_WAIT_END_OF_MATCH, 0, 0);
         }
     } else {
         lua_pushstring(l, "usage: match_modify index cmd [arg1 [arg2]]"
                 "\npossible cmds: nop, move, heading, look, syncheading"
-                ", fire, capture, waiteom");
+                ", fire, sleepms, waiteom");
         return 1;
     }
     lua_pushstring(l, "ok");

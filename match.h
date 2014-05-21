@@ -6,6 +6,8 @@
 #include <uptime.h>
 
 #define MATCH_DURATION 90*1000000 // [us]
+#define MATCH_TABLE_LENGHT  3
+#define MATCH_TABLE_WIDTH   2
 
 extern bool match_has_started;
 extern timestamp_t match_start;
