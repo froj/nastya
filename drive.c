@@ -450,7 +450,7 @@ void drive_task(void *pdata)
             cs_manage(&pos_cs.pos_x_cs);
             cs_manage(&pos_cs.pos_y_cs);
         } else { // no waypoints available: use fallback position controller
-            printf("drive using fallback pid %f %f\n", dest_x, dest_y);
+            // printf("drive using fallback pid %f %f\n", dest_x, dest_y);
             update_pos_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
