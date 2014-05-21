@@ -340,13 +340,13 @@ int match_action_save_as_c_code(char* buffer, int buf_len)
                        match_actions[i].cmd == MATCH_ACTION_NOP) {
                 ret = 0;
             } else {
-                ret = snprintf(buffer, remaining_sz, "{%d, %f, %f},\n",
+                ret = snprintf(buffer, remaining_sz, "\t{%d, %f, %f},\n",
                                match_actions[i].cmd,
                                match_actions[i].arg1,
                                match_actions[i].arg2);
            }
         } else {
-            ret = snprintf(buffer, remaining_sz, "{%d, %f, %f}\n};\n",
+            ret = snprintf(buffer, remaining_sz, "\t{%d, %f, %f}\n};\n",
                            match_actions[i].cmd,
                            match_actions[i].arg1,
                            match_actions[i].arg2);
