@@ -177,7 +177,6 @@ void match_restart(bool team_red)
 int match_action_list(char* buffer, int buf_len)
 {
     int i, ret, remaining_sz = buf_len;
-    char *cmd_name;
 
     for(i = 0; i < MAX_NB_MATCH_ACTIONS; i++) {
 
@@ -272,7 +271,6 @@ void match_action_delete(int index)
 int match_action_save_as_c_code(char* buffer, int buf_len)
 {
     int i, ret, remaining_sz = buf_len;
-    char *cmd_name;
 
     // print first line
     ret = snprintf(buffer, remaining_sz,
