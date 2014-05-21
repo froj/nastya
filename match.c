@@ -30,6 +30,9 @@ static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
 };
 
 
+static void match_exec(bool team_red, match_action_t *a);
+
+
 static void calibrate_position(void)
 {
     control_update_setpoint_omega(M_PI/2/5);
@@ -188,6 +191,7 @@ float mirror_heading(float h)
 {
     return circular_range(M_PI - h);
 }
+
 
 static void match_exec(bool team_red, match_action_t *a)
 {
