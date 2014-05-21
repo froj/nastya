@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <ucos_ii.h>
 #include <control_system_manager/control_system_manager.h>
@@ -173,22 +174,102 @@ void match_restart(bool team_red)
 
 
 
-int match_action_list(char* buffer) {
+int match_action_list(char* buffer, int buf_len)
+{
+    int i, ret, remaining_sz = buf_len;
+    char *cmd_name;
 
+    for(i = 0; i < MAX_NB_MATCH_ACTIONS; i++) {
+
+        switch (match_actions[i].cmd) {
+            case MATCH_ACTION_NOP:
+                if (i != 0 && match_actions[i-1].cmd != MATCH_ACTION_NOP){
+                    ret = snprintf(buffer, remaining_sz, "[%3d] NOP\n", i);
+                }
+                break;
+            case MATCH_ACTION_MOVE:
+                ret = snprintf(buffer, remaining_sz,
+                               "[%3d] Move (%1.3f, %1.3f)\n",
+                               i, match_actions[i].arg1, match_actions[i].arg2);
+                break;
+            case MATCH_ACTION_SET_HEADING:
+                ret = snprintf(buffer, remaining_sz,
+                               "[%3d] Set heading to %+1.2f\n",
+                               i, match_actions[i].arg1);
+                break;
+            case MATCH_ACTION_SET_LOOK_AT:
+                ret = snprintf(buffer, remaining_sz,
+                               "[%3d] Look at (%1.3f, %1.3f)\n",
+                               i, match_actions[i].arg1, match_actions[i].arg2);
+                break;
+            case MATCH_ACTION_SYNC_HEADING:
+                ret = snprintf(buffer, remaining_sz, "[%3d] Sync heading.\n", i);
+                break;
+            case MATCH_ACTION_FIRE_CANNON:
+                ret = snprintf(buffer, remaining_sz,
+                               "[%3d] Fire cannon Nb. %1.0f Arrrr!\n",
+                               i, match_actions[i].arg1);
+                break;
+            case MATCH_ACTION_CAPTURE_MAMMOTH:
+                ret = snprintf(buffer, remaining_sz, "[%3d] Capture mammoth.\n", i);
+                break;
+            case MATCH_ACTION_WAIT_END_OF_MATCH:
+                ret = snprintf(buffer, remaining_sz, "[%3d] Wait end of match.\n", i);
+                break;
+            default:
+                ret = snprintf(buffer, remaining_sz, "[%3d] Unknown command.\n", i);
+                break;
+        }
+
+        if (ret < 0) {
+            // snprintf error
+            return -1;
+        }
+
+        if (ret > remaining_sz) {
+            // buffer overflow
+            return -2;
+        }
+
+        buffer += ret;
+        remaining_sz -= ret;
+    }
+
+    return 0;
 }
 
-void match_action_modify(int index, int cmd, float arg1, float arg2) {
-
+void match_action_modify(int index, int cmd, float arg1, float arg2)
+{
+    if (index < MAX_NB_MATCH_ACTIONS && index >= 0) {
+        match_actions[index].cmd = cmd;
+        match_actions[index].arg1 = arg1;
+        match_actions[index].arg2 = arg2;
+    }
 }
 
 void match_action_insert(int index) {
-
+    if (index < MAX_NB_MATCH_ACTIONS - 1 && index >= 0) {
+        memmove(&match_actions[index+1], &match_actions[index],
+                (MAX_NB_MATCH_ACTIONS - index - 1) * sizeof(match_action_t));
+    } else if (index != MAX_NB_MATCH_ACTIONS - 1){
+        return; // invalid index
+    }
+    match_action_modify(index, MATCH_ACTION_NOP, 0, 0);
 }
 
-void match_action_delete(int index) {
-
+void match_action_delete(int index)
+{
+    if (index < MAX_NB_MATCH_ACTIONS - 1 && index >= 0) {
+        memmove(&match_actions[index], &match_actions[index+1],
+                (MAX_NB_MATCH_ACTIONS - index - 1) * sizeof(match_action_t));
+    } else if (index != MAX_NB_MATCH_ACTIONS - 1){
+        return; // invalid index
+    }
+    match_action_modify(MAX_NB_MATCH_ACTIONS - 1, MATCH_ACTION_NOP, 0, 0);
 }
 
-int match_action_save_as_c_code(char* buffer) {
-
+int match_action_save_as_c_code(char* buffer, int buf_len)
+{
+    buffer[0] = '\0';
+    return 0;
 }
