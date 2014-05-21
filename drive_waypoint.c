@@ -88,7 +88,7 @@ drive_waypoint_t* drive_waypoint_get_next()
     timestamp_t now = uptime_get();
     int32_t relative_now = now - request_time;
     if (relative_now > param_get(&drive_request_timeout)) {
-        printf("rel now: %d, req: %d, now %d\n", relative_now, request_time, now);
+        // printf("rel now: %d, req: %d, now %d\n", relative_now, request_time, now);
         OSSemPost(mutex);
         return NULL;
     }
@@ -121,7 +121,7 @@ drive_waypoint_t* drive_waypoint_get_next()
         OSSemPost(mutex);
         return NULL;
     }
-    printf("wp nb %d (%d): %d %d\n", i, path.len, path.points[i].x, path.points[i].y);
+    // printf("wp nb %d (%d): %d %d\n", i, path.len, path.points[i].x, path.points[i].y);
     next_waypoint.x = (float)path.points[i].x / 1000;
     next_waypoint.y = (float)path.points[i].y / 1000;
     next_waypoint.vx = (float)path.points[i].vx / 1000;
@@ -195,7 +195,7 @@ static int send_request()
 void drive_waypoint_task(void *arg)
 {
     while(42) {
-        printf("new req: %d %d\n", destination.x, destination.y);
+        // printf("new req: %d %d\n", destination.x, destination.y);
         int err = send_request();
         if (err != ERR_OK) {
             OSTimeDly(OS_TICKS_PER_SEC/20);

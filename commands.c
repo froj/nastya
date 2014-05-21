@@ -232,21 +232,29 @@ int cmd_match_action_modify(lua_State *l)
             match_action_modify(ind, MATCH_ACTION_FIRE_CANNON,
                 lua_tonumber(l, 3), 0);
         } else if (strcmp(cmd, "sleepms") == 0) {
-            match_action_modify(ind, MATCH_ACTION_SLEEP_MS, 0, 0);
+            if (lua_gettop(l) < 3) {
+                lua_pushstring(l, "waitms args: ms");
+                return 1;
+            }
+            match_action_modify(ind, MATCH_ACTION_SLEEP_MS,
+                lua_tonumber(l, 3), 0);
         } else if (strcmp(cmd, "waiteom") == 0) {
             match_action_modify(ind, MATCH_ACTION_WAIT_END_OF_MATCH, 0, 0);
+        } else {
+            lua_pushstring(l, "unknown cmd, possible cmds: nop, move, "
+                              "heading, look, syncheading, fire, sleepms,"
+                              " waiteom\n");
+            return 1;
         }
     } else {
-        lua_pushstring(l, "usage: match_modify index cmd [arg1 [arg2]]"
-                "\npossible cmds: nop, move, heading, look, syncheading"
-                ", fire, sleepms, waiteom");
+        lua_pushstring(l, "usage: match_modify index cmd [arg1 [arg2]]\n");
         return 1;
     }
     lua_pushstring(l, "ok");
     return 1;
 }
 
-int cmd_match_action_insert_after(lua_State *l)
+int cmd_match_action_insert(lua_State *l)
 {
     if (lua_gettop(l) < 1) {
         lua_pushstring(l, "usage: match_insert index [cmd [args]]");
@@ -341,7 +349,7 @@ void commands_register(lua_State *l)
     lua_setglobal(l, "match_list");
     lua_pushcfunction(l, cmd_match_action_modify);
     lua_setglobal(l, "match_modify");
-    lua_pushcfunction(l, cmd_match_action_insert_after);
+    lua_pushcfunction(l, cmd_match_action_insert);
     lua_setglobal(l, "match_insert");
     lua_pushcfunction(l, cmd_match_action_delete);
     lua_setglobal(l, "match_delete");
