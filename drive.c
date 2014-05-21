@@ -95,6 +95,8 @@ int drive_goto(float x, float y)
 {
     drive_set_dest(x, y);
     while (!destination_reached()) {
+        if (match_action_timeout())
+            return -1;
         OSTimeDly(OS_TICKS_PER_SEC/20);
     }
     return 0;
@@ -120,6 +122,8 @@ static float calc_heading_err(void)
 void drive_sync_heading(void)
 {
     while (fabsf(calc_heading_err()) < 3.14*1/180) {
+        if (match_action_timeout())
+            return;
         OSTimeDly(OS_TICKS_PER_SEC/20);
     }
 }
@@ -556,7 +560,7 @@ void emergency_stop_task(void *arg)
     int stop_timeout = 0;
     while (1) {
         if (emergency_stop() ||
-            (match_has_started && uptime_get() - match_start > MATCH_DURATION)) {
+            (match_running && uptime_get() - match_start > MATCH_DURATION)) {
             stop_timeout = EMERGENCY_STOP_UPDATE_FREQ / 10; // reset stop timer
         }
         if (stop_timeout > 0) {
