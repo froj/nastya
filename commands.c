@@ -12,6 +12,7 @@
 #include "match.h"
 #include "param.h"
 #include <cvra_servo.h>
+#include <cvra_dc.h>
 
 
 int cmd_get_pos(lua_State *l)
@@ -302,7 +303,17 @@ int cmd_set_servo(lua_State *l)
         return 1;
     }
     cvra_servo_all_off();
-    cvra_servo_set(lua_tonumber(l, 1) + 1, lua_tonumber(l, 2) * 10000);
+    cvra_servo_set(lua_tonumber(l, 1) - 1, lua_tonumber(l, 2) * 10000);
+    return 0;
+}
+
+int cmd_set_hex_mot(lua_State *l)
+{
+    if (lua_gettop(l) < 2) {
+        lua_pushstring(l, "usage: hmot(index, PWM)");
+        return 1;
+    }
+    cvra_dc_set_pwm((void*)HEXMOTORCONTROLLER_BASE, lua_tonumber(l, 1), lua_tonumber(l, 2));
     return 0;
 }
 
@@ -370,5 +381,8 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_set_servo);
     lua_setglobal(l, "servo");
+
+    lua_pushcfunction(l, cmd_set_hex_mot);
+    lua_setglobal(l, "hmot");
 }
 
