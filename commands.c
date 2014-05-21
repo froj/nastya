@@ -302,7 +302,7 @@ int cmd_set_servo(lua_State *l)
         return 1;
     }
     cvra_servo_all_off();
-    cvra_servo_set(lua_tonumber(l, 1), lua_tonumber(l, 2) * 10000);
+    cvra_servo_set(lua_tonumber(l, 1) + 1, lua_tonumber(l, 2) * 10000);
     return 0;
 }
 
