@@ -216,6 +216,10 @@ int match_action_list(char* buffer, int buf_len)
             case MATCH_ACTION_WAIT_END_OF_MATCH:
                 ret = snprintf(buffer, remaining_sz, "[%3d] Wait end of match.\n", i);
                 break;
+            case MATCH_ACTION_SLEEP_MS:
+                ret = snprintf(buffer, remaining_sz, "[%3d] Sleep %1.0f ms.\n",
+                               i, match_actions[i].arg1);
+                break;
             default:
                 ret = snprintf(buffer, remaining_sz, "[%3d] Unknown command.\n", i);
                 break;
