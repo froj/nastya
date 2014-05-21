@@ -241,7 +241,7 @@ int match_action_list(char* buffer, int buf_len)
 
         switch (match_actions[i].cmd) {
             case MATCH_ACTION_NOP:
-                if (i != 0 && match_actions[i-1].cmd != MATCH_ACTION_NOP){
+                if (i == 0 || (i != 0 && match_actions[i-1].cmd != MATCH_ACTION_NOP)){
                     ret = snprintf(buffer, remaining_sz, "[%3d] NOP\n", i);
                 } else {
                     ret = 0;
