@@ -9,7 +9,7 @@
 #define MATCH_TABLE_LENGHT  3
 #define MATCH_TABLE_WIDTH   2
 
-extern bool match_has_started;
+extern bool match_running;
 extern timestamp_t match_start;
 
 void ready_for_match(void);
@@ -17,6 +17,7 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y);
 void match_set_red(void);
 void match_set_yellow(void);
 void match_restart(bool team_red);
+bool match_action_timeout();
 
 #define MATCH_ACTION_NOP                0
 #define MATCH_ACTION_MOVE               1   //  (x, y)

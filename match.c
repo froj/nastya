@@ -22,50 +22,32 @@ bool next_match_team_red = false;
 static bool restart_match = false;
 
 timestamp_t match_start;
-bool match_has_started = false;
+bool match_running = false;
+static bool match_abort;
+
+
+#define MAMMOTH_CAPTURE_SETUP_TIME 3000000 // [us]
 
 #define MAX_NB_MATCH_ACTIONS    128
 static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
-    {MATCH_ACTION_MOVE, 0.3, 0.3}
+    {1, 0.200000, 0.200000},
+    {1, 0.300000, 0.600000},
+    {1, 1.300000, 0.600000},
+    {2, 0.520000, 0.000000},
+    {1, 1.300000, 0.120000},
+    {1, 1.300000, 0.250000},
+    {0, 0.000000, 0.000000},
+    {0, 0.000000, 0.000000}
 };
 
 
 static void match_exec(bool team_red, match_action_t *a);
 
 
-static void calibrate_position(void)
+bool match_action_timeout()
 {
-    control_update_setpoint_omega(M_PI/2/5);
-    OSTimeDly(OS_TICKS_PER_SEC * 5);
-    control_update_setpoint_omega(0);
-
-    control_update_setpoint_vx(-0.02);
-    OSTimeDly(OS_TICKS_PER_SEC * 4);
-    control_update_setpoint_vx(0);
-    OSTimeDly(OS_TICKS_PER_SEC / 10);
-    position_reset();
-    control_update_setpoint_vx(0.05);
-    OSTimeDly(OS_TICKS_PER_SEC * 4);
-    control_update_setpoint_vx(0);
-
-    control_update_setpoint_omega(-M_PI/2/5);
-    OSTimeDly(OS_TICKS_PER_SEC * 5);
-    control_update_setpoint_omega(0);
-
-    float x, y, unused;
-    get_position(&y, &unused);
-
-    control_update_setpoint_vx(-0.02);
-    OSTimeDly(OS_TICKS_PER_SEC * 4);
-    control_update_setpoint_vx(0);
-    OSTimeDly(OS_TICKS_PER_SEC / 10);
-    position_reset();
-    control_update_setpoint_vx(0.03);
-    OSTimeDly(OS_TICKS_PER_SEC * 4);
-    control_update_setpoint_vx(0);
-
-    get_position(&x, &unused);
-    position_reset_to(x, y, 0);
+    return (match_abort ||
+        (match_running && uptime_get() - match_start > MATCH_DURATION - MAMMOTH_CAPTURE_SETUP_TIME));
 }
 
 
@@ -74,9 +56,10 @@ static bool wait_for_start(void)
     return !(IORD(PIO_BASE, 0) & 0x1000);
 }
 
-void match_run(bool team_red)
+void match_run(void)
 {
-    match_has_started = false;
+    match_running = false;
+    match_abort = false;
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
     control_update_setpoint_omega(0);
@@ -86,6 +69,9 @@ void match_run(bool team_red)
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+
+    bool team_red = next_match_team_red;
+
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
     if (team_red) {
@@ -103,35 +89,42 @@ void match_run(bool team_red)
     while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
 
     match_start = uptime_get();
-    match_has_started = true;
+    match_running = true;
     printf("much started [%d]\nwow\n", (int)match_start);
 
-    // if (team_red) {
-    //     goto_position(2.8, 0.6, -10, 0);
-    //     goto_position(1.65, 0.6, 0, 1);
-    //     float ang = 0.5235987756;
-    //     goto_position(1.65, 0.015, 1.65 - 10*cos(ang), 0.015 + 10*sin(ang));
-    //     goto_position(1.65, 0.0, 1.65 - 10*cos(ang), 0.0 + 10*sin(ang));
-    //     goto_position(1.65, 0.1, 1.65 - 10*cos(ang), 0.1 + 10*sin(ang));
-    //     goto_position(1.5,  0.6, 0, 0);
-    // }
-    // else {
-    //     goto_position(0.2, 0.6, 10, 0);
-    //     goto_position(1.35, 0.6, 3, 1);
-    //     float ang = 0.5235987756;
-    //     goto_position(1.35, 0.015, 1.35 + 10*cos(ang), 0.015 + 10*sin(ang));
-    //     goto_position(1.35, 0.0, 1.35 + 10*cos(ang), 0.0 + 10*sin(ang));
-    //     goto_position(1.35, 0.1, 1.35 + 10*cos(ang), 0.1 + 10*sin(ang));
-    //     goto_position(1.5,  0.6, 0, 0);
-    // }
     int i;
     for (i = 0; i < MAX_NB_MATCH_ACTIONS; i++) {
         match_exec(team_red, &match_actions[i]);
+        if (match_abort)
+            goto abort_match;
+        if (uptime_get() - match_start > MATCH_DURATION - MAMMOTH_CAPTURE_SETUP_TIME)
+            goto end_of_match;
     }
 
+end_of_match:
+    while (uptime_get() - match_start < MATCH_DURATION - MAMMOTH_CAPTURE_SETUP_TIME)
+        OSTimeDly(OS_TICKS_PER_SEC/100);
+
+    // orient robot for mammoth capture
+    printf("orient robot for mammoth capture\n");
+
+    while (uptime_get() - match_start < MATCH_DURATION + 500000)
+        OSTimeDly(OS_TICKS_PER_SEC/100);
+
+    // fire
+    printf("capture mammoth\n");
+
+    // wait for new match
+    while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
+        restart_match = false;
+
+abort_match:
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
     control_update_setpoint_omega(0);
+    match_running = false;
+    match_abort = false;
+    return;
 }
 
 
@@ -140,15 +133,12 @@ void match_task(void *arg)
 {
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
     while (1) {
-        match_run(next_match_team_red);
-        // while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
-        restart_match = false;
+        match_run();
     }
 }
 
 void ready_for_match(void)
 {
-
     OSTaskCreateExt(match_task,
                     NULL,
                     &match_task_stk[MATCH_TASK_STACKSIZE-1],
@@ -171,6 +161,7 @@ void match_set_yellow(void)
 
 void match_restart(bool team_red)
 {
+    match_abort = true;
     restart_match = true;
     next_match_team_red = team_red;
 }
@@ -227,7 +218,7 @@ static void match_exec(bool team_red, match_action_t *a)
         OSTimeDlyHMSM(0, 0, 0, a->arg1);
         break;
     case MATCH_ACTION_WAIT_END_OF_MATCH:
-        while (match_has_started && uptime_get() - match_start > MATCH_DURATION)
+        while (match_running && uptime_get() - match_start > MATCH_DURATION)
             OSTimeDly(OS_TICKS_PER_SEC / 100);
         break;
     }
