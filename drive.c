@@ -100,7 +100,29 @@ int drive_goto(float x, float y)
     return 0;
 }
 
+static float calc_heading_err(void)
+{
+    if (drive_heading_mode == DRIVE_HEADING_MODE_FREE) {
+        return 0;
+    }
+    if (drive_heading_mode == DRIVE_HEADING_MODE_POINT) {
+        float pos_x = get_position_x();
+        float pos_y = get_position_y();
+        float set = atan2(look_at_y - pos_y, look_at_x - pos_x);
+        return circular_range(get_heading() - set);
+    }
+    if (drive_heading_mode == DRIVE_HEADING_MODE_ANGLE) {
+        return circular_range(get_heading() - dest_heading);
+    }
+    return 0;
+}
 
+void drive_sync_heading(void)
+{
+    while (fabsf(calc_heading_err()) < 3.14*1/180) {
+        OSTimeDly(OS_TICKS_PER_SEC/20);
+    }
+}
 
 #define DRIVE_CTRL_FREQ_DEFAULT 33.333 // [Hz]
 static param_t drive_ctrl_freq;
@@ -457,15 +479,12 @@ void drive_task(void *pdata)
         set_vx += (float)out_x / PID_SCALE_OUT;
         set_vy += (float)out_y / PID_SCALE_OUT;
 
-        float current_heading = get_heading();
-        float heading_err = circular_range(current_heading - dest_heading);
-        float set_heading;
+        float heading_err;
         switch (drive_heading_mode) {
         case DRIVE_HEADING_MODE_POINT:
-            set_heading = atan2(look_at_y - pos_y, look_at_x - pos_x);
-            heading_err = circular_range(current_heading - set_heading);
         case DRIVE_HEADING_MODE_ANGLE:
             update_heading_pid_parameters(&heading_cs);
+            heading_err = calc_heading_err();
             in_rotation = heading_err * PID_SCALE_IN;
             cs_manage(&heading_cs.theta_cs);
             set_omega += (float)out_rotation / PID_SCALE_OUT;
@@ -494,6 +513,7 @@ void drive_task(void *pdata)
         trace_var_update(&theta_out_tr, set_omega);
 
         // coordinate transform to robot coordinate system
+        float current_heading = get_heading();
         float sin_heading = sin(current_heading);
         float cos_heading = cos(current_heading);
         control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
