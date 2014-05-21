@@ -243,6 +243,8 @@ int match_action_list(char* buffer, int buf_len)
             case MATCH_ACTION_NOP:
                 if (i != 0 && match_actions[i-1].cmd != MATCH_ACTION_NOP){
                     ret = snprintf(buffer, remaining_sz, "[%3d] NOP\n", i);
+                } else {
+                    ret = 0;
                 }
                 break;
             case MATCH_ACTION_MOVE:
@@ -342,13 +344,16 @@ int match_action_save_as_c_code(char* buffer, int buf_len)
 
     for(i = 0; i < MAX_NB_MATCH_ACTIONS; i++) {
 
-        if (i != MAX_NB_MATCH_ACTIONS - 1 &&
-            !(i > 0 && match_actions[i - 1].cmd == MATCH_ACTION_NOP &&
-                       match_actions[i].cmd == MATCH_ACTION_NOP)) {
-            ret = snprintf(buffer, remaining_sz, "{%d, %f, %f},\n",
-                           match_actions[i].cmd,
-                           match_actions[i].arg1,
-                           match_actions[i].arg2);
+        if (i != MAX_NB_MATCH_ACTIONS - 1) {
+            if (i > 0 && match_actions[i - 1].cmd == MATCH_ACTION_NOP &&
+                       match_actions[i].cmd == MATCH_ACTION_NOP) {
+                ret = 0;
+            } else {
+                ret = snprintf(buffer, remaining_sz, "{%d, %f, %f},\n",
+                               match_actions[i].cmd,
+                               match_actions[i].arg1,
+                               match_actions[i].arg2);
+           }
         } else {
             ret = snprintf(buffer, remaining_sz, "{%d, %f, %f}\n};\n",
                            match_actions[i].cmd,
