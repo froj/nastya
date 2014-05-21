@@ -186,6 +186,7 @@ float mirror_heading(float h)
 
 static void match_exec(bool team_red, match_action_t *a)
 {
+    int wait_ms;
     switch (a->cmd) {
     case MATCH_ACTION_MOVE:
         if (team_red) {
@@ -215,10 +216,16 @@ static void match_exec(bool team_red, match_action_t *a)
         printf("cannon %d: boooom!\n", (int)a->arg1);
         break;
     case MATCH_ACTION_SLEEP_MS:
-        OSTimeDlyHMSM(0, 0, 0, a->arg1);
+        wait_ms = a->arg1;
+        while (wait_ms > 0) {
+            OSTimeDly(OS_TICKS_PER_SEC / 100);
+            wait_ms -= 10;
+            if (match_action_timeout())
+                break;
+        }
         break;
     case MATCH_ACTION_WAIT_END_OF_MATCH:
-        while (match_running && uptime_get() - match_start > MATCH_DURATION)
+        while (!match_action_timeout())
             OSTimeDly(OS_TICKS_PER_SEC / 100);
         break;
     }
