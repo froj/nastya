@@ -19,7 +19,7 @@ OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
 
 bool disable_postion_control = false;
-
+bool disable_heading_control = false;
 
 static float dest_x = 0;
 static float dest_y = 0;
@@ -428,19 +428,9 @@ void drive_task(void *pdata)
             period_us = OS_TICKS_PER_SEC / param_get(&drive_ctrl_freq);
         }
         OSTimeDly(period_us);
-        // static bool pos_ctrl_was_prev_disabled = true;
-        if (disable_postion_control) {
-            // pos_ctrl_was_prev_disabled = true;
-            continue;
-        }
 
         float pos_x, pos_y;
         get_position(&pos_x, &pos_y);
-
-        // if (pos_ctrl_was_prev_disabled) {
-
-        //     pos_ctrl_was_prev_disabled = false;
-        // }
 
         update_drive_params();
         float x_err, y_err;
@@ -516,9 +506,17 @@ void drive_task(void *pdata)
         float current_heading = get_heading();
         float sin_heading = sin(current_heading);
         float cos_heading = cos(current_heading);
-        control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
-        control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
-        control_update_setpoint_omega(set_omega);
+        if (!disable_postion_control) {
+            control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
+            control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
+        } else {
+            // todo pid reset
+        }
+        if (!disable_heading_control) {
+            control_update_setpoint_omega(set_omega);
+        } else {
+            // todo pid reset
+        }
     }
 }
 
@@ -564,6 +562,7 @@ void emergency_stop_task(void *arg)
         if (stop_timeout > 0) {
             stop_timeout--;
             disable_postion_control = true;
+            disable_heading_control = true;
             // ramp speed to 0
             float vx, vy, omega;
             vx = control_get_setpoint_vx();
@@ -598,6 +597,7 @@ void emergency_stop_task(void *arg)
             control_update_setpoint_omega(omega);
         } else {
             disable_postion_control = false;
+            disable_heading_control = false;
         }
         OSTimeDly(OS_TICKS_PER_SEC/EMERGENCY_STOP_UPDATE_FREQ);
     }
