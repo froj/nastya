@@ -274,7 +274,7 @@ int match_action_list(char* buffer, int buf_len)
                 ret = snprintf(buffer, remaining_sz, "[%3d] Wait end of match.\n", i);
                 break;
             case MATCH_ACTION_SLEEP_MS:
-                ret = snprintf(buffer, remaining_sz, "[%3d] Sleep %1.0f ms.\n",
+                ret = snprintf(buffer, remaining_sz, "[%3d] Sleep %.0f ms.\n",
                                i, match_actions[i].arg1);
                 break;
             default:
