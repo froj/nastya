@@ -10,6 +10,7 @@
 #include "position_integration.h"
 #include "hardware.h"
 #include "plot_task.h"
+#include "util.h"
 #include "drive.h"
 
 #include "match.h"
@@ -102,8 +103,6 @@ void match_run(bool team_red)
     match_has_started = true;
     printf("much started [%d]\nwow\n", (int)match_start);
 
-    OSTimeDlyHMSM(0, 0, MATCH_DURATION/1000000, 0);
-
     // if (team_red) {
     //     goto_position(2.8, 0.6, -10, 0);
     //     goto_position(1.65, 0.6, 0, 1);
@@ -122,13 +121,14 @@ void match_run(bool team_red)
     //     goto_position(1.35, 0.1, 1.35 + 10*cos(ang), 0.1 + 10*sin(ang));
     //     goto_position(1.5,  0.6, 0, 0);
     // }
+    int i;
+    for (i = 0; i < MAX_NB_MATCH_ACTIONS; i++) {
+        match_exec(team_red, &match_actions[i])
+    }
 
-    // control_update_setpoint_vx(0);
-    // control_update_setpoint_vy(0);
-    // control_update_setpoint_omega(0);
-    nastya_cs.vx_control_enable = false;
-    nastya_cs.vy_control_enable = false;
-    nastya_cs.omega_control_enable = false;
+    control_update_setpoint_vx(0);
+    control_update_setpoint_vy(0);
+    control_update_setpoint_omega(0);
 }
 
 
@@ -172,7 +172,62 @@ void match_restart(bool team_red)
     next_match_team_red = team_red;
 }
 
+// mirror functions to change coordinates to the other team
 
+float mirror_x(float x)
+{
+    return MATCH_TABLE_LENGHT - x;
+}
+
+float mirror_y(float y)
+{
+    return y;
+}
+
+float mirror_heading(float h)
+{
+    return circular_range(M_PI - h);
+}
+
+static void match_exec(bool team_red, match_action_t *a)
+{
+    switch (a->cmd) {
+    case MATCH_ACTION_MOVE:
+        if (team_red) {
+            drive_goto(mirror_x(a->arg1), mirror_y(a->arg2));
+        } else {
+            drive_goto(a->arg1, a->arg2);
+        }
+        break;
+    case MATCH_ACTION_SET_HEADING:
+        if (team_red) {
+            drive_set_heading(mirror_heading(a->arg1));
+        } else {
+            drive_set_heading(a->arg1);
+        }
+        break;
+    case MATCH_ACTION_SET_LOOK_AT:
+        if (team_red) {
+            drive_set_look_at(mirror_x(a->arg1), mirror_y(a->arg2));
+        } else {
+            drive_set_look_at(a->arg1, a->arg2);
+        }
+        break;
+    case MATCH_ACTION_SYNC_HEADING:
+        drive_sync_heading();
+        break;
+    case MATCH_ACTION_FIRE_CANNON:
+        printf("cannon %d: boooom!\n", (int)a->arg1);
+        break;
+    case MATCH_ACTION_SLEEP_MS:
+        OSTimeDlyHMSM(0, 0, 0, a->arg1);
+        break;
+    case MATCH_ACTION_WAIT_END_OF_MATCH:
+        while (match_has_started && uptime_get() - match_start > MATCH_DURATION)
+            OSTimeDly(OS_TICKS_PER_SEC / 100);
+        break;
+    }
+}
 
 int match_action_list(char* buffer, int buf_len)
 {
