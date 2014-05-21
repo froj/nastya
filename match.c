@@ -126,7 +126,7 @@ void match_run(bool team_red)
     // }
     int i;
     for (i = 0; i < MAX_NB_MATCH_ACTIONS; i++) {
-        match_exec(team_red, &match_actions[i])
+        match_exec(team_red, &match_actions[i]);
     }
 
     control_update_setpoint_vx(0);
