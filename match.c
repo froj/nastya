@@ -265,11 +265,12 @@ int match_action_list(char* buffer, int buf_len)
                                "[%3d] Fire cannon Nb. %1.0f Arrrr!\n",
                                i, match_actions[i].arg1);
                 break;
-            case MATCH_ACTION_CAPTURE_MAMMOTH:
-                ret = snprintf(buffer, remaining_sz, "[%3d] Capture mammoth.\n", i);
-                break;
             case MATCH_ACTION_WAIT_END_OF_MATCH:
                 ret = snprintf(buffer, remaining_sz, "[%3d] Wait end of match.\n", i);
+                break;
+            case MATCH_ACTION_SLEEP_MS:
+                ret = snprintf(buffer, remaining_sz, "[%3d] Sleep %1.0f ms.\n",
+                               i, match_actions[i].arg1);
                 break;
             default:
                 ret = snprintf(buffer, remaining_sz, "[%3d] Unknown command.\n", i);
@@ -325,6 +326,47 @@ void match_action_delete(int index)
 
 int match_action_save_as_c_code(char* buffer, int buf_len)
 {
-    buffer[0] = '\0';
+    int i, ret, remaining_sz = buf_len;
+    char *cmd_name;
+
+    // print first line
+    ret = snprintf(buffer, remaining_sz,
+        "static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {\n");
+
+    if (ret < 0) return -1;
+    if (ret > remaining_sz) return -2;
+    buffer += ret;
+    remaining_sz -= ret;
+
+    for(i = 0; i < MAX_NB_MATCH_ACTIONS; i++) {
+
+        if (i != MAX_NB_MATCH_ACTIONS - 1 &&
+            !(i > 0 && match_actions[i - 1].cmd == MATCH_ACTION_NOP &&
+                       match_actions[i].cmd == MATCH_ACTION_NOP)) {
+            ret = snprintf(buffer, remaining_sz, "{%d, %f, %f},\n",
+                           match_actions[i].cmd,
+                           match_actions[i].arg1,
+                           match_actions[i].arg2);
+        } else {
+            ret = snprintf(buffer, remaining_sz, "{%d, %f, %f}\n};\n",
+                           match_actions[i].cmd,
+                           match_actions[i].arg1,
+                           match_actions[i].arg2);
+        }
+
+        if (ret < 0) {
+            // snprintf error
+            return -1;
+        }
+
+        if (ret > remaining_sz) {
+            // buffer overflow
+            return -2;
+        }
+
+        buffer += ret;
+        remaining_sz -= ret;
+    }
+
     return 0;
 }
