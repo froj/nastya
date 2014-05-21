@@ -210,9 +210,6 @@ int match_action_list(char* buffer, int buf_len)
                                "[%3d] Fire cannon Nb. %1.0f Arrrr!\n",
                                i, match_actions[i].arg1);
                 break;
-            case MATCH_ACTION_CAPTURE_MAMMOTH:
-                ret = snprintf(buffer, remaining_sz, "[%3d] Capture mammoth.\n", i);
-                break;
             case MATCH_ACTION_WAIT_END_OF_MATCH:
                 ret = snprintf(buffer, remaining_sz, "[%3d] Wait end of match.\n", i);
                 break;

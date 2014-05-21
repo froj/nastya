@@ -22,9 +22,8 @@ void match_restart(bool team_red);
 #define MATCH_ACTION_SET_LOOK_AT        3   //  (x, y)
 #define MATCH_ACTION_SYNC_HEADING       4   //  wait for heading error to be 0
 #define MATCH_ACTION_FIRE_CANNON        5   //  (cannon_index)
-#define MATCH_ACTION_CAPTURE_MAMMOTH    6   //  ()
-#define MATCH_ACTION_WAIT_END_OF_MATCH  7
-#define MATCH_ACTION_SLEEP_MS           8   //  (ms)
+#define MATCH_ACTION_WAIT_END_OF_MATCH  6
+#define MATCH_ACTION_SLEEP_MS           7   //  (ms)
 
 typedef struct {
     int cmd;
