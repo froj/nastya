@@ -66,6 +66,8 @@ void match_run(void)
     nastya_cs.vx_control_enable = false;
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
+    enable_postion_control = false;
+    enable_heading_control = false;
 
     hw_cannon_arm_all();
 
@@ -85,6 +87,9 @@ void match_run(void)
         position_reset_to(0.102, 0.120, 0);
         drive_set_dest(0.102, 0.120);
     }
+    drive_disable_heading_ctrl();
+    enable_postion_control = true;
+    enable_heading_control = true;
     nastya_cs.vx_control_enable = true;
     nastya_cs.vy_control_enable = true;
     nastya_cs.omega_control_enable = true;
@@ -117,7 +122,7 @@ end_of_match:
 
     // wait for new match
     while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
-        restart_match = false;
+    restart_match = false;
 
 abort_match:
     control_update_setpoint_vx(0);

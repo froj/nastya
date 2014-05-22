@@ -1,6 +1,9 @@
 #ifndef DRIVE_H
 #define DRIVE_H
 
+extern bool enable_postion_control;
+extern bool enable_heading_control;
+
 void drive_set_heading(float heading);
 void drive_set_look_at(float x, float y);
 void drive_disable_heading_ctrl();

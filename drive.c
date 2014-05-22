@@ -18,8 +18,9 @@ OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
 
 
-bool disable_postion_control = false;
-bool disable_heading_control = false;
+bool enable_postion_control = false;
+bool enable_heading_control = false;
+static bool emergency_stop_disable_heading_and_pos_ctrl = false;
 
 static float dest_x = 0;
 static float dest_y = 0;
@@ -442,6 +443,8 @@ void drive_task(void *pdata)
         if ((wp = drive_waypoint_get_next()) != NULL) { // waypoints available
             printf("drive using waypoints %f %f\n (%f %f %f %f)\n\n",
                 dest_x, dest_y, wp->x, wp->y, wp->vx, wp->vy);
+            pid_reset(&fallback_pos_cs.pos_x_pid);
+            pid_reset(&fallback_pos_cs.pos_y_pid);
             update_pos_pid_parameters(&pos_cs);
             set_vx = wp->vx;
             set_vy = wp->vy;
@@ -455,6 +458,8 @@ void drive_task(void *pdata)
             cs_manage(&pos_cs.pos_y_cs);
         } else { // no waypoints available: use fallback position controller
             // printf("drive using fallback pid %f %f\n", dest_x, dest_y);
+            pid_reset(&pos_cs.pos_x_pid);
+            pid_reset(&pos_cs.pos_y_pid);
             update_pos_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
@@ -510,16 +515,19 @@ void drive_task(void *pdata)
         float current_heading = get_heading();
         float sin_heading = sin(current_heading);
         float cos_heading = cos(current_heading);
-        if (!disable_postion_control) {
+        if (enable_postion_control && !emergency_stop_disable_heading_and_pos_ctrl) {
             control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
             control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
         } else {
-            // todo pid reset
+            pid_reset(&pos_cs.pos_x_pid);
+            pid_reset(&pos_cs.pos_y_pid);
+            pid_reset(&fallback_pos_cs.pos_x_pid);
+            pid_reset(&fallback_pos_cs.pos_y_pid);
         }
-        if (!disable_heading_control) {
+        if (enable_heading_control && !emergency_stop_disable_heading_and_pos_ctrl) {
             control_update_setpoint_omega(set_omega);
         } else {
-            // todo pid reset
+            pid_reset(&heading_cs.theta_pid);
         }
     }
 }
@@ -532,8 +540,8 @@ void drive_task(void *pdata)
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
 
-#define EMERGENCY_STOP_ACCELERATION_XY    5.0 // [m/s^2]
-#define EMERGENCY_STOP_ACCELERATION_ALPHA 5.0 // [rad/s^2]
+#define EMERGENCY_STOP_ACCELERATION_XY    2.0 // [m/s^2]
+#define EMERGENCY_STOP_ACCELERATION_ALPHA 3.0 // [rad/s^2]
 #define EMERGENCY_STOP_UPDATE_FREQ        100 // [Hz]
 
 #define EMERGENCY_STOP_DELTA_OMEGA EMERGENCY_STOP_ACCELERATION_ALPHA / EMERGENCY_STOP_UPDATE_FREQ
@@ -565,8 +573,7 @@ void emergency_stop_task(void *arg)
         }
         if (stop_timeout > 0) {
             stop_timeout--;
-            disable_postion_control = true;
-            disable_heading_control = true;
+            emergency_stop_disable_heading_and_pos_ctrl = true;
             // ramp speed to 0
             float vx, vy, omega;
             vx = control_get_setpoint_vx();
@@ -600,8 +607,7 @@ void emergency_stop_task(void *arg)
             control_update_setpoint_vy(vy);
             control_update_setpoint_omega(omega);
         } else {
-            disable_postion_control = false;
-            disable_heading_control = false;
+            emergency_stop_disable_heading_and_pos_ctrl = false;
         }
         OSTimeDly(OS_TICKS_PER_SEC/EMERGENCY_STOP_UPDATE_FREQ);
     }
