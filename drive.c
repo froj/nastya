@@ -645,7 +645,8 @@ void start_drive_task(void)
                     NULL, 0);
 
     // Emergency stop init
-    cvra_beacon_init(&beacon, (void*)AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
+    cvra_beacon_init(&beacon, (void*)AVOIDING_BASE, AVOIDING_IRQ, 50, 1., 1.);
+    cvra_beacon_set_direction_offset(&beacon, 68);
     OSTaskCreateExt(emergency_stop_task,
                     NULL,
                     &emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE-1],
