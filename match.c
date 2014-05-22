@@ -36,6 +36,8 @@ static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
     {2, 0.520000, 0.000000},
     {1, 1.300000, 0.120000},
     {1, 1.300000, 0.250000},
+    {1, 1.100000, 0.600000},
+    {1, 0.800000, 0.600000},
     {0, 0.000000, 0.000000},
     {0, 0.000000, 0.000000}
 };
@@ -76,9 +78,6 @@ void match_run(void)
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
-    // wait for start signal
-    while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
-
     bool team_red = next_match_team_red;
     if (team_red) {
         position_reset_to(2.898, 0.120, 3.14159);
@@ -93,6 +92,14 @@ void match_run(void)
     nastya_cs.vx_control_enable = true;
     nastya_cs.vy_control_enable = true;
     nastya_cs.omega_control_enable = true;
+
+    // wait for start signal
+    while (wait_for_start()) {
+        OSTimeDly(OS_TICKS_PER_SEC/100);
+        if (match_abort)
+            goto abort_match;
+    }
+
 
     match_start = uptime_get();
     match_running = true;
