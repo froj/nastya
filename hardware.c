@@ -70,7 +70,7 @@ static const int32_t cannon_arm_pos[6] = {
 
 static const int32_t cannon_fire_pos[6] = {
     19000,
-    12000,
+    11500,
     14000,
     13000,
     12500,
