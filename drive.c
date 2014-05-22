@@ -18,8 +18,8 @@ OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
 
 
-bool enable_postion_control = false;
-bool enable_heading_control = false;
+bool enable_postion_control = true;
+bool enable_heading_control = true;
 static bool emergency_stop_disable_heading_and_pos_ctrl = false;
 
 static float dest_x = 0;
@@ -519,6 +519,8 @@ void drive_task(void *pdata)
             control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
             control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
         } else {
+            prev_set_vx = 0;
+            prev_set_vy = 0;
             pid_reset(&pos_cs.pos_x_pid);
             pid_reset(&pos_cs.pos_y_pid);
             pid_reset(&fallback_pos_cs.pos_x_pid);
@@ -527,6 +529,7 @@ void drive_task(void *pdata)
         if (enable_heading_control && !emergency_stop_disable_heading_and_pos_ctrl) {
             control_update_setpoint_omega(set_omega);
         } else {
+            prev_set_omega = 0;
             pid_reset(&heading_cs.theta_pid);
         }
     }
@@ -540,7 +543,7 @@ void drive_task(void *pdata)
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
 
-#define EMERGENCY_STOP_ACCELERATION_XY    2.0 // [m/s^2]
+#define EMERGENCY_STOP_ACCELERATION_XY    1.0 // [m/s^2]
 #define EMERGENCY_STOP_ACCELERATION_ALPHA 3.0 // [rad/s^2]
 #define EMERGENCY_STOP_UPDATE_FREQ        100 // [Hz]
 
@@ -583,7 +586,6 @@ void emergency_stop_task(void *arg)
     param_set(&emergency_stop_ang_p, M_PI / 3);
 
     static bool controllers_disabled = false;
-    static bool vx_en, vy_en, omega_en;
 
     int stop_timeout = 0;
     while (1) {
@@ -632,20 +634,17 @@ void emergency_stop_task(void *arg)
             if (vx == 0 && vy == 0 && omega ==0) {
                 if (!controllers_disabled) {
                     controllers_disabled = true;
-                    vx_en = nastya_cs.vx_control_enable;
                     nastya_cs.vx_control_enable = false;
-                    vy_en = nastya_cs.vy_control_enable;
                     nastya_cs.vy_control_enable = false;
-                    omega_en = nastya_cs.omega_control_enable;
                     nastya_cs.omega_control_enable = false;
                 }
             }
         } else {
             if (controllers_disabled) {
                 controllers_disabled = false;
-                nastya_cs.vx_control_enable = vx_en;
-                nastya_cs.vy_control_enable = vy_en;
-                nastya_cs.omega_control_enable = omega_en;
+                nastya_cs.vx_control_enable = true;
+                nastya_cs.vy_control_enable = true;
+                nastya_cs.omega_control_enable = true;
             }
             emergency_stop_disable_heading_and_pos_ctrl = false;
         }
