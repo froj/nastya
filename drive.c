@@ -554,8 +554,15 @@ static bool emergency_stop(void)
     int i;
 
     for (i = 0; i < beacon.nb_beacon; i++) {
-        // TODO also take heading into account
-        if (beacon.beacon[i].distance > 15) {
+        // printf("beacon %d ang: %f dist: %f\n", i, beacon.beacon[i].direction, beacon.beacon[i].distance);
+        float pos_x, pos_y;
+        get_position(&pos_x, &pos_y);
+        float dest_dir = atan2(dest_y - pos_y, dest_x - pos_x);
+        float beacon_dir = beacon.beacon[i].direction/180*M_PI;
+
+        // printf("rel ang: %f\n", fabsf(circular_range(dest_dir - beacon_dir)));
+        if (beacon.beacon[i].distance > 13
+            && fabsf(circular_range(dest_dir - beacon_dir)) < M_PI / 3) {
             return true;
         }
     }
