@@ -26,12 +26,31 @@ bool match_running = false;
 static bool match_abort;
 
 
+
+// mirror functions to change coordinates to the other team
+
+float mirror_x(float x)
+{
+    return MATCH_TABLE_LENGHT - x;
+}
+
+float mirror_y(float y)
+{
+    return y;
+}
+
+float mirror_heading(float h)
+{
+    return circular_range(M_PI - h);
+}
+
+
+
 #define MAMMOTH_CAPTURE_SETUP_TIME 3000000 // [us]
 
 #define MAX_NB_MATCH_ACTIONS    128
 static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
-    {1, 0.270000, 0.363000},
-    {1, 0.300000, 0.600000},
+    {1, 0.466437, 0.553406},
     {1, 1.300000, 0.600000},
     {2, 0.520000, 0.000000},
     {1, 1.300000, 0.120000},
@@ -58,8 +77,17 @@ static bool wait_for_start(void)
     return !(IORD(PIO_BASE, 0) & 0x1000);
 }
 
+#define RESET_POS_X     0.125
+#define RESET_POS_Y     0.135
+#define RESET_HEADING   (- M_PI / 3)
+
+#define START_POS_X     0.27091094851494
+#define START_POS_Y     0.35258761048317
+#define START_HEADING   -4.0729007720947
+
 void match_run(void)
 {
+    emergency_stop_en = false;
     match_running = false;
     match_abort = false;
     control_update_setpoint_vx(0);
@@ -80,11 +108,11 @@ void match_run(void)
 
     bool team_red = next_match_team_red;
     if (team_red) {
-        position_reset_to(2.898, 0.120, 3.14159);
-        drive_set_dest(2.898, 0.120);
+        position_reset_to(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y), mirror_heading(RESET_HEADING));
+        drive_set_dest(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y));
     } else {
-        position_reset_to(0.102, 0.120, 0);
-        drive_set_dest(0.102, 0.120);
+        position_reset_to(RESET_POS_X, RESET_POS_Y, RESET_HEADING);
+        drive_set_dest(RESET_POS_X, RESET_POS_Y);
     }
     drive_disable_heading_ctrl();
     enable_postion_control = true;
@@ -93,13 +121,31 @@ void match_run(void)
     nastya_cs.vy_control_enable = true;
     nastya_cs.omega_control_enable = true;
 
+    OSTimeDly(OS_TICKS_PER_SEC * 2);
+
+    if (team_red) {
+        drive_goto(mirror_x(0.19162034988403), mirror_y(0.19018436968327));
+        drive_goto(mirror_x(0.21569117903709), mirror_y(0.25893285870552));
+        OSTimeDly(OS_TICKS_PER_SEC * 3);
+        drive_set_heading(mirror_heading(START_HEADING));
+        drive_goto(mirror_x(0.26092061400414), mirror_y(0.35386016964912));
+        drive_goto(mirror_x(START_POS_X), mirror_y(START_POS_Y));
+    } else {
+        drive_goto(0.19162034988403, 0.19018436968327);
+        drive_goto(0.21569117903709, 0.25893285870552);
+        OSTimeDly(OS_TICKS_PER_SEC * 3);
+        drive_set_heading(START_HEADING);
+        drive_goto(0.26092061400414, 0.35386016964912);
+        drive_goto(START_POS_X, START_POS_Y);
+    }
+
     // wait for start signal
     while (wait_for_start()) {
         OSTimeDly(OS_TICKS_PER_SEC/100);
         if (match_abort)
             goto abort_match;
     }
-
+    emergency_stop_en = true;
 
     match_start = uptime_get();
     match_running = true;
@@ -115,8 +161,12 @@ void match_run(void)
     }
 
 end_of_match:
-    while (uptime_get() - match_start < MATCH_DURATION - MAMMOTH_CAPTURE_SETUP_TIME)
+    while (uptime_get() - match_start < MATCH_DURATION - MAMMOTH_CAPTURE_SETUP_TIME) {
+        if (match_abort)
+            goto abort_match;
         OSTimeDly(OS_TICKS_PER_SEC/100);
+    }
+
 
     // choose nearest mammoth
     float pos_x, pos_y;
@@ -128,7 +178,10 @@ end_of_match:
         mammoth_x = 0.8;
     }
     // orient robot for mammoth capture
+    drive_set_dest(pos_x, pos_y);
     drive_set_look_at(mammoth_x, mammoth_y);
+
+    emergency_stop_en = false;
 
     // wait until .5s after match
     while (uptime_get() - match_start < MATCH_DURATION + 500000)
@@ -191,23 +244,6 @@ void match_restart(bool team_red)
     match_abort = true;
     restart_match = true;
     next_match_team_red = team_red;
-}
-
-// mirror functions to change coordinates to the other team
-
-float mirror_x(float x)
-{
-    return MATCH_TABLE_LENGHT - x;
-}
-
-float mirror_y(float y)
-{
-    return y;
-}
-
-float mirror_heading(float h)
-{
-    return circular_range(M_PI - h);
 }
 
 

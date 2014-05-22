@@ -1,6 +1,8 @@
 #ifndef DRIVE_H
 #define DRIVE_H
 
+extern bool emergency_stop_en;
+
 extern bool enable_postion_control;
 extern bool enable_heading_control;
 

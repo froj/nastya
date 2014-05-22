@@ -16,7 +16,7 @@
 
 OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
-
+bool emergency_stop_en = false;
 
 bool enable_postion_control = true;
 bool enable_heading_control = true;
@@ -590,10 +590,10 @@ void emergency_stop_task(void *arg)
     int stop_timeout = 0;
     while (1) {
         if (emergency_stop() ||
-            (match_running && uptime_get() - match_start > MATCH_DURATION)) {
+            (match_running && uptime_get() - match_start > MATCH_DURATION - 100000)) {
             stop_timeout = EMERGENCY_STOP_UPDATE_FREQ / 10; // reset stop timer
         }
-        if (stop_timeout > 0) {
+        if (stop_timeout > 0 && emergency_stop_en) {
             stop_timeout--;
             emergency_stop_disable_heading_and_pos_ctrl = true;
             // ramp speed to 0
