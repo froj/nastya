@@ -185,7 +185,7 @@ static int send_request()
 
         OSSemPost(mutex);
     } else {
-        printf("pius err %d\n", err);
+        // printf("comm err %d\n", err);
     }
 
     obstacle_avoidance_request_delete(&request);
