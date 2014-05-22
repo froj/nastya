@@ -11,6 +11,7 @@
 #include "drive.h"
 #include "match.h"
 #include "param.h"
+#include "hardware.h"
 #include <cvra_servo.h>
 #include <cvra_dc.h>
 
@@ -294,6 +295,20 @@ int cmd_match_action_c_code(lua_State *l)
         lua_pushstring(l, "buffer too small");
     }
     return 1;
+}
+
+int cmd_fire_cannon(lua_State *l)
+{
+    if (lua_gettop(l) == 1) {
+        hw_cannon_fire(lua_tonumber(l, 1));
+    }
+    return 0;
+}
+
+int cmd_load_cannon(lua_State *l)
+{
+    hw_cannon_arm_all();
+    return 0;
 }
 
 int cmd_set_servo(lua_State *l)

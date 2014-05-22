@@ -30,7 +30,7 @@ static bool match_abort;
 
 #define MAX_NB_MATCH_ACTIONS    128
 static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
-    {1, 0.200000, 0.200000},
+    {1, 0.270000, 0.363000},
     {1, 0.300000, 0.600000},
     {1, 1.300000, 0.600000},
     {2, 0.520000, 0.000000},
@@ -67,13 +67,17 @@ void match_run(void)
     nastya_cs.vy_control_enable = false;
     nastya_cs.omega_control_enable = false;
 
+    hw_cannon_arm_all();
+
     OSTimeDly(OS_TICKS_PER_SEC / 2);
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
 
-    bool team_red = next_match_team_red;
-
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
+    // wait for start signal
+    while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+
+    bool team_red = next_match_team_red;
     if (team_red) {
         position_reset_to(2.898, 0.120, 3.14159);
         drive_set_dest(2.898, 0.120);
@@ -84,9 +88,6 @@ void match_run(void)
     nastya_cs.vx_control_enable = true;
     nastya_cs.vy_control_enable = true;
     nastya_cs.omega_control_enable = true;
-
-    // wait for start signal
-    while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
 
     match_start = uptime_get();
     match_running = true;
@@ -213,7 +214,8 @@ static void match_exec(bool team_red, match_action_t *a)
         drive_sync_heading();
         break;
     case MATCH_ACTION_FIRE_CANNON:
-        printf("cannon %d: boooom!\n", (int)a->arg1);
+        hw_cannon_fire(a->arg1);
+        // printf("cannon %d: boooom!\n", (int)a->arg1);
         break;
     case MATCH_ACTION_SLEEP_MS:
         wait_ms = a->arg1;
