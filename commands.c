@@ -123,8 +123,20 @@ int cmd_set_yellow(lua_State *l)
 
 int cmd_match(lua_State *l)
 {
-    match_restart(false);
-    return 0;
+    bool team_red = false;
+    if (lua_gettop(l) == 1) {
+        const char *team = lua_tostring(l, 1);
+        if (strcmp(team, "r") == 0 || strcmp(team, "red"))
+            team_red = true;
+        else
+            team_red = false;
+    }
+    match_restart(team_red);
+    if (team_red)
+        lua_pushstring(l, "new match, team red");
+    else
+        lua_pushstring(l, "new match, team yellow");
+    return 1;
 }
 
 int cmd_control_on(lua_State *l)
