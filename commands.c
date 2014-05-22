@@ -411,5 +411,11 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_set_hex_mot);
     lua_setglobal(l, "hmot");
+
+    lua_pushcfunction(l, cmd_fire_cannon);
+    lua_setglobal(l, "fire_cannon");
+
+    lua_pushcfunction(l, cmd_load_cannon);
+    lua_setglobal(l, "load_cannon");
 }
 
