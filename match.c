@@ -111,14 +111,28 @@ end_of_match:
     while (uptime_get() - match_start < MATCH_DURATION - MAMMOTH_CAPTURE_SETUP_TIME)
         OSTimeDly(OS_TICKS_PER_SEC/100);
 
+    // choose nearest mammoth
+    float pos_x, pos_y;
+    get_position(&pos_x, &pos_y);
+    float mammoth_x, mammoth_y = 0;
+    if (pos_x > MATCH_TABLE_LENGHT/2) {
+        mammoth_x = MATCH_TABLE_LENGHT - 0.8;
+    } else {
+        mammoth_x = 0.8;
+    }
     // orient robot for mammoth capture
-    printf("orient robot for mammoth capture\n");
+    drive_set_look_at(mammoth_x, mammoth_y);
 
+    // wait until .5s after match
     while (uptime_get() - match_start < MATCH_DURATION + 500000)
         OSTimeDly(OS_TICKS_PER_SEC/100);
 
     // fire
-    printf("capture mammoth\n");
+    hw_set_net(1);
+    OSTimeDly(OS_TICKS_PER_SEC);
+    hw_set_net(0);
+
+    printf("captured mammoth\n");
 
     // wait for new match
     while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
