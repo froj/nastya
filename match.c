@@ -141,10 +141,6 @@ end_of_match:
 
     printf("captured mammoth\n");
 
-    // wait for new match
-    while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
-    restart_match = false;
-
 abort_match:
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
@@ -152,13 +148,17 @@ abort_match:
     match_running = false;
     match_abort = false;
     return;
+
+    // wait for new match
+    while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
+    restart_match = false;
 }
 
 
 
 void match_task(void *arg)
 {
-    while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    while (!wait_for_start() && !restart_match) OSTimeDly(OS_TICKS_PER_SEC/100);
     while (1) {
         match_run();
     }
