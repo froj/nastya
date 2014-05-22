@@ -572,6 +572,9 @@ static bool emergency_stop(void)
 
 void emergency_stop_task(void *arg)
 {
+    static bool controllers_disabled = false;
+    static bool vx_en, vy_en, omega_en;
+
     int stop_timeout = 0;
     while (1) {
         if (emergency_stop() ||
@@ -613,7 +616,27 @@ void emergency_stop_task(void *arg)
             control_update_setpoint_vx(vx);
             control_update_setpoint_vy(vy);
             control_update_setpoint_omega(omega);
+
+            // disable controllers to look innocent and keep the wheels from
+            //  slipping in case of a collision
+            if (vx == 0 && vy == 0 && omega ==0) {
+                if (!controllers_disabled) {
+                    controllers_disabled = true;
+                    vx_en = nastya_cs.vx_control_enable;
+                    nastya_cs.vx_control_enable = false;
+                    vy_en = nastya_cs.vy_control_enable;
+                    nastya_cs.vy_control_enable = false;
+                    omega_en = nastya_cs.omega_control_enable;
+                    nastya_cs.omega_control_enable = false;
+                }
+            }
         } else {
+            if (controllers_disabled) {
+                controllers_disabled = false;
+                nastya_cs.vx_control_enable = vx_en;
+                nastya_cs.vy_control_enable = vy_en;
+                nastya_cs.omega_control_enable = omega_en;
+            }
             emergency_stop_disable_heading_and_pos_ctrl = false;
         }
         OSTimeDly(OS_TICKS_PER_SEC/EMERGENCY_STOP_UPDATE_FREQ);
