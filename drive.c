@@ -16,10 +16,11 @@
 
 OS_STK    drive_task_stk[DRIVE_TASK_STACKSIZE];
 
+bool emergency_stop_en = false;
 
-
-bool disable_postion_control = false;
-
+bool enable_postion_control = true;
+bool enable_heading_control = true;
+static bool emergency_stop_disable_heading_and_pos_ctrl = false;
 
 static float dest_x = 0;
 static float dest_y = 0;
@@ -95,20 +96,46 @@ int drive_goto(float x, float y)
 {
     drive_set_dest(x, y);
     while (!destination_reached()) {
+        if (match_action_timeout())
+            return -1;
         OSTimeDly(OS_TICKS_PER_SEC/20);
     }
     return 0;
 }
 
+static float calc_heading_err(void)
+{
+    if (drive_heading_mode == DRIVE_HEADING_MODE_FREE) {
+        return 0;
+    }
+    if (drive_heading_mode == DRIVE_HEADING_MODE_POINT) {
+        float pos_x = get_position_x();
+        float pos_y = get_position_y();
+        float set = atan2(look_at_y - pos_y, look_at_x - pos_x);
+        return circular_range(get_heading() - set);
+    }
+    if (drive_heading_mode == DRIVE_HEADING_MODE_ANGLE) {
+        return circular_range(get_heading() - dest_heading);
+    }
+    return 0;
+}
 
+void drive_sync_heading(void)
+{
+    while (fabsf(calc_heading_err()) > 3.14*1/180) {
+        if (match_action_timeout())
+            return;
+        OSTimeDly(OS_TICKS_PER_SEC/20);
+    }
+}
 
 #define DRIVE_CTRL_FREQ_DEFAULT 33.333 // [Hz]
 static param_t drive_ctrl_freq;
 
-#define MAX_ACC_XY_DEFAULT      0.05         // [m/s^2]
-#define MAX_SPEED_XY_DEFAULT    0.75         // [m/s]
-#define MAX_ALPHA_DEFAULT       1.5          // [rad/s^2]
-#define MAX_OMEGA_DEFAULT       M_PI         // [rad/s]
+#define MAX_ACC_XY_DEFAULT      0.03         // [m/s^2]
+#define MAX_SPEED_XY_DEFAULT    0.5          // [m/s]
+#define MAX_ALPHA_DEFAULT       0.2          // [rad/s^2]
+#define MAX_OMEGA_DEFAULT       1            // [rad/s]
 static param_t max_acc_xy_p;
 static param_t max_speed_xy_p;
 static param_t max_alpha_p;
@@ -406,19 +433,9 @@ void drive_task(void *pdata)
             period_us = OS_TICKS_PER_SEC / param_get(&drive_ctrl_freq);
         }
         OSTimeDly(period_us);
-        // static bool pos_ctrl_was_prev_disabled = true;
-        if (disable_postion_control) {
-            // pos_ctrl_was_prev_disabled = true;
-            continue;
-        }
 
         float pos_x, pos_y;
         get_position(&pos_x, &pos_y);
-
-        // if (pos_ctrl_was_prev_disabled) {
-
-        //     pos_ctrl_was_prev_disabled = false;
-        // }
 
         update_drive_params();
         float x_err, y_err;
@@ -426,6 +443,8 @@ void drive_task(void *pdata)
         if ((wp = drive_waypoint_get_next()) != NULL) { // waypoints available
             printf("drive using waypoints %f %f\n (%f %f %f %f)\n\n",
                 dest_x, dest_y, wp->x, wp->y, wp->vx, wp->vy);
+            pid_reset(&fallback_pos_cs.pos_x_pid);
+            pid_reset(&fallback_pos_cs.pos_y_pid);
             update_pos_pid_parameters(&pos_cs);
             set_vx = wp->vx;
             set_vy = wp->vy;
@@ -438,7 +457,9 @@ void drive_task(void *pdata)
             cs_manage(&pos_cs.pos_x_cs);
             cs_manage(&pos_cs.pos_y_cs);
         } else { // no waypoints available: use fallback position controller
-            printf("drive using fallback pid %f %f\n", dest_x, dest_y);
+            // printf("drive using fallback pid %f %f\n", dest_x, dest_y);
+            pid_reset(&pos_cs.pos_x_pid);
+            pid_reset(&pos_cs.pos_y_pid);
             update_pos_pid_parameters(&fallback_pos_cs);
             set_vx = 0;
             set_vy = 0;
@@ -457,15 +478,12 @@ void drive_task(void *pdata)
         set_vx += (float)out_x / PID_SCALE_OUT;
         set_vy += (float)out_y / PID_SCALE_OUT;
 
-        float current_heading = get_heading();
-        float heading_err = circular_range(current_heading - dest_heading);
-        float set_heading;
+        float heading_err;
         switch (drive_heading_mode) {
         case DRIVE_HEADING_MODE_POINT:
-            set_heading = atan2(look_at_y - pos_y, look_at_x - pos_x);
-            heading_err = circular_range(current_heading - set_heading);
         case DRIVE_HEADING_MODE_ANGLE:
             update_heading_pid_parameters(&heading_cs);
+            heading_err = calc_heading_err();
             in_rotation = heading_err * PID_SCALE_IN;
             cs_manage(&heading_cs.theta_cs);
             set_omega += (float)out_rotation / PID_SCALE_OUT;
@@ -494,11 +512,26 @@ void drive_task(void *pdata)
         trace_var_update(&theta_out_tr, set_omega);
 
         // coordinate transform to robot coordinate system
+        float current_heading = get_heading();
         float sin_heading = sin(current_heading);
         float cos_heading = cos(current_heading);
-        control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
-        control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
-        control_update_setpoint_omega(set_omega);
+        if (enable_postion_control && !emergency_stop_disable_heading_and_pos_ctrl) {
+            control_update_setpoint_vx(cos_heading * set_vx + sin_heading * set_vy);
+            control_update_setpoint_vy(-sin_heading * set_vx + cos_heading * set_vy);
+        } else {
+            prev_set_vx = 0;
+            prev_set_vy = 0;
+            pid_reset(&pos_cs.pos_x_pid);
+            pid_reset(&pos_cs.pos_y_pid);
+            pid_reset(&fallback_pos_cs.pos_x_pid);
+            pid_reset(&fallback_pos_cs.pos_y_pid);
+        }
+        if (enable_heading_control && !emergency_stop_disable_heading_and_pos_ctrl) {
+            control_update_setpoint_omega(set_omega);
+        } else {
+            prev_set_omega = 0;
+            pid_reset(&heading_cs.theta_pid);
+        }
     }
 }
 
@@ -510,22 +543,35 @@ void drive_task(void *pdata)
 OS_STK match_task_stk[MATCH_TASK_STACKSIZE];
 OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
 
-#define EMERGENCY_STOP_ACCELERATION_XY    5.0 // [m/s^2]
-#define EMERGENCY_STOP_ACCELERATION_ALPHA 5.0 // [rad/s^2]
+#define EMERGENCY_STOP_ACCELERATION_XY    1.0 // [m/s^2]
+#define EMERGENCY_STOP_ACCELERATION_ALPHA 3.0 // [rad/s^2]
 #define EMERGENCY_STOP_UPDATE_FREQ        100 // [Hz]
 
 #define EMERGENCY_STOP_DELTA_OMEGA EMERGENCY_STOP_ACCELERATION_ALPHA / EMERGENCY_STOP_UPDATE_FREQ
 #define EMERGENCY_STOP_DELTA_VXY EMERGENCY_STOP_ACCELERATION_XY / EMERGENCY_STOP_UPDATE_FREQ
 
 static cvra_beacon_t beacon;
+param_t emergency_stop_dist_p, emergency_stop_ang_p;
 
 static bool emergency_stop(void)
 {
+    static float emergency_stop_ang, emergency_stop_dist;
+    if (param_has_changed(&emergency_stop_dist_p))
+        emergency_stop_dist = param_get(&emergency_stop_dist_p);
+    if (param_has_changed(&emergency_stop_ang_p))
+        emergency_stop_ang = param_get(&emergency_stop_ang_p);
     int i;
-
     for (i = 0; i < beacon.nb_beacon; i++) {
-        // TODO also take heading into account
-        if (beacon.beacon[i].distance > 15) {
+        // printf("beacon %d ang: %f dist: %f\n", i, beacon.beacon[i].direction, beacon.beacon[i].distance);
+        float pos_x, pos_y;
+        get_position(&pos_x, &pos_y);
+        float heading = get_heading();
+        float dest_dir = atan2(dest_y - pos_y, dest_x - pos_x);
+        float beacon_dir = beacon.beacon[i].direction/180*M_PI + heading;
+
+        // printf("rel ang: %f\n", fabsf(circular_range(dest_dir - beacon_dir)));
+        if (beacon.beacon[i].distance > emergency_stop_dist
+            && fabsf(circular_range(dest_dir - beacon_dir)) < emergency_stop_ang) {
             return true;
         }
     }
@@ -535,15 +581,22 @@ static bool emergency_stop(void)
 
 void emergency_stop_task(void *arg)
 {
+    param_add(&emergency_stop_dist_p, "emerg_stop_dist", "[beacon size (ang)]");
+    param_add(&emergency_stop_ang_p, "emerg_stop_ang", "[rad]");
+    param_set(&emergency_stop_dist_p, 9.0);
+    param_set(&emergency_stop_ang_p, M_PI / 3);
+
+    static bool controllers_disabled = false;
+
     int stop_timeout = 0;
     while (1) {
         if (emergency_stop() ||
-            (match_has_started && uptime_get() - match_start > MATCH_DURATION)) {
+            (match_running && uptime_get() - match_start > MATCH_DURATION - 100000)) {
             stop_timeout = EMERGENCY_STOP_UPDATE_FREQ / 10; // reset stop timer
         }
-        if (stop_timeout > 0) {
+        if (stop_timeout > 0 && emergency_stop_en) {
             stop_timeout--;
-            disable_postion_control = true;
+            emergency_stop_disable_heading_and_pos_ctrl = true;
             // ramp speed to 0
             float vx, vy, omega;
             vx = control_get_setpoint_vx();
@@ -576,8 +629,25 @@ void emergency_stop_task(void *arg)
             control_update_setpoint_vx(vx);
             control_update_setpoint_vy(vy);
             control_update_setpoint_omega(omega);
+
+            // disable controllers to look innocent and keep the wheels from
+            //  slipping in case of a collision
+            if (vx == 0 && vy == 0 && omega ==0) {
+                if (!controllers_disabled) {
+                    controllers_disabled = true;
+                    nastya_cs.vx_control_enable = false;
+                    nastya_cs.vy_control_enable = false;
+                    nastya_cs.omega_control_enable = false;
+                }
+            }
         } else {
-            disable_postion_control = false;
+            if (controllers_disabled) {
+                controllers_disabled = false;
+                nastya_cs.vx_control_enable = true;
+                nastya_cs.vy_control_enable = true;
+                nastya_cs.omega_control_enable = true;
+            }
+            emergency_stop_disable_heading_and_pos_ctrl = false;
         }
         OSTimeDly(OS_TICKS_PER_SEC/EMERGENCY_STOP_UPDATE_FREQ);
     }
@@ -615,7 +685,8 @@ void start_drive_task(void)
                     NULL, 0);
 
     // Emergency stop init
-    cvra_beacon_init(&beacon, (void*)AVOIDING_BASE, AVOIDING_IRQ, 100, 1., 1.);
+    cvra_beacon_init(&beacon, (void*)AVOIDING_BASE, AVOIDING_IRQ, 50, 1., 1.);
+    cvra_beacon_set_direction_offset(&beacon, 68);
     OSTaskCreateExt(emergency_stop_task,
                     NULL,
                     &emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE-1],
