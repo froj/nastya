@@ -5,8 +5,7 @@
 #include <stdbool.h>
 #include <uptime.h>
 
-// TODO reset match to 90s
-#define MATCH_DURATION 30*1000000 // [us]
+#define MATCH_DURATION 90*1000000 // [us]
 #define MATCH_TABLE_LENGHT  3
 #define MATCH_TABLE_WIDTH   2
 
