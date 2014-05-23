@@ -209,8 +209,25 @@ end_of_match:
 
     // fire
     hw_set_net(1);
-    OSTimeDly(OS_TICKS_PER_SEC * 8);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
     hw_set_net(0);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(1);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(0);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(1);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(0);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(1);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(0);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(1);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
+    hw_set_net(0);
+    OSTimeDly(OS_TICKS_PER_SEC/2);
 
     printf("captured mammoth\n");
 
