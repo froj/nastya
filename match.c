@@ -52,11 +52,11 @@ float mirror_heading(float h)
 static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
     {1, 0.466437, 0.553406},
     {2, 1.570796, 0.000000},
-    {1, 0.720000, 0.600000},
+    {1, 0.700000, 0.600000},
     {5, 2.000000, 0.000000},
     {7, 500.000000, 0.000000},
     {5, 3.000000, 0.000000},
-    {1, 0.800000, 0.600000},
+    {1, 0.780000, 0.600000},
     {5, 1.000000, 0.000000},
     {7, 500.000000, 0.000000},
     {5, 5.000000, 0.000000},
@@ -65,9 +65,12 @@ static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
     {7, 500.000000, 0.000000},
     {5, 4.000000, 0.000000},
     {1, 1.300000, 0.600000},
-    {2, 0.520000, 0.000000},
-    {1, 1.300000, 0.110000},
+    {2, -0.520000, 0.000000},
+    {1, 1.300000, 0.150000},
+    {4, 0.000000, 0.000000},
+    {1, 1.300000, 0.090000},
     {1, 1.300000, 0.600000},
+    {2, -1.570796, 0.000000},
     {1, 1.100000, 0.600000},
     {1, 0.800000, 0.600000},
     {1, 0.800000, 0.400000},
@@ -91,7 +94,7 @@ static bool wait_for_start(void)
     return !(IORD(PIO_BASE, 0) & 0x1000);
 }
 
-#define RESET_POS_X     0.125
+#define RESET_POS_X     0.105
 #define RESET_POS_Y     0.135
 #define RESET_HEADING   (- M_PI / 3)
 
@@ -122,7 +125,7 @@ void match_run(void)
 
     bool team_red = next_match_team_red;
     if (team_red) {
-        position_reset_to(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y), mirror_heading(RESET_HEADING));
+        position_reset_to(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y), RESET_HEADING);
         drive_set_dest(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y));
     } else {
         position_reset_to(RESET_POS_X, RESET_POS_Y, RESET_HEADING);
@@ -142,6 +145,7 @@ void match_run(void)
         drive_goto(mirror_x(0.21569117903709), mirror_y(0.25893285870552));
         OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_set_heading(mirror_heading(START_HEADING));
+        OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_goto(mirror_x(0.26092061400414), mirror_y(0.35386016964912));
         drive_goto(mirror_x(START_POS_X), mirror_y(START_POS_Y));
     } else {
@@ -149,6 +153,7 @@ void match_run(void)
         drive_goto(0.21569117903709, 0.25893285870552);
         OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_set_heading(START_HEADING);
+        OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_goto(0.26092061400414, 0.35386016964912);
         drive_goto(START_POS_X, START_POS_Y);
     }
@@ -203,7 +208,7 @@ end_of_match:
 
     // fire
     hw_set_net(1);
-    OSTimeDly(OS_TICKS_PER_SEC);
+    OSTimeDly(OS_TICKS_PER_SEC * 8);
     hw_set_net(0);
 
     printf("captured mammoth\n");

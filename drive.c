@@ -122,7 +122,7 @@ static float calc_heading_err(void)
 
 void drive_sync_heading(void)
 {
-    while (fabsf(calc_heading_err()) < 3.14*1/180) {
+    while (fabsf(calc_heading_err()) > 3.14*1/180) {
         if (match_action_timeout())
             return;
         OSTimeDly(OS_TICKS_PER_SEC/20);
@@ -132,10 +132,10 @@ void drive_sync_heading(void)
 #define DRIVE_CTRL_FREQ_DEFAULT 33.333 // [Hz]
 static param_t drive_ctrl_freq;
 
-#define MAX_ACC_XY_DEFAULT      0.05         // [m/s^2]
-#define MAX_SPEED_XY_DEFAULT    0.75         // [m/s]
-#define MAX_ALPHA_DEFAULT       1.5          // [rad/s^2]
-#define MAX_OMEGA_DEFAULT       M_PI         // [rad/s]
+#define MAX_ACC_XY_DEFAULT      0.03         // [m/s^2]
+#define MAX_SPEED_XY_DEFAULT    0.5          // [m/s]
+#define MAX_ALPHA_DEFAULT       0.2          // [rad/s^2]
+#define MAX_OMEGA_DEFAULT       1            // [rad/s]
 static param_t max_acc_xy_p;
 static param_t max_speed_xy_p;
 static param_t max_alpha_p;
