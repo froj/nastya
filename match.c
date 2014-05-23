@@ -107,7 +107,6 @@ void match_run(void)
 {
     emergency_stop_en = false;
     match_running = false;
-    match_abort = false;
     control_update_setpoint_vx(0);
     control_update_setpoint_vy(0);
     control_update_setpoint_omega(0);
@@ -121,6 +120,7 @@ void match_run(void)
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    match_abort = false;
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
 
@@ -128,9 +128,11 @@ void match_run(void)
     if (team_red) {
         position_reset_to(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y), RESET_HEADING);
         drive_set_dest(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y));
+        printf("reset match red %f %f %f\n", get_position_x(), get_position_y(), get_heading());
     } else {
         position_reset_to(RESET_POS_X, RESET_POS_Y, RESET_HEADING);
         drive_set_dest(RESET_POS_X, RESET_POS_Y);
+        printf("reset match yellow %f %f %f\n", get_position_x(), get_position_y(), get_heading());
     }
     drive_disable_heading_ctrl();
     enable_postion_control = true;
@@ -142,6 +144,7 @@ void match_run(void)
     OSTimeDly(OS_TICKS_PER_SEC * 2);
 
     if (team_red) {
+        printf("start seq red\n");
         drive_goto(mirror_x(0.19162034988403), mirror_y(0.19018436968327));
         drive_goto(mirror_x(0.21569117903709), mirror_y(0.25893285870552));
         OSTimeDly(OS_TICKS_PER_SEC * 3);
@@ -150,6 +153,7 @@ void match_run(void)
         drive_goto(mirror_x(0.26092061400414), mirror_y(0.35386016964912));
         drive_goto(mirror_x(START_POS_X), mirror_y(START_POS_Y));
     } else {
+        printf("start seq yellow\n");
         drive_goto(0.19162034988403, 0.19018436968327);
         drive_goto(0.21569117903709, 0.25893285870552);
         OSTimeDly(OS_TICKS_PER_SEC * 3);
@@ -158,6 +162,7 @@ void match_run(void)
         drive_goto(0.26092061400414, 0.35386016964912);
         drive_goto(START_POS_X, START_POS_Y);
     }
+    printf("seq term: %f %f %f\n", get_position_x(), get_position_y(), get_heading());
 
     // wait for start signal
     while (wait_for_start()) {
@@ -209,9 +214,9 @@ end_of_match:
 
     // fire
     hw_set_net(1);
-    OSTimeDly(OS_TICKS_PER_SEC/2);
+    OSTimeDly(OS_TICKS_PER_SEC *3);
     hw_set_net(0);
-    OSTimeDly(OS_TICKS_PER_SEC/2);
+    OSTimeDly(OS_TICKS_PER_SEC);
     hw_set_net(1);
     OSTimeDly(OS_TICKS_PER_SEC/2);
     hw_set_net(0);
@@ -237,11 +242,9 @@ abort_match:
     control_update_setpoint_omega(0);
     match_running = false;
     match_abort = false;
-    return;
 
-    // wait for new match
-    while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
-    restart_match = false;
+    while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    return;
 }
 
 
