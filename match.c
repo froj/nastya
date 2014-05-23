@@ -12,6 +12,7 @@
 #include "plot_task.h"
 #include "util.h"
 #include "drive.h"
+#include <cvra_servo.h>
 
 #include "match.h"
 #include "param.h"
@@ -119,7 +120,8 @@ void match_run(void)
 
     hw_cannon_arm_all();
 
-    OSTimeDly(OS_TICKS_PER_SEC / 2);
+    OSTimeDly(OS_TICKS_PER_SEC);
+    cvra_servo_all_off();
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
@@ -238,11 +240,8 @@ abort_match:
     control_update_setpoint_omega(0);
     match_running = false;
     match_abort = false;
+    cvra_servo_all_off();
     return;
-
-    // wait for new match
-    while (!restart_match) OSTimeDly(OS_TICKS_PER_SEC/10);
-    restart_match = false;
 }
 
 
