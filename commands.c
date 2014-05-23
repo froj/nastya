@@ -10,6 +10,7 @@
 #include "match.h"
 #include "drive.h"
 #include "match.h"
+#include <ucos_ii.h>
 #include "param.h"
 #include "hardware.h"
 #include <cvra_servo.h>
@@ -350,6 +351,14 @@ int cmd_set_hex_mot(lua_State *l)
     return 0;
 }
 
+int cmd_net(lua_State *l)
+{
+    hw_set_net(1);
+    OSTimeDly(OS_TICKS_PER_SEC *2);
+    hw_set_net(0);
+    return 0;
+}
+
 
 void commands_register(lua_State *l)
 {
@@ -426,5 +435,8 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_load_cannon);
     lua_setglobal(l, "load_cannon");
+
+    lua_pushcfunction(l, cmd_net);
+    lua_setglobal(l, "net");
 }
 
