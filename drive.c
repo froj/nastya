@@ -565,8 +565,9 @@ static bool emergency_stop(void)
         // printf("beacon %d ang: %f dist: %f\n", i, beacon.beacon[i].direction, beacon.beacon[i].distance);
         float pos_x, pos_y;
         get_position(&pos_x, &pos_y);
+        float heading = get_heading();
         float dest_dir = atan2(dest_y - pos_y, dest_x - pos_x);
-        float beacon_dir = beacon.beacon[i].direction/180*M_PI;
+        float beacon_dir = beacon.beacon[i].direction/180*M_PI + heading;
 
         // printf("rel ang: %f\n", fabsf(circular_range(dest_dir - beacon_dir)));
         if (beacon.beacon[i].distance > emergency_stop_dist
