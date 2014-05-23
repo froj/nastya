@@ -126,9 +126,27 @@ void match_run(void)
 
     bool team_red = next_match_team_red;
     if (team_red) {
+        position_reset_to(0,0,0);
+        nastya_cs.vx_control_enable = true;
+        nastya_cs.vy_control_enable = true;
+        control_update_setpoint_vx(-0.01);
+        control_update_setpoint_vy(-0.001);
+        OSTimeDly(OS_TICKS_PER_SEC);
+        control_update_setpoint_vx(0);
+        control_update_setpoint_vy(0);
+        OSTimeDly(OS_TICKS_PER_SEC/10);
         position_reset_to(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y), RESET_HEADING);
         drive_set_dest(mirror_x(RESET_POS_X), mirror_y(RESET_POS_Y));
     } else {
+        position_reset_to(0,0,0);
+        nastya_cs.vx_control_enable = true;
+        nastya_cs.vy_control_enable = true;
+        control_update_setpoint_vx(-0.01);
+        control_update_setpoint_vy(0.001);
+        OSTimeDly(OS_TICKS_PER_SEC);
+        control_update_setpoint_vx(0);
+        control_update_setpoint_vy(0);
+        OSTimeDly(OS_TICKS_PER_SEC/10);
         position_reset_to(RESET_POS_X, RESET_POS_Y, RESET_HEADING);
         drive_set_dest(RESET_POS_X, RESET_POS_Y);
     }
