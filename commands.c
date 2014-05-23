@@ -90,6 +90,12 @@ int cmd_heading(lua_State *l)
     return 1;
 }
 
+int cmd_heading_sync(lua_State *l)
+{
+    drive_sync_heading();
+    return 0;
+}
+
 int cmd_position_reset_to(lua_State *l)
 {
     lua_Number x, y, theta;
@@ -394,6 +400,9 @@ void commands_register(lua_State *l)
 
     lua_pushcfunction(l, cmd_heading);
     lua_setglobal(l, "heading");
+
+    lua_pushcfunction(l, cmd_heading_sync);
+    lua_setglobal(l, "heading_sync");
 
     lua_pushcfunction(l, cmd_match_action_list);
     lua_setglobal(l, "match_list");
