@@ -58,6 +58,7 @@ int mirror_cannon(int c)
 #define MAX_NB_MATCH_ACTIONS    128
 static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
    {7, 2000.000000, 0.000000},
+   {1, 0.22, 0.45},
    {1, 0.466437, 0.553406},
    {2, 1.570796, 0.000000},
    {1, 0.700000, 0.600000},
@@ -104,8 +105,8 @@ static bool wait_for_start(void)
 #define RESET_POS_Y     0.135
 #define RESET_HEADING   (- M_PI / 3)
 
-#define START_POS_X     0.27091094851494
-#define START_POS_Y     0.35258761048317
+#define START_POS_X     0.21569117903709
+#define START_POS_Y     0.25893285870552
 #define START_HEADING   -4.0729007720947
 
 void match_run(void)
@@ -151,21 +152,17 @@ void match_run(void)
     if (team_red) {
         printf("start seq red\n");
         drive_goto(mirror_x(0.19162034988403), mirror_y(0.19018436968327));
-        drive_goto(mirror_x(0.21569117903709), mirror_y(0.25893285870552));
+        drive_goto(mirror_x(START_POS_X), mirror_y(START_POS_Y));
         OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_set_heading(mirror_heading(START_HEADING));
-        OSTimeDly(OS_TICKS_PER_SEC * 3);
-        drive_goto(mirror_x(0.26092061400414), mirror_y(0.35386016964912));
-        drive_goto(mirror_x(START_POS_X), mirror_y(START_POS_Y));
+        drive_sync_heading();
     } else {
         printf("start seq yellow\n");
         drive_goto(0.19162034988403, 0.19018436968327);
-        drive_goto(0.21569117903709, 0.25893285870552);
+        drive_goto(START_POS_X, START_POS_Y);
         OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_set_heading(START_HEADING);
-        OSTimeDly(OS_TICKS_PER_SEC * 3);
-        drive_goto(0.26092061400414, 0.35386016964912);
-        drive_goto(START_POS_X, START_POS_Y);
+        drive_sync_heading();
     }
     printf("seq term: %f %f %f\n", get_position_x(), get_position_y(), get_heading());
 
