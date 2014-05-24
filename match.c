@@ -46,7 +46,7 @@ float mirror_heading(float h)
 
 
 
-#define MAMMOTH_CAPTURE_SETUP_TIME 3000000 // [us]
+#define MAMMOTH_CAPTURE_SETUP_TIME 10000000 // [us]
 
 #define MAX_NB_MATCH_ACTIONS    128
 static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
@@ -203,8 +203,9 @@ end_of_match:
         mammoth_x = 0.8;
     }
     // orient robot for mammoth capture
-    drive_set_dest(pos_x, pos_y);
     drive_set_look_at(mammoth_x, mammoth_y);
+    OSTimeDly(OS_TICKS_PER_SEC);
+    drive_set_dest(mammoth_x, mammoth_y + 0.35);
 
     emergency_stop_en = false;
 
