@@ -580,15 +580,21 @@ OS_STK emergency_stop_task_stk[EMERGENCY_STOP_TASK_STACKSIZE];
 #define EMERGENCY_STOP_DELTA_VXY EMERGENCY_STOP_ACCELERATION_XY / EMERGENCY_STOP_UPDATE_FREQ
 
 static cvra_beacon_t beacon;
-param_t emergency_stop_dist_p, emergency_stop_ang_p;
+param_t emergency_stop_dist1_p, emergency_stop_ang1_p;
+param_t emergency_stop_dist2_p, emergency_stop_ang2_p;
 
 static bool emergency_stop(void)
 {
-    static float emergency_stop_ang, emergency_stop_dist;
-    if (param_has_changed(&emergency_stop_dist_p))
-        emergency_stop_dist = param_get(&emergency_stop_dist_p);
-    if (param_has_changed(&emergency_stop_ang_p))
-        emergency_stop_ang = param_get(&emergency_stop_ang_p);
+    static float emergency_stop_ang1, emergency_stop_dist1;
+    static float emergency_stop_ang2, emergency_stop_dist2;
+    if (param_has_changed(&emergency_stop_dist1_p))
+        emergency_stop_dist1 = param_get(&emergency_stop_dist1_p);
+    if (param_has_changed(&emergency_stop_ang1_p))
+        emergency_stop_ang1 = param_get(&emergency_stop_ang1_p);
+    if (param_has_changed(&emergency_stop_dist2_p))
+        emergency_stop_dist2 = param_get(&emergency_stop_dist2_p);
+    if (param_has_changed(&emergency_stop_ang2_p))
+        emergency_stop_ang2 = param_get(&emergency_stop_ang2_p);
     float pos_x, pos_y;
     get_position(&pos_x, &pos_y);
     if ((dest_x - pos_x)*(dest_x - pos_x) + (dest_y - pos_y)*(dest_y - pos_y) < 0.01*0.01)
@@ -601,8 +607,12 @@ static bool emergency_stop(void)
         float beacon_dir = beacon.beacon[i].direction/180*M_PI + heading;
 
         // printf("rel ang: %f\n", fabsf(circular_range(dest_dir - beacon_dir)));
-        if (beacon.beacon[i].distance > emergency_stop_dist
-            && fabsf(circular_range(dest_dir - beacon_dir)) < emergency_stop_ang) {
+        if (beacon.beacon[i].distance > emergency_stop_dist1
+            && fabsf(circular_range(dest_dir - beacon_dir)) < emergency_stop_ang1) {
+            return true;
+        }
+        if (beacon.beacon[i].distance > emergency_stop_dist2
+            && fabsf(circular_range(dest_dir - beacon_dir)) < emergency_stop_ang2) {
             return true;
         }
     }
@@ -612,10 +622,14 @@ static bool emergency_stop(void)
 
 void emergency_stop_task(void *arg)
 {
-    param_add(&emergency_stop_dist_p, "emerg_stop_dist", "[beacon size (ang)]");
-    param_add(&emergency_stop_ang_p, "emerg_stop_ang", "[rad]");
-    param_set(&emergency_stop_dist_p, 9.0);
-    param_set(&emergency_stop_ang_p, M_PI / 3);
+    param_add(&emergency_stop_dist1_p, "emerg_stop_dist1", "[beacon size (ang)]");
+    param_add(&emergency_stop_ang1_p, "emerg_stop_ang1", "[rad]");
+    param_set(&emergency_stop_dist1_p, 9.0);
+    param_set(&emergency_stop_ang1_p, M_PI / 6);
+    param_add(&emergency_stop_dist2_p, "emerg_stop_dist2", "[beacon size (ang)]");
+    param_add(&emergency_stop_ang2_p, "emerg_stop_ang2", "[rad]");
+    param_set(&emergency_stop_dist2_p, 15.0);
+    param_set(&emergency_stop_ang2_p, M_PI / 3);
 
     static bool controllers_disabled = false;
 
