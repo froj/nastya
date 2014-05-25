@@ -8,6 +8,7 @@
 #include <trace/trace.h>
 #include "position_integration.h"
 #include "match.h"
+#include <uptime.h>
 #include "util.h"
 #include "drive_waypoint.h"
 #include "tasks.h"
@@ -31,6 +32,11 @@ static float look_at_y = 0;
 #define DRIVE_HEADING_MODE_ANGLE  1
 #define DRIVE_HEADING_MODE_POINT  2
 static int drive_heading_mode = DRIVE_HEADING_MODE_FREE;
+
+
+
+
+static bool emergency_stop(void);
 
 
 bool destination_reached()
@@ -92,15 +98,31 @@ void drive_set_dest(float x, float y)
     drive_waypoint_set_destination(x, y);
 }
 
-int drive_goto(float x, float y)
+#define DRIVE_OK                    0
+#define DRIVE_TIMEOUT               1
+#define DRIVE_MATCH_ACTION_TIMEOUT  2
+#define DRIVE_BLOCKED_BY_OPPONENT   3
+
+// timeouts > 0: return after 'timeout' us
+// timeouts < 0: return 'timeout' us before end of match
+// cancel_if_blocked_by_opponent: return if opponent blocks the way to destination
+int drive_goto(float x, float y, int timeout, bool cancel_if_blocked_by_opponent)
 {
+    timestamp_t fn_enter = uptime_get();
     drive_set_dest(x, y);
     while (!destination_reached()) {
-        if (match_action_timeout())
-            return -1;
+        if (timeout > 0 && uptime_get() - fn_enter > timeout)
+                return DRIVE_TIMEOUT;
+        int t = 0;
+        if (timeout < 0)
+            t = -timeout;
+        if (match_action_timeout(t))
+            return DRIVE_MATCH_ACTION_TIMEOUT;
+        if (cancel_if_blocked_by_opponent && emergency_stop())
+            return DRIVE_BLOCKED_BY_OPPONENT;
         OSTimeDly(OS_TICKS_PER_SEC/20);
     }
-    return 0;
+    return DRIVE_OK;
 }
 
 static float calc_heading_err(void)
@@ -120,13 +142,20 @@ static float calc_heading_err(void)
     return 0;
 }
 
-void drive_sync_heading(void)
+int drive_sync_heading(int timeout)
 {
+    timestamp_t fn_enter = uptime_get();
     while (fabsf(calc_heading_err()) > 3.14*1/180) {
-        if (match_action_timeout())
-            return;
+        if (timeout > 0 && uptime_get() - fn_enter > timeout)
+            return DRIVE_TIMEOUT;
+        int t = 0;
+        if (timeout < 0)
+            t = -timeout;
+        if (match_action_timeout(t))
+            return DRIVE_MATCH_ACTION_TIMEOUT;
         OSTimeDly(OS_TICKS_PER_SEC/20);
     }
+    return DRIVE_OK;
 }
 
 #define DRIVE_CTRL_FREQ_DEFAULT 33.333 // [Hz]
@@ -560,13 +589,15 @@ static bool emergency_stop(void)
         emergency_stop_dist = param_get(&emergency_stop_dist_p);
     if (param_has_changed(&emergency_stop_ang_p))
         emergency_stop_ang = param_get(&emergency_stop_ang_p);
+    float pos_x, pos_y;
+    get_position(&pos_x, &pos_y);
+    if ((dest_x - pos_x)*(dest_x - pos_x) + (dest_y - pos_y)*(dest_y - pos_y) < 0.01*0.01)
+        return false; // don't stop if close to destination
+    float heading = get_heading();
+    float dest_dir = atan2(dest_y - pos_y, dest_x - pos_x);
     int i;
     for (i = 0; i < beacon.nb_beacon; i++) {
         // printf("beacon %d ang: %f dist: %f\n", i, beacon.beacon[i].direction, beacon.beacon[i].distance);
-        float pos_x, pos_y;
-        get_position(&pos_x, &pos_y);
-        float heading = get_heading();
-        float dest_dir = atan2(dest_y - pos_y, dest_x - pos_x);
         float beacon_dir = beacon.beacon[i].direction/180*M_PI + heading;
 
         // printf("rel ang: %f\n", fabsf(circular_range(dest_dir - beacon_dir)));

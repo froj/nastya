@@ -57,7 +57,7 @@ int cmd_goto_position(lua_State *l)
     if (lua_gettop(l) == 2) {
         x = lua_tonumber(l, -2);
         y = lua_tonumber(l, -1);
-        drive_goto(x, y);
+        drive_goto(x, y, 15*1000000, false);
         // control_update_setpoint_vx(0);
         // control_update_setpoint_vy(0);
         // control_update_setpoint_omega(0);
@@ -93,7 +93,7 @@ int cmd_heading(lua_State *l)
 
 int cmd_heading_sync(lua_State *l)
 {
-    drive_sync_heading();
+    drive_sync_heading(10*1000000);
     return 0;
 }
 

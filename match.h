@@ -17,7 +17,7 @@ int goto_position(float dest_x, float dest_y, float lookat_x, float lookat_y);
 void match_set_red(void);
 void match_set_yellow(void);
 void match_restart(bool team_red);
-bool match_action_timeout();
+bool match_action_timeout(int time_to_end_of_match);
 
 #define MATCH_ACTION_NOP                0
 #define MATCH_ACTION_MOVE               1   //  (x, y)

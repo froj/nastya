@@ -89,10 +89,10 @@ static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
 static void match_exec(bool team_red, match_action_t *a);
 
 
-bool match_action_timeout()
+bool match_action_timeout(int time_to_end_of_match)
 {
     return (match_abort ||
-        (match_running && uptime_get() - match_start > MATCH_DURATION - MAMMOTH_CAPTURE_SETUP_TIME));
+        (match_running && uptime_get() - match_start > MATCH_DURATION - time_to_end_of_match));
 }
 
 
@@ -151,18 +151,18 @@ void match_run(void)
 
     if (team_red) {
         printf("start seq red\n");
-        drive_goto(mirror_x(0.19162034988403), mirror_y(0.19018436968327));
-        drive_goto(mirror_x(START_POS_X), mirror_y(START_POS_Y));
+        drive_goto(mirror_x(0.19162034988403), mirror_y(0.19018436968327),0,false);
+        drive_goto(mirror_x(START_POS_X), mirror_y(START_POS_Y),0,false);
         OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_set_heading(mirror_heading(START_HEADING));
-        drive_sync_heading();
+        drive_sync_heading(0);
     } else {
         printf("start seq yellow\n");
-        drive_goto(0.19162034988403, 0.19018436968327);
-        drive_goto(START_POS_X, START_POS_Y);
+        drive_goto(0.19162034988403, 0.19018436968327,0,false);
+        drive_goto(START_POS_X, START_POS_Y,0,false);
         OSTimeDly(OS_TICKS_PER_SEC * 3);
         drive_set_heading(START_HEADING);
-        drive_sync_heading();
+        drive_sync_heading(0);
     }
     printf("seq term: %f %f %f\n", get_position_x(), get_position_y(), get_heading());
 
@@ -296,9 +296,9 @@ static void match_exec(bool team_red, match_action_t *a)
     switch (a->cmd) {
     case MATCH_ACTION_MOVE:
         if (team_red) {
-            drive_goto(mirror_x(a->arg1), mirror_y(a->arg2));
+            drive_goto(mirror_x(a->arg1), mirror_y(a->arg2),0,false);
         } else {
-            drive_goto(a->arg1, a->arg2);
+            drive_goto(a->arg1, a->arg2,0,false);
         }
         break;
     case MATCH_ACTION_SET_HEADING:
@@ -316,7 +316,7 @@ static void match_exec(bool team_red, match_action_t *a)
         }
         break;
     case MATCH_ACTION_SYNC_HEADING:
-        drive_sync_heading();
+        drive_sync_heading(0);
         break;
     case MATCH_ACTION_FIRE_CANNON:
         if (team_red) {
@@ -331,12 +331,12 @@ static void match_exec(bool team_red, match_action_t *a)
         while (wait_ms > 0) {
             OSTimeDly(OS_TICKS_PER_SEC / 100);
             wait_ms -= 10;
-            if (match_action_timeout())
+            if (match_action_timeout(MAMMOTH_CAPTURE_SETUP_TIME))
                 break;
         }
         break;
     case MATCH_ACTION_WAIT_END_OF_MATCH:
-        while (!match_action_timeout())
+        while (!match_action_timeout(MAMMOTH_CAPTURE_SETUP_TIME))
             OSTimeDly(OS_TICKS_PER_SEC / 100);
         break;
     }
