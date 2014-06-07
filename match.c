@@ -82,7 +82,7 @@ static match_action_t match_actions[MAX_NB_MATCH_ACTIONS] = {
         {2, -1.570796, 0.000000},
         {1, 1.100000, 0.550000},
         {1, 0.800000, 0.550000},
-        {1, 0.800000, 0.350000},
+        {1, 0.800000, 0.400000},
         {0, 0.000000, 0.000000},
         {0, 0.000000, 0.000000}
 };
@@ -124,6 +124,8 @@ void match_run(void)
     enable_heading_control = false;
 
     hw_cannon_arm_all();
+    hw_finger_retract(1);
+    hw_finger_retract(2);
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
@@ -343,15 +345,15 @@ static void match_exec(bool team_red, match_action_t *a)
     case MATCH_ACTION_FINGER:
         if (team_red) {
             if (a->arg1) {
-                hw_finger_extend(1);
-            } else {
-                hw_finger_retract(1);
-            }
-        } else {
-            if (a->arg1) {
                 hw_finger_extend(2);
             } else {
                 hw_finger_retract(2);
+            }
+        } else {
+            if (a->arg1) {
+                hw_finger_extend(1);
+            } else {
+                hw_finger_retract(1);
             }
         }
         break;
