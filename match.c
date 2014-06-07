@@ -209,7 +209,7 @@ end_of_match:
     OSTimeDly(OS_TICKS_PER_SEC);
     drive_set_dest(mammoth_x, mammoth_y + 0.35);
 
-    emergency_stop_en = false;
+    // emergency_stop_en = false;
 
     // wait until .5s after match
     while (uptime_get() - match_start < MATCH_DURATION + 500000)
