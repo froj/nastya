@@ -124,6 +124,8 @@ void match_run(void)
     enable_heading_control = false;
 
     hw_cannon_arm_all();
+    hw_finger_retract(1);
+    hw_finger_retract(2);
 
     OSTimeDly(OS_TICKS_PER_SEC / 2);
     while (!wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
@@ -210,8 +212,6 @@ end_of_match:
     OSTimeDly(OS_TICKS_PER_SEC);
     drive_set_dest(mammoth_x, mammoth_y + 0.35);
 
-    // emergency_stop_en = false;
-
     // wait until .5s after match
     while (uptime_get() - match_start < MATCH_DURATION + 500000)
         OSTimeDly(OS_TICKS_PER_SEC/100);
@@ -248,6 +248,7 @@ abort_match:
     match_abort = false;
 
     while (wait_for_start()) OSTimeDly(OS_TICKS_PER_SEC/100);
+    emergency_stop_en = false;
     return;
 }
 
@@ -343,15 +344,15 @@ static void match_exec(bool team_red, match_action_t *a)
     case MATCH_ACTION_FINGER:
         if (team_red) {
             if (a->arg1) {
-                hw_finger_extend(1);
-            } else {
-                hw_finger_retract(1);
-            }
-        } else {
-            if (a->arg1) {
                 hw_finger_extend(2);
             } else {
                 hw_finger_retract(2);
+            }
+        } else {
+            if (a->arg1) {
+                hw_finger_extend(1);
+            } else {
+                hw_finger_retract(1);
             }
         }
         break;
