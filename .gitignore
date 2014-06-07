@@ -3,3 +3,4 @@ tags
 *.d
 *.sw[po]
 .syntastic_c_config
+Makefile
