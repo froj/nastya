@@ -60,21 +60,21 @@ uint32_t hw_get_wheel_2_encoder(void)
 
 
 static const int32_t cannon_arm_pos[6] = {
-    14500,
     14000,
-    14000,
-    16000,
+    18000,
     15000,
-    15000
+    15000,
+    14000,
+    14000
 };
 
 static const int32_t cannon_fire_pos[6] = {
-    19000,
-    11500,
-    18000,
+    12000,
+    15000,
     13000,
-    12500,
-    11000
+    19000,
+    12000,
+    17000
 };
 
 void hw_cannon_arm_all(void)
