@@ -353,6 +353,7 @@ static void match_exec(bool team_red, match_action_t *a)
                 hw_finger_retract(2);
             }
         }
+        break;
     }
 }
 
@@ -402,9 +403,9 @@ int match_action_list(char* buffer, int buf_len)
                 break;
             case MATCH_ACTION_FINGER:
                 if (match_actions[i].arg1) {
-                    ret = snprintf(buffer, remaining_sz, "[%3d] Extend finger.");
+                    ret = snprintf(buffer, remaining_sz, "[%3d] Extend finger.\n", i);
                 } else {
-                    ret = snprintf(buffer, remaining_sz, "[%3d] Retract finger.");
+                    ret = snprintf(buffer, remaining_sz, "[%3d] Retract finger.\n", i);
                 }
                 break;
             default:
