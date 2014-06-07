@@ -209,7 +209,7 @@ end_of_match:
     OSTimeDly(OS_TICKS_PER_SEC);
     drive_set_dest(mammoth_x, mammoth_y + 0.35);
 
-    emergency_stop_en = false;
+    // emergency_stop_en = false;
 
     // wait until .5s after match
     while (uptime_get() - match_start < MATCH_DURATION + 500000)
@@ -339,6 +339,20 @@ static void match_exec(bool team_red, match_action_t *a)
         while (!match_action_timeout())
             OSTimeDly(OS_TICKS_PER_SEC / 100);
         break;
+    case MATCH_ACTION_FINGER:
+        if (team_red) {
+            if (a->arg1) {
+                hw_finger_extend(1);
+            } else {
+                hw_finger_retract(1);
+            }
+        } else {
+            if (a->arg1) {
+                hw_finger_extend(2);
+            } else {
+                hw_finger_retract(2);
+            }
+        }
     }
 }
 
@@ -385,6 +399,13 @@ int match_action_list(char* buffer, int buf_len)
             case MATCH_ACTION_SLEEP_MS:
                 ret = snprintf(buffer, remaining_sz, "[%3d] Sleep %.0f ms.\n",
                                i, match_actions[i].arg1);
+                break;
+            case MATCH_ACTION_FINGER:
+                if (match_actions[i].arg1) {
+                    ret = snprintf(buffer, remaining_sz, "[%3d] Extend finger.");
+                } else {
+                    ret = snprintf(buffer, remaining_sz, "[%3d] Retract finger.");
+                }
                 break;
             default:
                 ret = snprintf(buffer, remaining_sz, "[%3d] Unknown command.\n", i);

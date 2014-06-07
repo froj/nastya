@@ -27,6 +27,7 @@ bool match_action_timeout();
 #define MATCH_ACTION_FIRE_CANNON        5   //  (cannon_index)
 #define MATCH_ACTION_WAIT_END_OF_MATCH  6
 #define MATCH_ACTION_SLEEP_MS           7   //  (ms)
+#define MATCH_ACTION_FINGER				8   //  (0=retract/1=extend)
 
 typedef struct {
     int cmd;

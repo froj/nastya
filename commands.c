@@ -262,10 +262,17 @@ int cmd_match_action_modify(lua_State *l)
                 lua_tonumber(l, 3), 0);
         } else if (strcmp(cmd, "waiteom") == 0) {
             match_action_modify(ind, MATCH_ACTION_WAIT_END_OF_MATCH, 0, 0);
+        } else if (strcmp(cmd, "finger") == 0) {
+            if (lua_gettop(l) < 3) {
+                lua_pushstring(l, "finger arg: 1=extend/0=retract");
+                return 1;
+            }
+            match_action_modify(ind, MATCH_ACTION_FINGER,
+                lua_tonumber(l, 3), 0);
         } else {
             lua_pushstring(l, "unknown cmd, possible cmds: nop, move, "
                               "heading, look, syncheading, fire, sleepms,"
-                              " waiteom\n");
+                              " waiteom, finger\n");
             return 1;
         }
     } else {
