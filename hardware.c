@@ -77,6 +77,16 @@ static const int32_t cannon_fire_pos[6] = {
     17000
 };
 
+static const int32_t finger_retracted_pos[2] = {
+    15000,
+    15000
+};
+
+static const int32_t finger_extended_pos[2] = {
+    15000,
+    15000
+};
+
 void hw_cannon_arm_all(void)
 {
     int i;
@@ -92,4 +102,16 @@ void hw_cannon_fire(int index)
     cvra_servo_set(index-1, cannon_fire_pos[index-1]);
 }
 
+void hw_finger_extend(int index)
+{
+    if (index < 1 || index > 2)
+        return;
+    cvra_servo_set(index+5, finger_extended_pos[index-1]);
+}
 
+void hw_finger_retract(int index)
+{
+    if (index < 1 || index > 2)
+        return;
+    cvra_servo_set(index+5, finger_retracted_pos[index-1]);
+}
