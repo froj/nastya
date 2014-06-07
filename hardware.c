@@ -78,13 +78,13 @@ static const int32_t cannon_fire_pos[6] = {
 };
 
 static const int32_t finger_retracted_pos[2] = {
-    15000,
-    15000
+    17000,
+    13000
 };
 
 static const int32_t finger_extended_pos[2] = {
-    15000,
-    15000
+    23500,
+     6500
 };
 
 void hw_cannon_arm_all(void)
